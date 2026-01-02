@@ -190,17 +190,6 @@ input:focus, select:focus, textarea:focus {
 
 #form-actions { display: flex; gap: 4px; margin-top: 20px; }
 
-.time-tag {
-  display: inline-block;
-  padding: 6px 14px;
-  border-radius: 10px;
-  font-size: 0.85rem;
-  font-weight: bold;
-  margin-top: 10px;
-}
-.tag-closed { background: #fee2e2; color: #ef4444; }
-.tag-open { background: #dcfce7; color: #16a34a; }
-
 .stats-list {
   list-style: none;
   padding: 0; 
@@ -251,9 +240,14 @@ input:focus, select:focus, textarea:focus {
   gap: 8px; 
   margin-bottom: 10px; 
   width: 100%;
+  align-items: center;
 }
 .guest-name-item {
+  flex: 2;
+}
+.guest-count-item {
   flex: 1;
+  min-width: 80px;
 }
 .btn-del-guest { 
   background: #fee2e2; 
@@ -263,6 +257,7 @@ input:focus, select:focus, textarea:focus {
   padding: 0 15px; 
   cursor: pointer;
   font-weight: bold;
+  height: 42px;
 }
 </style>
 </head>
@@ -289,13 +284,6 @@ input:focus, select:focus, textarea:focus {
       <p>🏠 <strong>場地：</strong><span id="info-venue-name"></span></p>
       <p>📍 <strong>地點：</strong><span id="info-location"></span> 
          <a id="info-map-link" href="#" target="_blank" style="color:var(--accent-blue); text-decoration:none; margin-left:8px;">🗺️ 地圖</a></p>
-      
-      <div id="deadline-container">
-        <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
-        <p>⏳ <strong style="color:var(--accent-red);">報名截止：</strong><span id="info-close-time"></span></p>
-      </div>
-      
-      <div id="time-status-tag" class="time-tag"></div>
     </div>
   </div>
 
@@ -305,11 +293,11 @@ input:focus, select:focus, textarea:focus {
       <strong>姓名：</strong> <span id="line-nickname" style="color:var(--line-dark); font-weight:bold;">載入中...</span>
     </p>
 
-    <label for="attendees-count">參加人數</label>
+    <label for="attendees-count">本人/家屬人數</label>
     <select id="attendees-count"></select>
 
     <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 15px;">
-      <label style="margin:0;">來賓姓名 (選填)</label>
+      <label style="margin:0;">來賓姓名及其人數</label>
       <button type="button" onclick="addGuestInput()" style="background:var(--line-green); color:white; border:none; border-radius:8px; padding:6px 12px; cursor:pointer; font-size:0.8rem; font-weight:bold;">+ 新增來賓</button>
     </div>
     
@@ -336,31 +324,18 @@ const GAS_URL='https://script.google.com/macros/s/AKfycbzS99Xj9BMLxUYsOrFL5W3rng
 const LIFF_ID='2008678090-SEONUKky';
 let LINE_UID='', LINE_NICKNAME='', CURRENT_EVENT_ID=null, ALL_EVENTS=[];
 
-function addGuestInput(val = '') {
+function addGuestInput(val = '', count = 1) {
   const container = document.getElementById('guest-inputs-container');
   const div = document.createElement('div');
   div.className = 'guest-input-group';
   div.innerHTML = `
     <input type="text" class="guest-name-item" value="${val}" placeholder="輸入來賓姓名">
-    <button type="button" class="btn-del-guest" onclick="removeGuest(this)">✕</button>
+    <select class="guest-count-item">
+      ${[1,2,3,4,5,6,7,8,9,10].map(i => `<option value="${i}" ${i==count?'selected':''}>+${i}</option>`).join('')}
+    </select>
+    <button type="button" class="btn-del-guest" onclick="this.parentElement.remove()">✕</button>
   `;
   container.appendChild(div);
-  
-  // 功能增加：自動連動增加「參加人數」
-  const countSel = document.getElementById('attendees-count');
-  const currentVal = parseInt(countSel.value);
-  if (currentVal < 10) {
-    countSel.value = currentVal + 1;
-  }
-}
-
-function removeGuest(btn) {
-  btn.parentElement.remove();
-  const countSel = document.getElementById('attendees-count');
-  const currentVal = parseInt(countSel.value);
-  if (currentVal > 1) {
-    countSel.value = currentVal - 1;
-  }
 }
 
 async function initializeLiff(){
@@ -445,7 +420,6 @@ function selectEvent(eventId){
   document.getElementById('activity-info').scrollIntoView({ behavior: 'smooth' });
 }
 
-// 關鍵修復：優化統計名單的欄位解析
 async function loadStatsList(eventId){
   const ul = document.getElementById('registered-list');
   try {
@@ -453,7 +427,6 @@ async function loadStatsList(eventId){
     const data = await res.json();
     ul.innerHTML = '';
     
-    // 兼容後端回傳的陣列
     const users = data.registeredUsers || [];
     if(users.length === 0){
       ul.innerHTML = '<li style="justify-content:center; color:#cbd5e0;">尚無人報名</li>';
@@ -461,17 +434,28 @@ async function loadStatsList(eventId){
     }
     
     users.forEach(u => {
-      // 確保同時讀取姓名、人數與來賓清單
-      let html = `<div style="display:flex; justify-content:space-between; width:100%;">
-                    <strong>${u.name || u.Nickname}</strong> 
-                    <span>${u.attendees || u.Attendees_Count}人</span>
+      const name = u.name || u.Nickname;
+      const count = u.attendees || u.Attendees_Count;
+      const rawGuests = u.guestNames || u.Guest_Names || "";
+
+      let html = `<div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
+                    <strong style="color:#2d3748;">${name}</strong> 
+                    <span style="background:var(--line-green); color:white; padding:2px 10px; border-radius:20px; font-size:0.8rem; font-weight:bold;">
+                      共 ${count} 人
+                    </span>
                   </div>`;
       
-      // 如果有來賓姓名，顯示在下方小字
-      if(u.guestNames || u.Guest_Names) {
-        html += `<small style="color:#718096; margin-top:4px;">來賓: ${u.guestNames || u.Guest_Names}</small>`;
+      if(rawGuests) {
+        const tags = rawGuests.split(',').map(g => 
+          `<span style="display:inline-block; background:#f1f5f9; color:#4a5568; padding:2px 8px; border-radius:6px; margin:2px; font-size:0.75rem; border:1px solid #e2e8f0;">${g.trim()}</span>`
+        ).join('');
+        html += `<div style="margin-top:6px; display:flex; flex-wrap:wrap;">${tags}</div>`;
       }
-      ul.innerHTML += `<li>${html}</li>`;
+      
+      const li = document.createElement('li');
+      li.style.cssText = "border-left:4px solid var(--line-green); margin-bottom:10px; padding-left:12px; background:#fff; border-radius:0 12px 12px 0;";
+      li.innerHTML = html;
+      ul.appendChild(li);
     });
   } catch(err){
     ul.innerHTML = '<li style="text-align:center;">名單載入中...</li>';
@@ -480,8 +464,6 @@ async function loadStatsList(eventId){
 
 function updateButtons(userStatus){
   document.getElementById('guest-inputs-container').innerHTML = '';
-  
-  // 檢查是否已報名
   const isRegistered = userStatus && (userStatus.Status === 'Registered' || userStatus.IsRegistered);
 
   if(isRegistered){
@@ -489,12 +471,25 @@ function updateButtons(userStatus){
     document.getElementById('btn-cancel').style.display='inline-block';
     document.getElementById('btn-edit').style.display='inline-block';
     
-    // 欄位容錯解析
-    document.getElementById('attendees-count').value = userStatus.Attendees_Count || userStatus.attendees || 1;
-    const names = userStatus.Guest_Names || userStatus.guestNames || "";
-    if(names) {
-      names.split(',').forEach(n => { if(n.trim()) addGuestInput(n.trim()); });
+    const total = userStatus.Attendees_Count || userStatus.attendees || 1;
+    const namesStr = userStatus.Guest_Names || userStatus.guestNames || "";
+    
+    let guestPartTotal = 0;
+    if(namesStr) {
+      namesStr.split(',').forEach(item => {
+        const match = item.match(/(.+)\(\+(\d+)\)/);
+        if(match) {
+          const gName = match[1];
+          const gCount = parseInt(match[2]);
+          addGuestInput(gName, gCount);
+          guestPartTotal += gCount;
+        } else if(item.trim()) {
+          addGuestInput(item.trim(), 1);
+          guestPartTotal += 1;
+        }
+      });
     }
+    document.getElementById('attendees-count').value = Math.max(1, total - guestPartTotal);
   } else {
     document.getElementById('btn-register').style.display='inline-block';
     document.getElementById('btn-cancel').style.display='none';
@@ -511,16 +506,28 @@ async function submitRegistration(action){
   msg.className = 'message';
   msg.textContent = '⏳ 處理中...';
 
-  const guestItems = document.querySelectorAll('.guest-name-item');
-  const guestList = Array.from(guestItems).map(i => i.value.trim()).filter(v => v !== "");
+  const guestNamesWithCount = [];
+  let totalGuestsCount = 0;
+  
+  document.querySelectorAll('.guest-input-group').forEach(group => {
+    const name = group.querySelector('.guest-name-item').value.trim();
+    const count = parseInt(group.querySelector('.guest-count-item').value);
+    if(name) {
+      guestNamesWithCount.push(`${name}(+${count})`); 
+      totalGuestsCount += count;
+    }
+  });
+
+  const userCount = parseInt(document.getElementById('attendees-count').value);
+  const finalTotal = userCount + totalGuestsCount;
 
   const payload = {
     action,
     eventId: CURRENT_EVENT_ID,
     lineUid: LINE_UID,
     lineNickname: LINE_NICKNAME,
-    attendeesCount: parseInt(document.getElementById('attendees-count').value),
-    guestNames: guestList.join(',')
+    attendeesCount: finalTotal,
+    guestNames: guestNamesWithCount.join(',')
   };
 
   try {
