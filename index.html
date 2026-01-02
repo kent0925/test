@@ -342,9 +342,25 @@ function addGuestInput(val = '') {
   div.className = 'guest-input-group';
   div.innerHTML = `
     <input type="text" class="guest-name-item" value="${val}" placeholder="輸入來賓姓名">
-    <button type="button" class="btn-del-guest" onclick="this.parentElement.remove()">✕</button>
+    <button type="button" class="btn-del-guest" onclick="removeGuest(this)">✕</button>
   `;
   container.appendChild(div);
+  
+  // 功能增加：自動連動增加「參加人數」
+  const countSel = document.getElementById('attendees-count');
+  const currentVal = parseInt(countSel.value);
+  if (currentVal < 10) {
+    countSel.value = currentVal + 1;
+  }
+}
+
+function removeGuest(btn) {
+  btn.parentElement.remove();
+  const countSel = document.getElementById('attendees-count');
+  const currentVal = parseInt(countSel.value);
+  if (currentVal > 1) {
+    countSel.value = currentVal - 1;
+  }
 }
 
 async function initializeLiff(){
@@ -432,37 +448,33 @@ function selectEvent(eventId){
 // 關鍵修復：優化統計名單的欄位解析
 async function loadStatsList(eventId){
   const ul = document.getElementById('registered-list');
-  ul.innerHTML = '<li style="justify-content:center; color:#cbd5e0;">載入中...</li>';
   try {
     const res = await fetch(`${GAS_URL}?action=getStatsAndStatus&lineUid=${LINE_UID}&eventId=${eventId}`);
     const data = await res.json();
-    ul.innerHTML='';
+    ul.innerHTML = '';
     
-    // 同時檢查不同的後端回傳欄位命名
-    const users = data.registeredUsers || data.users || [];
-    
+    // 兼容後端回傳的陣列
+    const users = data.registeredUsers || [];
     if(users.length === 0){
       ul.innerHTML = '<li style="justify-content:center; color:#cbd5e0;">尚無人報名</li>';
       return;
     }
     
-    users.forEach(u=>{
-      // 容錯處理：後端欄位可能是 name/Nickname, attendees/Attendees_Count, guestNames/Guest_Names
-      const displayName = u.name || u.Nickname || '未知用戶';
-      const count = u.attendees || u.Attendees_Count || 1;
-      const guests = u.guestNames || u.Guest_Names || '';
-
+    users.forEach(u => {
+      // 確保同時讀取姓名、人數與來賓清單
       let html = `<div style="display:flex; justify-content:space-between; width:100%;">
-                    <strong>${displayName}</strong> 
-                    <span>${count}人</span>
+                    <strong>${u.name || u.Nickname}</strong> 
+                    <span>${u.attendees || u.Attendees_Count}人</span>
                   </div>`;
-      if(guests) {
-        html += `<small style="color:#718096; margin-top:4px;">來賓: ${guests}</small>`;
+      
+      // 如果有來賓姓名，顯示在下方小字
+      if(u.guestNames || u.Guest_Names) {
+        html += `<small style="color:#718096; margin-top:4px;">來賓: ${u.guestNames || u.Guest_Names}</small>`;
       }
       ul.innerHTML += `<li>${html}</li>`;
     });
   } catch(err){
-    ul.innerHTML = '<li style="color:red;">載入名單失敗</li>';
+    ul.innerHTML = '<li style="text-align:center;">名單載入中...</li>';
   }
 }
 
