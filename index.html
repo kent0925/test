@@ -246,7 +246,6 @@ input:focus, select:focus, textarea:focus {
 }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-/* 修正版：動態欄位樣式，確保不破壞佈局 */
 .guest-input-group { 
   display: flex; 
   gap: 8px; 
@@ -316,8 +315,6 @@ input:focus, select:focus, textarea:focus {
     
     <div id="guest-inputs-container" style="margin-top:10px;"></div>
     
-    <textarea id="guest-names" style="display:none;"></textarea>
-
     <div id="form-actions">
       <button id="btn-register" class="btn btn-register" onclick="submitRegistration('register')">提交報名</button>
       <button id="btn-edit" class="btn btn-edit" onclick="submitRegistration('edit')">更新</button>
@@ -339,7 +336,6 @@ const GAS_URL='https://script.google.com/macros/s/AKfycbzS99Xj9BMLxUYsOrFL5W3rng
 const LIFF_ID='2008678090-SEONUKky';
 let LINE_UID='', LINE_NICKNAME='', CURRENT_EVENT_ID=null, ALL_EVENTS=[];
 
-// 功能性增加：管理動態欄位
 function addGuestInput(val = '') {
   const container = document.getElementById('guest-inputs-container');
   const div = document.createElement('div');
@@ -388,7 +384,7 @@ async function loadEventsList(){
 
     ALL_EVENTS.forEach(ev => {
       const card = document.createElement('div');
-      card.className = 'event-card';
+      card.className = 'event-card' + (ev.IsRegistered ? ' selected' : '');
       
       let html = '';
       if(ev.IsRegistered) html += `<span class="reg-badge">已報名</span>`;
@@ -399,7 +395,6 @@ async function loadEventsList(){
       card.onclick = function() {
         document.querySelectorAll('.event-card').forEach(el => el.classList.remove('selected'));
         this.classList.add('selected');
-        if (window.navigator.vibrate) window.navigator.vibrate(10);
         selectEvent(ev.EventID);
       };
       container.appendChild(card);
@@ -414,12 +409,7 @@ async function loadEventsList(){
 
 function selectEvent(eventId){
   const ev = ALL_EVENTS.find(e=>e.EventID===eventId);
-  if(!ev) {
-    document.getElementById('activity-info').style.display='none';
-    document.getElementById('registration-form').style.display='none';
-    document.getElementById('statistics').style.display='none';
-    return;
-  }
+  if(!ev) return;
   CURRENT_EVENT_ID = eventId;
   
   document.getElementById('activity-info').style.display='block';
@@ -435,97 +425,66 @@ function selectEvent(eventId){
   document.getElementById('total-attendees').textContent = ev.TotalAttendees || 0;
   
   updateButtons(ev.UserStatus);
-
-  const isSystemEvent = !ev.CreatorUID; 
-  const deadlineBox = document.getElementById('deadline-container');
-  const tag = document.getElementById('time-status-tag');
-  const regBtn = document.getElementById('btn-register');
-
-  if (isSystemEvent) {
-    deadlineBox.style.display = 'none';
-    tag.style.display = 'none';
-    regBtn.disabled = false;
-  } else {
-    deadlineBox.style.display = 'block';
-    tag.style.display = 'inline-block';
-    document.getElementById('info-close-time').textContent = formatLocalTime(ev.CloseTime);
-
-    const now = new Date().getTime();
-    const open = new Date(ev.OpenTime).getTime();
-    const close = new Date(ev.CloseTime).getTime();
-
-    if (now < open) {
-      tag.className = 'time-tag tag-closed';
-      tag.textContent = `🚫 尚未開放報名`;
-      regBtn.disabled = true;
-    } else if (now > close) {
-      tag.className = 'time-tag tag-closed';
-      tag.textContent = '❌ 報名已截止';
-      regBtn.disabled = true;
-    } else {
-      tag.className = 'time-tag tag-open';
-      tag.textContent = '✅ 開放報名中';
-      regBtn.disabled = false;
-    }
-  }
-
-  document.getElementById('registered-list').innerHTML = '<li style="justify-content:center; color:#cbd5e0;">載入中...</li>';
   loadStatsList(eventId); 
   document.getElementById('activity-info').scrollIntoView({ behavior: 'smooth' });
 }
 
+// 關鍵修復：優化統計名單的欄位解析
 async function loadStatsList(eventId){
+  const ul = document.getElementById('registered-list');
+  ul.innerHTML = '<li style="justify-content:center; color:#cbd5e0;">載入中...</li>';
   try {
     const res = await fetch(`${GAS_URL}?action=getStatsAndStatus&lineUid=${LINE_UID}&eventId=${eventId}`);
     const data = await res.json();
-    const ul = document.getElementById('registered-list');
     ul.innerHTML='';
-    if(!data.registeredUsers || data.registeredUsers.length === 0){
+    
+    // 同時檢查不同的後端回傳欄位命名
+    const users = data.registeredUsers || data.users || [];
+    
+    if(users.length === 0){
       ul.innerHTML = '<li style="justify-content:center; color:#cbd5e0;">尚無人報名</li>';
       return;
     }
-    data.registeredUsers.forEach(u=>{
-      // 功能性優化：列表直接顯示報名詳情
+    
+    users.forEach(u=>{
+      // 容錯處理：後端欄位可能是 name/Nickname, attendees/Attendees_Count, guestNames/Guest_Names
+      const displayName = u.name || u.Nickname || '未知用戶';
+      const count = u.attendees || u.Attendees_Count || 1;
+      const guests = u.guestNames || u.Guest_Names || '';
+
       let html = `<div style="display:flex; justify-content:space-between; width:100%;">
-                    <strong>${u.name}</strong> 
-                    <span>${u.attendees}人</span>
+                    <strong>${displayName}</strong> 
+                    <span>${count}人</span>
                   </div>`;
-      if(u.guestNames) {
-        html += `<small style="color:#718096; margin-top:4px;">來賓: ${u.guestNames}</small>`;
+      if(guests) {
+        html += `<small style="color:#718096; margin-top:4px;">來賓: ${guests}</small>`;
       }
       ul.innerHTML += `<li>${html}</li>`;
     });
   } catch(err){
-    console.error('載入名單失敗:', err);
+    ul.innerHTML = '<li style="color:red;">載入名單失敗</li>';
   }
 }
 
 function updateButtons(userStatus){
-  const ev = ALL_EVENTS.find(e=>e.EventID===CURRENT_EVENT_ID);
-  const now = new Date().getTime();
-  
-  let withinTime = true;
-  if(ev && ev.CreatorUID){
-      const open = new Date(ev.OpenTime).getTime();
-      const close = new Date(ev.CloseTime).getTime();
-      withinTime = (now >= open && now <= close);
-  }
-
-  // 功能性增加：重新選擇活動時清空動態欄位
   document.getElementById('guest-inputs-container').innerHTML = '';
+  
+  // 檢查是否已報名
+  const isRegistered = userStatus && (userStatus.Status === 'Registered' || userStatus.IsRegistered);
 
-  if(userStatus && userStatus.Status==='Registered'){
+  if(isRegistered){
     document.getElementById('btn-register').style.display='none';
     document.getElementById('btn-cancel').style.display='inline-block';
     document.getElementById('btn-edit').style.display='inline-block';
-    document.getElementById('attendees-count').value = userStatus.Attendees_Count||1;
     
-    // 將已有的來賓資料拆分回欄位
-    if(userStatus.Guest_Names) {
-      userStatus.Guest_Names.split(',').forEach(n => addGuestInput(n.trim()));
+    // 欄位容錯解析
+    document.getElementById('attendees-count').value = userStatus.Attendees_Count || userStatus.attendees || 1;
+    const names = userStatus.Guest_Names || userStatus.guestNames || "";
+    if(names) {
+      names.split(',').forEach(n => { if(n.trim()) addGuestInput(n.trim()); });
     }
   } else {
-    document.getElementById('btn-register').style.display = withinTime ? 'inline-block' : 'none';
+    document.getElementById('btn-register').style.display='inline-block';
     document.getElementById('btn-cancel').style.display='none';
     document.getElementById('btn-edit').style.display='none';
     document.getElementById('attendees-count').value = 1;
@@ -533,19 +492,15 @@ function updateButtons(userStatus){
 }
 
 async function submitRegistration(action){
-  if(!CURRENT_EVENT_ID) return;
-  
   const btns = document.querySelectorAll('.btn');
   btns.forEach(b => b.disabled = true);
-
   const msg = document.getElementById('form-message');
   msg.style.display = 'block';
   msg.className = 'message';
   msg.textContent = '⏳ 處理中...';
 
-  // 功能性調整：合併所有欄位為逗號分隔字串
-  const items = document.querySelectorAll('.guest-name-item');
-  const guestList = Array.from(items).map(i => i.value.trim()).filter(v => v !== "");
+  const guestItems = document.querySelectorAll('.guest-name-item');
+  const guestList = Array.from(guestItems).map(i => i.value.trim()).filter(v => v !== "");
 
   const payload = {
     action,
@@ -564,23 +519,16 @@ async function submitRegistration(action){
 
     if (data.status === 'success') {
       if (action === 'register' || action === 'cancel') {
-        msg.textContent += ' 視窗即將關閉...';
         setTimeout(() => { liff.closeWindow(); }, 2000);
       } else {
         await loadEventsList();
-        const ev = ALL_EVENTS.find(e => e.EventID === CURRENT_EVENT_ID);
-        if(ev) {
-          updateButtons(ev.UserStatus);
-          document.getElementById('total-attendees').textContent = ev.TotalAttendees;
-        }
-        loadStatsList(CURRENT_EVENT_ID);
+        selectEvent(CURRENT_EVENT_ID);
         btns.forEach(b => b.disabled = false);
       }
     } else {
       btns.forEach(b => b.disabled = false);
     }
   } catch(err){
-    msg.className = 'message error';
     msg.textContent = '❌ 連線異常';
     btns.forEach(b => b.disabled = false);
   }
