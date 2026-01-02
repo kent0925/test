@@ -7,179 +7,178 @@
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
 <style>
-/* 100% 保留您的原始配色與定義 */
 :root {
-  --line-green: #06C755;
-  --line-dark: #05a346;
-  --bg-gradient: linear-gradient(160deg, #f0f9f1 0%, #d9e9e0 100%);
-  --accent-blue: #007AFF;
-  --accent-red: #FF3B30;
-  --glass-white: rgba(255, 255, 255, 0.9);
-  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --line-green: #06C755;
+  --line-dark: #05a346;
+  --bg-gradient: linear-gradient(160deg, #f0f9f1 0%, #d9e9e0 100%);
+  --accent-blue: #007AFF;
+  --accent-red: #FF3B30;
+  --glass-white: rgba(255, 255, 255, 0.9);
+  --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
-body { 
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft JhengHei", sans-serif; 
-  background: var(--bg-gradient);
-  background-attachment: fixed;
-  min-height: 100vh;
-  margin: 0;
-  padding: 15px;
-  color: #1a202c;
+body { 
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft JhengHei", sans-serif; 
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+  min-height: 100vh;
+  margin: 0;
+  padding: 15px;
+  color: #1a202c;
 }
 
-.container { 
-  background: var(--glass-white);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  padding: 24px; 
-  border-radius: 24px; 
-  max-width: 480px; 
-  margin: 10px auto; 
-  box-shadow: var(--shadow-lg);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+.container { 
+  background: var(--glass-white);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 24px; 
+  border-radius: 24px; 
+  max-width: 480px; 
+  margin: 10px auto; 
+  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
-h1 { 
-  color: var(--line-green); 
-  text-align: center; 
-  margin: 0 0 25px 0;
-  font-size: 1.6rem;
-  font-weight: 800;
+h1 { 
+  color: var(--line-green); 
+  text-align: center; 
+  margin: 0 0 25px 0;
+  font-size: 1.6rem;
+  font-weight: 800;
 }
 
-.info-card, .form-section, .stats-section { 
-  margin-bottom: 24px; 
-  padding: 20px; 
-  background: #ffffff;
-  border: 1px solid #f0f0f0; 
-  border-radius: 18px; 
-  box-shadow: var(--shadow-sm);
+.info-card, .form-section, .stats-section { 
+  margin-bottom: 24px; 
+  padding: 20px; 
+  background: #ffffff;
+  border: 1px solid #f0f0f0; 
+  border-radius: 18px; 
+  box-shadow: var(--shadow-sm);
 }
 
 h2 {
-  font-size: 1.1rem;
-  margin: 0 0 15px 0;
-  color: #2d3748;
-  display: flex;
-  align-items: center;
+  font-size: 1.1rem;
+  margin: 0 0 15px 0;
+  color: #2d3748;
+  display: flex;
+  align-items: center;
 }
 
 h2::before {
-  content: "";
-  display: inline-block;
-  width: 5px;
-  height: 18px;
-  background: var(--line-green);
-  margin-right: 10px;
-  border-radius: 10px;
+  content: "";
+  display: inline-block;
+  width: 5px;
+  height: 18px;
+  background: var(--line-green);
+  margin-right: 10px;
+  border-radius: 10px;
 }
 
 .event-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-  margin-top: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+  margin-top: 10px;
 }
 
 .event-card {
-  background: #ffffff;
-  border: 2px solid #e2e8f0;
-  border-radius: 20px;
-  padding: 18px 10px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  min-height: 80px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 18px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  min-height: 80px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.03);
 }
 
 .event-card:active {
-  transform: scale(0.92);
+  transform: scale(0.92);
 }
 
 .event-card.selected {
-  border-color: var(--line-green);
-  background-color: #ffffff;
-  transform: translateY(-5px);
-  box-shadow: 0 12px 20px -8px rgba(6, 199, 85, 0.4);
+  border-color: var(--line-green);
+  background-color: #ffffff;
+  transform: translateY(-5px);
+  box-shadow: 0 12px 20px -8px rgba(6, 199, 85, 0.4);
 }
 
 .event-card.selected .event-title {
-  color: var(--line-green);
+  color: var(--line-green);
 }
 
 .event-card .reg-badge {
-  position: absolute;
-  top: -10px;
-  right: -5px;
-  background: var(--line-green);
-  color: white;
-  font-size: 0.7rem;
-  padding: 3px 10px;
-  border-radius: 12px;
-  font-weight: 800;
-  box-shadow: 0 4px 8px rgba(6, 199, 85, 0.3);
-  z-index: 5;
+  position: absolute;
+  top: -10px;
+  right: -5px;
+  background: var(--line-green);
+  color: white;
+  font-size: 0.7rem;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-weight: 800;
+  box-shadow: 0 4px 8px rgba(6, 199, 85, 0.3);
+  z-index: 5;
 }
 
 .event-card .event-title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #2d3748;
-  margin-bottom: 4px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 4px;
 }
 
 .event-card .event-date {
-  font-size: 0.8rem;
-  color: #718096;
+  font-size: 0.8rem;
+  color: #718096;
 }
 
 label {
-  display: block; 
-  margin: 15px 0 6px 4px; 
-  font-weight: 600;
-  font-size: 0.85rem;
-  color: #4a5568;
+  display: block; 
+  margin: 15px 0 6px 4px; 
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #4a5568;
 }
 
 input[type="text"], select, textarea {
-  width: 100%; 
-  padding: 12px 16px; 
-  border: 1.5px solid #e2e8f0; 
-  border-radius: 12px; 
-  box-sizing: border-box;
-  font-size: 1rem;
-  background-color: #f8fafc;
-  transition: all 0.2s;
+  width: 100%; 
+  padding: 12px 16px; 
+  border: 1.5px solid #e2e8f0; 
+  border-radius: 12px; 
+  box-sizing: border-box;
+  font-size: 1rem;
+  background-color: #f8fafc;
+  transition: all 0.2s;
 }
 
 input:focus, select:focus, textarea:focus {
-  outline: none;
-  border-color: var(--line-green);
-  background-color: #fff;
-  box-shadow: 0 0 0 4px rgba(6, 199, 85, 0.1);
+  outline: none;
+  border-color: var(--line-green);
+  background-color: #fff;
+  box-shadow: 0 0 0 4px rgba(6, 199, 85, 0.1);
 }
 
 .btn {
-  padding: 14px 20px; 
-  border: none; 
-  border-radius: 14px; 
-  cursor: pointer; 
-  font-weight: 700; 
-  font-size: 1rem;
-  transition: all 0.2s;
-  margin: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
+  padding: 14px 20px; 
+  border: none; 
+  border-radius: 14px; 
+  cursor: pointer; 
+  font-weight: 700; 
+  font-size: 1rem;
+  transition: all 0.2s;
+  margin: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
 }
 
 .btn:active { transform: scale(0.96); }
@@ -192,44 +191,44 @@ input:focus, select:focus, textarea:focus {
 #form-actions { display: flex; gap: 4px; margin-top: 20px; }
 
 .time-tag {
-  display: inline-block;
-  padding: 6px 14px;
-  border-radius: 10px;
-  font-size: 0.85rem;
-  font-weight: bold;
-  margin-top: 10px;
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  margin-top: 10px;
 }
 .tag-closed { background: #fee2e2; color: #ef4444; }
 .tag-open { background: #dcfce7; color: #16a34a; }
 
 .stats-list {
-  list-style: none;
-  padding: 0; 
-  margin: 10px 0 0 0;
-  max-height: 180px; 
-  overflow-y: auto; 
+  list-style: none;
+  padding: 0; 
+  margin: 10px 0 0 0;
+  max-height: 250px; 
+  overflow-y: auto; 
 }
 
 .stats-list li {
-  padding: 12px 4px; 
-  border-bottom: 1px solid #f7fafc;
-  font-size: 0.95rem;
-  display: flex;
-  justify-content: space-between;
+  padding: 12px 4px; 
+  border-bottom: 1px solid #f7fafc;
+  font-size: 0.95rem;
+  display: flex;
+  flex-direction: column;
 }
 
 .message {
-  padding: 14px; 
-  margin-top: 20px; 
-  border-radius: 12px; 
-  text-align: center; 
-  font-weight: 600;
-  animation: slideUp 0.4s ease-out;
+  padding: 14px; 
+  margin-top: 20px; 
+  border-radius: 12px; 
+  text-align: center; 
+  font-weight: 600;
+  animation: slideUp 0.4s ease-out;
 }
 
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .success { background-color: #f0fff4; color: #276749; border: 1px solid #c6f6d5; }
@@ -237,84 +236,102 @@ input:focus, select:focus, textarea:focus {
 
 .loading { text-align: center; padding: 60px 20px; }
 .spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid var(--line-green);
-  border-radius: 50%;
-  margin: 0 auto 15px;
-  animation: spin 1s linear infinite;
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--line-green);
+  border-radius: 50%;
+  margin: 0 auto 15px;
+  animation: spin 1s linear infinite;
 }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-/* 新增：動態欄位所需的微量樣式 */
-.guest-input-group { display: flex; gap: 8px; margin-bottom: 8px; }
-.btn-del-guest { background: #fee2e2; color: var(--accent-red); border: 1px solid #fed7d7; border-radius: 8px; padding: 0 12px; cursor: pointer; }
+/* 修正版：動態欄位樣式，確保不破壞佈局 */
+.guest-input-group { 
+  display: flex; 
+  gap: 8px; 
+  margin-bottom: 10px; 
+  width: 100%;
+}
+.guest-name-item {
+  flex: 1;
+}
+.btn-del-guest { 
+  background: #fee2e2; 
+  color: var(--accent-red); 
+  border: 1px solid #fed7d7; 
+  border-radius: 12px; 
+  padding: 0 15px; 
+  cursor: pointer;
+  font-weight: bold;
+}
 </style>
 </head>
 <body>
 
 <div class="container">
-  <h1>活動報名系統</h1>
+  <h1>活動報名系統</h1>
 
-  <div id="loading-spinner" class="loading">
-    <div class="spinner"></div>
-    <p style="color:#718096;">讀取資料中...</p>
-  </div>
+  <div id="loading-spinner" class="loading">
+    <div class="spinner"></div>
+    <p style="color:#718096;">讀取資料中...</p>
+  </div>
 
-  <div id="event-selection" class="form-section" style="display:none;">
-    <h2>選擇活動場次</h2>
-    <div id="event-button-container" class="event-grid"></div>
-  </div>
+  <div id="event-selection" class="form-section" style="display:none;">
+    <h2>選擇活動場次</h2>
+    <div id="event-button-container" class="event-grid"></div>
+  </div>
 
-  <div id="activity-info" class="info-card" style="display:none;">
-    <h2 id="info-title">活動資訊</h2>
-    <div style="font-size: 0.95rem; color: #4a5568;">
-      <p>👤 <strong>主辦者：</strong><span id="info-creator"></span></p>
-      <p>🕒 <strong>活動時間：</strong><span id="info-time"></span></p>
-      <p>🏠 <strong>場地：</strong><span id="info-venue-name"></span></p>
-      <p>📍 <strong>地點：</strong><span id="info-location"></span> 
-         <a id="info-map-link" href="#" target="_blank" style="color:var(--accent-blue); text-decoration:none; margin-left:8px;">🗺️ 地圖</a></p>
-      
-      <div id="deadline-container">
-        <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
-        <p>⏳ <strong style="color:var(--accent-red);">報名截止：</strong><span id="info-close-time"></span></p>
-      </div>
-      
-      <div id="time-status-tag" class="time-tag"></div>
-    </div>
-  </div>
-
-  <div id="registration-form" class="form-section" style="display:none;">
-    <h2>報名資料</h2>
-    <p style="background:#f1f5f9; padding:10px 15px; border-radius:10px; font-size:0.9rem;">
-      <strong>姓名：</strong> <span id="line-nickname" style="color:var(--line-dark); font-weight:bold;">載入中...</span>
-    </p>
-
-    <label for="attendees-count">參加人數</label>
-    <select id="attendees-count"></select>
-
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-      <label>來賓姓名 (選填)</label>
-      <button type="button" onclick="addGuestInput()" style="background:var(--line-green); color:white; border:none; border-radius:8px; padding:4px 12px; cursor:pointer; font-size:0.8rem; font-weight:bold;">+ 新增</button>
+  <div id="activity-info" class="info-card" style="display:none;">
+    <h2 id="info-title">活動資訊</h2>
+    <div style="font-size: 0.95rem; color: #4a5568;">
+      <p>👤 <strong>主辦者：</strong><span id="info-creator"></span></p>
+      <p>🕒 <strong>活動時間：</strong><span id="info-time"></span></p>
+      <p>🏠 <strong>場地：</strong><span id="info-venue-name"></span></p>
+      <p>📍 <strong>地點：</strong><span id="info-location"></span> 
+         <a id="info-map-link" href="#" target="_blank" style="color:var(--accent-blue); text-decoration:none; margin-left:8px;">🗺️ 地圖</a></p>
+      
+      <div id="deadline-container">
+        <hr style="border:0; border-top:1px solid #eee; margin:15px 0;">
+        <p>⏳ <strong style="color:var(--accent-red);">報名截止：</strong><span id="info-close-time"></span></p>
+      </div>
+      
+      <div id="time-status-tag" class="time-tag"></div>
     </div>
-    <div id="guest-inputs-container" style="margin-top:8px;"></div>
-        <textarea id="guest-names" style="display:none;"></textarea>
+  </div>
 
-    <div id="form-actions">
-      <button id="btn-register" class="btn btn-register" onclick="submitRegistration('register')">提交報名</button>
-      <button id="btn-edit" class="btn btn-edit" onclick="submitRegistration('edit')">更新</button>
-      <button id="btn-cancel" class="btn btn-cancel" onclick="submitRegistration('cancel')">取消</button>
-    </div>
+  <div id="registration-form" class="form-section" style="display:none;">
+    <h2>報名資料</h2>
+    <p style="background:#f1f5f9; padding:10px 15px; border-radius:10px; font-size:0.9rem;">
+      <strong>姓名：</strong> <span id="line-nickname" style="color:var(--line-dark); font-weight:bold;">載入中...</span>
+    </p>
 
-    <div id="form-message" class="message" style="display:none;"></div>
-  </div>
+    <label for="attendees-count">參加人數</label>
+    <select id="attendees-count"></select>
 
-  <div id="statistics" class="stats-section" style="display:none;">
-    <h2>報名動態</h2>
-    <p>目前報名：<strong style="color:var(--line-green); font-size: 1.2rem;"><span id="total-attendees">0</span></strong> 人</p>
-    <ul id="registered-list" class="stats-list"></ul>
-  </div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 15px;">
+      <label style="margin:0;">來賓姓名 (選填)</label>
+      <button type="button" onclick="addGuestInput()" style="background:var(--line-green); color:white; border:none; border-radius:8px; padding:6px 12px; cursor:pointer; font-size:0.8rem; font-weight:bold;">+ 新增來賓</button>
+    </div>
+    
+    <div id="guest-inputs-container" style="margin-top:10px;"></div>
+    
+    <textarea id="guest-names" style="display:none;"></textarea>
+
+    <div id="form-actions">
+      <button id="btn-register" class="btn btn-register" onclick="submitRegistration('register')">提交報名</button>
+      <button id="btn-edit" class="btn btn-edit" onclick="submitRegistration('edit')">更新</button>
+      <button id="btn-cancel" class="btn btn-cancel" onclick="submitRegistration('cancel')">取消</button>
+    </div>
+
+    <div id="form-message" class="message" style="display:none;"></div>
+  </div>
+
+  <div id="statistics" class="stats-section" style="display:none;">
+    <h2>報名動態</h2>
+    <p>目前報名：<strong style="color:var(--line-green); font-size: 1.2rem;"><span id="total-attendees">0</span></strong> 人</p>
+    <ul id="registered-list" class="stats-list"></ul>
+  </div>
 </div>
 
 <script>
@@ -322,7 +339,7 @@ const GAS_URL='https://script.google.com/macros/s/AKfycbzS99Xj9BMLxUYsOrFL5W3rng
 const LIFF_ID='2008678090-SEONUKky';
 let LINE_UID='', LINE_NICKNAME='', CURRENT_EVENT_ID=null, ALL_EVENTS=[];
 
-// 功能性增加：動態欄位管理
+// 功能性增加：管理動態欄位
 function addGuestInput(val = '') {
   const container = document.getElementById('guest-inputs-container');
   const div = document.createElement('div');
@@ -335,235 +352,238 @@ function addGuestInput(val = '') {
 }
 
 async function initializeLiff(){
-  try {
-    const countSel = document.getElementById('attendees-count');
-    countSel.innerHTML='';
-    for(let i=1;i<=10;i++){ countSel.innerHTML+=`<option value="${i}">${i} 人</option>`;}
+  try {
+    const countSel = document.getElementById('attendees-count');
+    countSel.innerHTML='';
+    for(let i=1;i<=10;i++){ countSel.innerHTML+=`<option value="${i}">${i} 人</option>`;}
 
-    await liff.init({ liffId: LIFF_ID });
-    if(!liff.isLoggedIn()){ liff.login(); return; }
-    const profile = await liff.getProfile();
-    LINE_UID = profile.userId;
-    LINE_NICKNAME = profile.displayName;
-    document.getElementById('line-nickname').textContent = LINE_NICKNAME;
-    
-    await loadEventsList();
-  } catch(err){
-    alert('LIFF 初始化失敗');
-  }
+    await liff.init({ liffId: LIFF_ID });
+    if(!liff.isLoggedIn()){ liff.login(); return; }
+    const profile = await liff.getProfile();
+    LINE_UID = profile.userId;
+    LINE_NICKNAME = profile.displayName;
+    document.getElementById('line-nickname').textContent = LINE_NICKNAME;
+    
+    await loadEventsList();
+  } catch(err){
+    alert('LIFF 初始化失敗');
+  }
 }
 
 function formatLocalTime(iso){
-  if(!iso) return "--";
-  const d = new Date(iso);
-  if(isNaN(d.getTime())) return iso;
-  return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  if(!iso) return "--";
+  const d = new Date(iso);
+  if(isNaN(d.getTime())) return iso;
+  return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
 async function loadEventsList(){
-  try {
-    const res = await fetch(`${GAS_URL}?action=getEventsList&lineUid=${LINE_UID}`);
-    const data = await res.json();
-    ALL_EVENTS = data.events || [];
+  try {
+    const res = await fetch(`${GAS_URL}?action=getEventsList&lineUid=${LINE_UID}`);
+    const data = await res.json();
+    ALL_EVENTS = data.events || [];
 
-    const container = document.getElementById('event-button-container');
-    container.innerHTML = '';
+    const container = document.getElementById('event-button-container');
+    container.innerHTML = '';
 
-    ALL_EVENTS.forEach(ev => {
-      const card = document.createElement('div');
-      card.className = 'event-card';
-      
-      let html = '';
-      if(ev.IsRegistered) html += `<span class="reg-badge">已報名</span>`;
-      html += `<span class="event-title">${ev.Title}</span>`;
-      html += `<span class="event-date">${formatLocalTime(ev.Time).split(' ')[0]}</span>`;
-      
-      card.innerHTML = html;
-      card.onclick = function() {
-        document.querySelectorAll('.event-card').forEach(el => el.classList.remove('selected'));
-        this.classList.add('selected');
-        if (window.navigator.vibrate) window.navigator.vibrate(10);
-        selectEvent(ev.EventID);
-      };
-      container.appendChild(card);
-    });
+    ALL_EVENTS.forEach(ev => {
+      const card = document.createElement('div');
+      card.className = 'event-card';
+      
+      let html = '';
+      if(ev.IsRegistered) html += `<span class="reg-badge">已報名</span>`;
+      html += `<span class="event-title">${ev.Title}</span>`;
+      html += `<span class="event-date">${formatLocalTime(ev.Time).split(' ')[0]}</span>`;
+      
+      card.innerHTML = html;
+      card.onclick = function() {
+        document.querySelectorAll('.event-card').forEach(el => el.classList.remove('selected'));
+        this.classList.add('selected');
+        if (window.navigator.vibrate) window.navigator.vibrate(10);
+        selectEvent(ev.EventID);
+      };
+      container.appendChild(card);
+    });
 
-    document.getElementById('loading-spinner').style.display='none';
-    document.getElementById('event-selection').style.display='block';
-  } catch(err){
-    console.error('載入失敗:', err);
-  }
+    document.getElementById('loading-spinner').style.display='none';
+    document.getElementById('event-selection').style.display='block';
+  } catch(err){
+    console.error('載入失敗:', err);
+  }
 }
 
 function selectEvent(eventId){
-  const ev = ALL_EVENTS.find(e=>e.EventID===eventId);
-  if(!ev) {
-    document.getElementById('activity-info').style.display='none';
-    document.getElementById('registration-form').style.display='none';
-    document.getElementById('statistics').style.display='none';
-    return;
-  }
-  CURRENT_EVENT_ID = eventId;
-  
-  document.getElementById('activity-info').style.display='block';
-  document.getElementById('registration-form').style.display='block';
-  document.getElementById('statistics').style.display='block';
-  
-  document.getElementById('info-title').textContent = ev.Title;
-  document.getElementById('info-creator').textContent = ev.CreatorNickname || "管理員";
-  document.getElementById('info-time').textContent = formatLocalTime(ev.Time);
-  document.getElementById('info-venue-name').textContent = ev.VenueName;
-  document.getElementById('info-location').textContent = ev.Address;
-  document.getElementById('info-map-link').href = ev.MapUrl || '#';
-  document.getElementById('total-attendees').textContent = ev.TotalAttendees || 0;
-  
-  updateButtons(ev.UserStatus);
+  const ev = ALL_EVENTS.find(e=>e.EventID===eventId);
+  if(!ev) {
+    document.getElementById('activity-info').style.display='none';
+    document.getElementById('registration-form').style.display='none';
+    document.getElementById('statistics').style.display='none';
+    return;
+  }
+  CURRENT_EVENT_ID = eventId;
+  
+  document.getElementById('activity-info').style.display='block';
+  document.getElementById('registration-form').style.display='block';
+  document.getElementById('statistics').style.display='block';
+  
+  document.getElementById('info-title').textContent = ev.Title;
+  document.getElementById('info-creator').textContent = ev.CreatorNickname || "管理員";
+  document.getElementById('info-time').textContent = formatLocalTime(ev.Time);
+  document.getElementById('info-venue-name').textContent = ev.VenueName;
+  document.getElementById('info-location').textContent = ev.Address;
+  document.getElementById('info-map-link').href = ev.MapUrl || '#';
+  document.getElementById('total-attendees').textContent = ev.TotalAttendees || 0;
+  
+  updateButtons(ev.UserStatus);
 
-  const isSystemEvent = !ev.CreatorUID; 
-  const deadlineBox = document.getElementById('deadline-container');
-  const tag = document.getElementById('time-status-tag');
-  const regBtn = document.getElementById('btn-register');
+  const isSystemEvent = !ev.CreatorUID; 
+  const deadlineBox = document.getElementById('deadline-container');
+  const tag = document.getElementById('time-status-tag');
+  const regBtn = document.getElementById('btn-register');
 
-  if (isSystemEvent) {
-    deadlineBox.style.display = 'none';
-    tag.style.display = 'none';
-    regBtn.disabled = false;
-  } else {
-    deadlineBox.style.display = 'block';
-    tag.style.display = 'inline-block';
-    document.getElementById('info-close-time').textContent = formatLocalTime(ev.CloseTime);
+  if (isSystemEvent) {
+    deadlineBox.style.display = 'none';
+    tag.style.display = 'none';
+    regBtn.disabled = false;
+  } else {
+    deadlineBox.style.display = 'block';
+    tag.style.display = 'inline-block';
+    document.getElementById('info-close-time').textContent = formatLocalTime(ev.CloseTime);
 
-    const now = new Date().getTime();
-    const open = new Date(ev.OpenTime).getTime();
-    const close = new Date(ev.CloseTime).getTime();
+    const now = new Date().getTime();
+    const open = new Date(ev.OpenTime).getTime();
+    const close = new Date(ev.CloseTime).getTime();
 
-    if (now < open) {
-      tag.className = 'time-tag tag-closed';
-      tag.textContent = `🚫 尚未開放報名`;
-      regBtn.disabled = true;
-    } else if (now > close) {
-      tag.className = 'time-tag tag-closed';
-      tag.textContent = '❌ 報名已截止';
-      regBtn.disabled = true;
-    } else {
-      tag.className = 'time-tag tag-open';
-      tag.textContent = '✅ 開放報名中';
-      regBtn.disabled = false;
-    }
-  }
+    if (now < open) {
+      tag.className = 'time-tag tag-closed';
+      tag.textContent = `🚫 尚未開放報名`;
+      regBtn.disabled = true;
+    } else if (now > close) {
+      tag.className = 'time-tag tag-closed';
+      tag.textContent = '❌ 報名已截止';
+      regBtn.disabled = true;
+    } else {
+      tag.className = 'time-tag tag-open';
+      tag.textContent = '✅ 開放報名中';
+      regBtn.disabled = false;
+    }
+  }
 
-  document.getElementById('registered-list').innerHTML = '<li style="justify-content:center; color:#cbd5e0;">載入中...</li>';
-  loadStatsList(eventId); 
-  document.getElementById('activity-info').scrollIntoView({ behavior: 'smooth' });
+  document.getElementById('registered-list').innerHTML = '<li style="justify-content:center; color:#cbd5e0;">載入中...</li>';
+  loadStatsList(eventId); 
+  document.getElementById('activity-info').scrollIntoView({ behavior: 'smooth' });
 }
 
 async function loadStatsList(eventId){
-  try {
-    const res = await fetch(`${GAS_URL}?action=getStatsAndStatus&lineUid=${LINE_UID}&eventId=${eventId}`);
-    const data = await res.json();
-    const ul = document.getElementById('registered-list');
-    ul.innerHTML='';
-    if(!data.registeredUsers || data.registeredUsers.length === 0){
-      ul.innerHTML = '<li style="justify-content:center; color:#cbd5e0;">尚無人報名</li>';
-      return;
-    }
-    data.registeredUsers.forEach(u=>{
-      // 功能性優化：列表直接顯示來賓
-      let info = `<span>${u.name}</span> <span>${u.attendees}人</span>`;
-      if(u.guestNames) info = `<div style="display:flex; flex-direction:column; width:100%;">
-        <div style="display:flex; justify-content:space-between;"><b>${u.name}</b> <span>${u.attendees}人</span></div>
-        <small style="color:#718096;">來賓: ${u.guestNames}</small>
-      </div>`;
-      ul.innerHTML+=`<li>${info}</li>`;
-    });
-  } catch(err){
-    console.error('載入名單失敗:', err);
-  }
+  try {
+    const res = await fetch(`${GAS_URL}?action=getStatsAndStatus&lineUid=${LINE_UID}&eventId=${eventId}`);
+    const data = await res.json();
+    const ul = document.getElementById('registered-list');
+    ul.innerHTML='';
+    if(!data.registeredUsers || data.registeredUsers.length === 0){
+      ul.innerHTML = '<li style="justify-content:center; color:#cbd5e0;">尚無人報名</li>';
+      return;
+    }
+    data.registeredUsers.forEach(u=>{
+      // 功能性優化：列表直接顯示報名詳情
+      let html = `<div style="display:flex; justify-content:space-between; width:100%;">
+                    <strong>${u.name}</strong> 
+                    <span>${u.attendees}人</span>
+                  </div>`;
+      if(u.guestNames) {
+        html += `<small style="color:#718096; margin-top:4px;">來賓: ${u.guestNames}</small>`;
+      }
+      ul.innerHTML += `<li>${html}</li>`;
+    });
+  } catch(err){
+    console.error('載入名單失敗:', err);
+  }
 }
 
 function updateButtons(userStatus){
-  const ev = ALL_EVENTS.find(e=>e.EventID===CURRENT_EVENT_ID);
-  const now = new Date().getTime();
-  
-  let withinTime = true;
-  if(ev && ev.CreatorUID){
-      const open = new Date(ev.OpenTime).getTime();
-      const close = new Date(ev.CloseTime).getTime();
-      withinTime = (now >= open && now <= close);
-  }
+  const ev = ALL_EVENTS.find(e=>e.EventID===CURRENT_EVENT_ID);
+  const now = new Date().getTime();
+  
+  let withinTime = true;
+  if(ev && ev.CreatorUID){
+      const open = new Date(ev.OpenTime).getTime();
+      const close = new Date(ev.CloseTime).getTime();
+      withinTime = (now >= open && now <= close);
+  }
 
-  // 功能性同步：清空並重新填入動態欄位
+  // 功能性增加：重新選擇活動時清空動態欄位
   document.getElementById('guest-inputs-container').innerHTML = '';
 
-  if(userStatus && userStatus.Status==='Registered'){
-    document.getElementById('btn-register').style.display='none';
-    document.getElementById('btn-cancel').style.display='inline-block';
-    document.getElementById('btn-edit').style.display='inline-block';
-    document.getElementById('attendees-count').value = userStatus.Attendees_Count||1;
+  if(userStatus && userStatus.Status==='Registered'){
+    document.getElementById('btn-register').style.display='none';
+    document.getElementById('btn-cancel').style.display='inline-block';
+    document.getElementById('btn-edit').style.display='inline-block';
+    document.getElementById('attendees-count').value = userStatus.Attendees_Count||1;
     
+    // 將已有的來賓資料拆分回欄位
     if(userStatus.Guest_Names) {
       userStatus.Guest_Names.split(',').forEach(n => addGuestInput(n.trim()));
     }
-  } else {
-    document.getElementById('btn-register').style.display = withinTime ? 'inline-block' : 'none';
-    document.getElementById('btn-cancel').style.display='none';
-    document.getElementById('btn-edit').style.display='none';
-    document.getElementById('attendees-count').value = 1;
-  }
+  } else {
+    document.getElementById('btn-register').style.display = withinTime ? 'inline-block' : 'none';
+    document.getElementById('btn-cancel').style.display='none';
+    document.getElementById('btn-edit').style.display='none';
+    document.getElementById('attendees-count').value = 1;
+  }
 }
 
 async function submitRegistration(action){
-  if(!CURRENT_EVENT_ID) return;
-  
-  const btns = document.querySelectorAll('.btn');
-  btns.forEach(b => b.disabled = true);
+  if(!CURRENT_EVENT_ID) return;
+  
+  const btns = document.querySelectorAll('.btn');
+  btns.forEach(b => b.disabled = true);
 
-  const msg = document.getElementById('form-message');
-  msg.style.display = 'block';
-  msg.className = 'message';
-  msg.textContent = '⏳ 處理中...';
+  const msg = document.getElementById('form-message');
+  msg.style.display = 'block';
+  msg.className = 'message';
+  msg.textContent = '⏳ 處理中...';
 
-  // 功能性同步：將多個欄位合併回 guestNames 傳送
+  // 功能性調整：合併所有欄位為逗號分隔字串
   const items = document.querySelectorAll('.guest-name-item');
   const guestList = Array.from(items).map(i => i.value.trim()).filter(v => v !== "");
 
-  const payload = {
-    action,
-    eventId: CURRENT_EVENT_ID,
-    lineUid: LINE_UID,
-    lineNickname: LINE_NICKNAME,
-    attendeesCount: parseInt(document.getElementById('attendees-count').value),
-    guestNames: guestList.join(',')
-  };
+  const payload = {
+    action,
+    eventId: CURRENT_EVENT_ID,
+    lineUid: LINE_UID,
+    lineNickname: LINE_NICKNAME,
+    attendeesCount: parseInt(document.getElementById('attendees-count').value),
+    guestNames: guestList.join(',')
+  };
 
-  try {
-    const res = await fetch(GAS_URL,{method:'POST',body:JSON.stringify(payload)});
-    const data = await res.json();
-    msg.className = data.status==='success'?'message success':'message error';
-    msg.textContent = data.message;
+  try {
+    const res = await fetch(GAS_URL,{method:'POST',body:JSON.stringify(payload)});
+    const data = await res.json();
+    msg.className = data.status==='success'?'message success':'message error';
+    msg.textContent = data.message;
 
-    if (data.status === 'success') {
-      if (action === 'register' || action === 'cancel') {
-        msg.textContent += ' 視窗即將關閉...';
-        setTimeout(() => { liff.closeWindow(); }, 2000);
-      } else {
-        await loadEventsList();
-        const ev = ALL_EVENTS.find(e => e.EventID === CURRENT_EVENT_ID);
-        if(ev) {
-          updateButtons(ev.UserStatus);
-          document.getElementById('total-attendees').textContent = ev.TotalAttendees;
-        }
-        loadStatsList(CURRENT_EVENT_ID);
-        btns.forEach(b => b.disabled = false);
-      }
-    } else {
-      btns.forEach(b => b.disabled = false);
-    }
-  } catch(err){
-    msg.className = 'message error';
-    msg.textContent = '❌ 連線異常';
-    btns.forEach(b => b.disabled = false);
-  }
+    if (data.status === 'success') {
+      if (action === 'register' || action === 'cancel') {
+        msg.textContent += ' 視窗即將關閉...';
+        setTimeout(() => { liff.closeWindow(); }, 2000);
+      } else {
+        await loadEventsList();
+        const ev = ALL_EVENTS.find(e => e.EventID === CURRENT_EVENT_ID);
+        if(ev) {
+          updateButtons(ev.UserStatus);
+          document.getElementById('total-attendees').textContent = ev.TotalAttendees;
+        }
+        loadStatsList(CURRENT_EVENT_ID);
+        btns.forEach(b => b.disabled = false);
+      }
+    } else {
+      btns.forEach(b => b.disabled = false);
+    }
+  } catch(err){
+    msg.className = 'message error';
+    msg.textContent = '❌ 連線異常';
+    btns.forEach(b => b.disabled = false);
+  }
 }
 
 initializeLiff();
