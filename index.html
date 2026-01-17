@@ -17,6 +17,11 @@
         .card-hover { transition: all 0.2s; }
         .card-hover:active { transform: scale(0.95); }
         .tag-remove { cursor: pointer; color: #ef4444; }
+        .dashed-separator { border-top: 2px dashed #e5e7eb; margin: 1rem 0; position: relative; }
+        .dashed-separator::after { content: '贊助與認桌'; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #fff; padding: 0 10px; color: #9ca3af; font-size: 0.75rem; }
+        /* Skeleton Animation */
+        .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite; }
+        @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen pb-10">
@@ -24,22 +29,21 @@
     <!-- Header -->
     <header class="bg-[#06c755] text-white p-4 shadow-md sticky top-0 z-50 flex justify-between items-center h-16">
         <div class="flex items-center gap-2">
-            <button id="btn-back" onclick="goHome()" class="hidden p-1 hover:bg-white/20 rounded-full transition">
+            <button id="btn-back" onclick="handleBackNav()" class="hidden p-1 hover:bg-white/20 rounded-full transition">
                 <i data-lucide="arrow-left" class="w-6 h-6"></i>
             </button>
             <h1 class="text-xl font-bold" id="header-title">活動與報名</h1>
         </div>
-        <div class="text-xs bg-white/20 px-2 py-1 rounded" id="header-user">訪客</div>
+        <div class="text-xs bg-white/20 px-2 py-1 rounded" id="header-user">
+            <span class="opacity-70">訪客</span>
+        </div>
     </header>
 
-    <div id="loading-mask" class="fixed inset-0 bg-white z-[70] flex flex-col items-center justify-center transition-opacity duration-300">
-        <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-[#06c755]"></div>
-        <p class="mt-4 text-gray-500 text-sm">系統載入中...</p>
-    </div>
+    <!-- Removing global loading mask for faster perceived speed -->
 
     <div class="max-w-md mx-auto p-4">
 
-        <!-- VIEW 1: HOME -->
+        <!-- VIEW 1: HOME (Categories) -->
         <div id="view-home" class="space-y-6 animate-fade-in">
             <div class="flex justify-end">
                 <button onclick="toggleHistoryView()" id="btn-history-toggle" class="text-xs text-gray-500 flex items-center gap-1 border border-gray-300 px-3 py-1 rounded-full hover:bg-gray-200 bg-white">
@@ -66,7 +70,7 @@
             </div>
 
             <div id="history-list" class="hidden space-y-4">
-                <p class="text-center text-gray-400 text-sm py-4">以下為已結束或關閉的活動</p>
+                <div id="history-loading" class="hidden text-center text-gray-400 text-xs py-4">載入歷史紀錄中...</div>
                 <div id="history-items" class="space-y-3"></div>
             </div>
 
@@ -76,15 +80,20 @@
             </button>
         </div>
 
-        <!-- VIEW 2: ACTIVITY LIST & FORM -->
-        <div id="view-activity" class="hidden space-y-5">
-            <div class="bg-white rounded-xl shadow-sm p-4 border border-gray-200">
-                <label class="block text-xs font-bold text-gray-500 mb-2 uppercase tracking-wide">選擇場次</label>
-                <select id="event-selector" onchange="onEventSelected()" class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-green-500 focus:border-green-500 block p-2.5">
-                    <option>載入中...</option>
-                </select>
-            </div>
+        <!-- VIEW 2: EVENT SELECTION (Card Grid) -->
+        <div id="view-event-list" class="hidden space-y-4">
+             <div id="event-list-loading" class="hidden space-y-3">
+                 <!-- Skeletons -->
+                 <div class="bg-white p-4 rounded-xl shadow h-24 w-full skeleton"></div>
+                 <div class="bg-white p-4 rounded-xl shadow h-24 w-full skeleton"></div>
+             </div>
+             <div id="event-grid-container" class="grid grid-cols-1 gap-4"></div>
+             <div id="no-events-msg" class="hidden text-center text-gray-500 py-10">目前沒有此類型的活動</div>
+        </div>
 
+        <!-- VIEW 3: ACTIVITY DETAIL & FORM -->
+        <div id="view-activity-detail" class="hidden space-y-5">
+            
             <div id="event-info-card" class="bg-white rounded-xl shadow p-5 space-y-3 border border-gray-100 relative overflow-hidden transition-opacity duration-300">
                 <div id="manager-controls" class="hidden absolute top-3 right-3 z-10">
                     <button onclick="toggleEventStatus()" id="btn-status-toggle" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded-full font-bold border border-red-200 hover:bg-red-200">
@@ -114,7 +123,7 @@
                 <input type="hidden" id="eventName" name="eventName">
                 <input type="hidden" id="formAction" value="register"> 
 
-                <div><label class="block text-sm font-medium text-gray-700 mb-1">參與者</label><div class="flex gap-2 items-center bg-gray-50 p-2 rounded-lg border border-gray-200"><img id="user-picture" src="https://placehold.co/40" class="w-10 h-10 rounded-full bg-gray-300 object-cover"><div class="flex-1 min-w-0"><input type="text" id="user-name" class="w-full bg-transparent border-none p-0 text-gray-800 font-medium text-sm focus:ring-0" readonly value="載入中..."></div></div><input type="hidden" id="user-id"></div>
+                <div><label class="block text-sm font-medium text-gray-700 mb-1">參與者</label><div class="flex gap-2 items-center bg-gray-50 p-2 rounded-lg border border-gray-200"><img id="user-picture" src="https://placehold.co/40" class="w-10 h-10 rounded-full bg-gray-300 object-cover"><div class="flex-1 min-w-0"><input type="text" id="user-name" class="w-full bg-transparent border-none p-0 text-gray-800 font-medium text-sm focus:ring-0" readonly value="讀取中..."></div></div><input type="hidden" id="user-id"></div>
                 <div><label class="block text-sm font-medium text-gray-700 mb-1">攜帶家屬 (同住)</label><select id="family-count" class="w-full border border-gray-300 rounded px-3 py-2 bg-white"><option value="0">無攜帶</option></select></div>
                 
                 <div class="bg-orange-50 p-3 rounded-lg border border-orange-100">
@@ -130,7 +139,16 @@
                 <div id="dynamic-fields" class="space-y-4">
                     <div id="field-travel" class="hidden space-y-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
                         <div class="text-xs font-bold text-blue-600 mb-1">旅遊專屬選項</div>
-                        <div><label class="text-xs text-gray-600 block mb-1">上車地點</label><select id="pickup-loc" class="w-full text-sm border-gray-300 rounded"><option value="">請選擇...</option></select></div>
+                        
+                        <div>
+                            <label class="text-xs text-gray-600 block mb-1">上車地點</label>
+                            <div class="flex gap-2 items-center">
+                                <select id="pickup-loc" onchange="updatePickupMap()" class="w-full text-sm border-gray-300 rounded"><option value="">請選擇...</option></select>
+                                <!-- Map Button -->
+                                <a id="pickup-map-btn" href="#" target="_blank" class="hidden bg-white p-2 border border-gray-200 rounded text-blue-500 shadow-sm hover:bg-blue-50 active:scale-95 transition" title="查看地圖"><i data-lucide="map-pin" class="w-4 h-4"></i></a>
+                            </div>
+                        </div>
+                        
                         <div><label class="text-xs text-gray-600 block mb-1">房型需求 (已選 / 數量)</label><select id="room-type" class="w-full text-sm border-gray-300 rounded"><option value="">請選擇...</option></select></div>
                     </div>
                     <div id="field-banquet" class="hidden p-3 bg-red-50 rounded-lg border border-red-100">
@@ -170,7 +188,7 @@
             </div>
         </div>
 
-        <!-- VIEW 3: CREATE EVENT -->
+        <!-- VIEW 4: CREATE EVENT -->
         <div id="view-create" class="hidden space-y-5">
              <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
                 <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><i data-lucide="plus-square" class="w-6 h-6 text-blue-600"></i> 建立新活動</h2>
@@ -182,29 +200,31 @@
                     <div id="new-field-time-range" class="hidden space-y-2"><div><label class="block text-sm font-medium text-gray-700 mb-1">出發日期</label><input type="date" id="new-date-start" class="w-full border border-gray-300 rounded px-3 py-2"></div><div><label class="block text-sm font-medium text-gray-700 mb-1">回程日期</label><input type="date" id="new-date-end" class="w-full border border-gray-300 rounded px-3 py-2"></div></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">地點名稱 (選單)</label><select id="new-location-select" onchange="onLocationChange()" class="w-full border border-gray-300 rounded px-3 py-2 bg-white"><option value="">載入中...</option></select></div>
                     <div><label class="block text-sm font-medium text-gray-700 mb-1">詳細地址 (自動帶入)</label><input type="text" id="new-address" readonly class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed"></div>
-                    <div id="new-field-itinerary" class="hidden"><label class="block text-sm font-medium text-gray-700 mb-1">行程內容 (格式：D1: 標題|內容)</label><textarea id="new-itinerary" rows="4" class="w-full border border-gray-300 rounded px-3 py-2 text-sm font-mono" placeholder="D1: 集合|08:00 車站集合;D2: 景點|10:00 抵達..."></textarea></div>
+                    <div id="new-field-itinerary" class="hidden"><label class="block text-sm font-medium text-gray-700 mb-1">行程內容 (格式：D1: 標題|內容)</label><textarea id="new-itinerary" rows="4" class="w-full border border-gray-300 rounded px-3 py-2 text-sm font-mono" placeholder="D1: 集合|08:00 車站集合;D2: 景點|10:00 抵達..."></textarea><p class="text-xs text-gray-400 mt-1">※ 此內容將儲存至獨立行程表 (ItineraryData)</p></div>
                     <button type="submit" id="create-btn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition shadow-md mt-4 flex justify-center items-center gap-2"><span>確認建立</span><i data-lucide="check-square" class="w-4 h-4"></i></button>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Modal -->
+    <!-- Modal (Same as before) -->
     <div id="details-modal" class="hidden fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm max-h-[80vh] flex flex-col relative transform scale-95 opacity-0 transition-all" id="modal-content">
             <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl">
                 <h3 class="font-bold text-gray-800 flex items-center gap-2"><i data-lucide="bar-chart" class="w-5 h-5 text-green-600"></i> 詳細統計 & 名單</h3>
                 <button onclick="closeDetailsModal()" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
-            
             <div id="modal-summary" class="bg-gray-50 p-3 text-xs text-gray-600 border-b border-gray-100 space-y-1"></div>
-
             <div class="p-4 overflow-y-auto flex-1">
                 <div id="modal-loading" class="flex flex-col items-center py-6"><i data-lucide="loader-2" class="w-6 h-6 animate-spin text-green-500 mb-2"></i><span class="text-xs text-gray-500">載入名單中...</span></div>
-                <ul id="details-list" class="space-y-2 text-sm text-gray-700 hidden font-mono"></ul>
+                <div id="details-lists-container" class="hidden">
+                    <ul id="details-list-people" class="space-y-2 text-sm text-gray-700 font-mono mb-2"></ul>
+                    <div id="details-separator" class="hidden dashed-separator"></div>
+                    <ul id="details-list-items" class="space-y-2 text-sm text-gray-700 font-mono"></ul>
+                </div>
                 <div id="modal-empty" class="hidden text-center py-6 text-gray-400 text-sm">目前尚未有人報名</div>
             </div>
-            <div class="p-3 border-t border-gray-100 bg-gray-50 rounded-b-xl"><button onclick="copyDetailsToClipboard()" class="w-full bg-blue-50 text-blue-600 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 transition flex justify-center items-center gap-2"><i data-lucide="copy" class="w-4 h-4"></i> 複製名單文字</button></div>
+            <div class="p-3 border-t border-gray-100 bg-gray-50 rounded-b-xl"><button onclick="copyDetailsToClipboard()" class="w-full bg-blue-50 text-blue-600 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 transition flex justify-center items-center gap-2"><i data-lucide="copy" class="w-4 h-4"></i> 複製名單 (含連結)</button></div>
         </div>
     </div>
     
@@ -219,36 +239,54 @@
         let currentCategory = '';
         let currentEvent = null;
         let currentStats = { totalPeople: 0, secondary: 0, roomCounts: {}, pickupCounts: {}, sponsorSummary: {}, tableCount: 0 };
-        let userProfile = { userId: 'mock_u1', displayName: '測試用戶', pictureUrl: '' };
-        let lastFetchedDetails = []; // Store raw details for copy format
+        let userProfile = { userId: '', displayName: '訪客', pictureUrl: '' };
+        let lastFetchedDetails = []; 
         
         let guestList = [];
         let sponsorList = [];
         let showingHistory = false;
+        let viewHistoryStack = [];
+        let isDataLoaded = false;
 
         const MOCK_EVENTS = [
-            { id: 'm1', type: 'general', name: '五月例會', organizer: '王社長', time: '2026-04-01T10:30:00.000Z', location: '市民中心', address: '台北市公園路', isActive: true, creatorId: 'mock_u1' },
-            { id: 'm4', type: 'travel', name: '花蓮三日遊', organizer: '康樂組', time: '2026/07/15~2026/07/18', location: '花蓮', address: '北車', itinerary: 'D1: 出發|內容;D2: 遊玩|內容', isActive: true, pickupOpts: ['台北車站'], roomOpts: ['雙人房:5'] }
+            { id: 'm1', type: 'general', name: '五月例會', organizer: '王社長', time: '2026-04-01T10:30:00.000Z', location: '市民中心', address: '台北市公園路', isActive: "開放", creatorId: 'mock_u1' },
+            { id: 'm2', type: 'general', name: '四月例會', organizer: '王社長', time: '2026-03-01T10:30:00.000Z', location: '市民中心', address: '台北市公園路', isActive: "關閉", creatorId: 'mock_u1' },
+            { id: 'm4', type: 'travel', name: '花蓮三日遊', organizer: '康樂組', time: '2026/07/15~2026/07/18', location: '花蓮', address: '北車', itinerary: 'D1: 出發|內容;D2: 遊玩|內容', isActive: "開放", pickupOpts: ['台北車站|https://goo.gl/maps/123', '板橋車站|https://goo.gl/maps/456'], roomOpts: ['雙人房:5'] }
         ];
         const MOCK_SETTINGS = { organizers: ['王社長'], locations: [{name:'中心', address:'地址'}] };
 
-        window.onload = async function() {
+        // 1. Immediate UI Render (Faster)
+        window.onload = function() {
             lucide.createIcons();
             populateCountOptions();
             renderAddSponsorUI(); 
-            
+            goHome(); // Show Home immediately
+            initApp(); // Load data in background
+        };
+
+        async function initApp() {
             if (LIFF_ID && LIFF_ID !== "YOUR_LIFF_ID") {
                 try {
                     await liff.init({ liffId: LIFF_ID });
-                    if (!liff.isLoggedIn()) { liff.login(); return; }
-                    userProfile = await liff.getProfile();
+                    if (liff.isLoggedIn()) {
+                        const profile = await liff.getProfile();
+                        userProfile = { userId: profile.userId, displayName: profile.displayName, pictureUrl: profile.pictureUrl };
+                        updateUserProfileUI();
+                    } else {
+                         // Optional: liff.login(); if strict
+                    }
                 } catch (e) { console.error(e); }
             }
-            updateUserProfileUI();
+            
+            // Parallel fetch
             await Promise.all([fetchEvents(), fetchSettings()]);
-            document.getElementById('loading-mask').classList.add('opacity-0', 'pointer-events-none');
-            goHome();
-        };
+            isDataLoaded = true;
+            
+            // Re-render if user is already on a list view
+            if(viewHistoryStack[viewHistoryStack.length-1] === 'list') {
+                 renderEventGrid(currentCategory);
+            }
+        }
 
         function updateUserProfileUI() {
             document.getElementById('header-user').innerText = userProfile.displayName;
@@ -257,13 +295,32 @@
             if (userProfile.pictureUrl) document.getElementById('user-picture').src = userProfile.pictureUrl;
         }
 
-        // --- Sponsor UI ---
+        // --- IsActive Logic Helper ---
+        function isEventOpen(e) {
+            // Compatible with boolean or string "開放"
+            return e.isActive === true || e.isActive === "開放";
+        }
+
+        // --- Sponsor UI (Fixed Alcohol Options) ---
         function renderAddSponsorUI() {
             const type = document.querySelector('input[name="addSponsorType"]:checked').value;
             const container = document.getElementById('sponsor-input-area');
             container.innerHTML = '';
             if (type === 'alcohol') {
-                container.innerHTML = `<input type="text" id="sp-alc-name" placeholder="品項" class="w-full flex-1 border border-gray-300 rounded px-2 py-1 text-sm"><input type="number" id="sp-alc-qty" placeholder="數量" inputmode="numeric" min="1" class="w-16 border border-gray-300 rounded px-2 py-1 text-sm text-center"><select id="sp-alc-unit" class="w-16 border border-gray-300 rounded px-1 py-1 text-sm text-center"><option value="瓶">瓶</option><option value="箱">箱</option></select>`;
+                // FIXED: Select dropdown for alcohol type
+                container.innerHTML = `
+                    <select id="sp-alc-name" class="w-full flex-1 border border-gray-300 rounded px-2 py-1 text-sm">
+                        <option value="啤酒">啤酒</option>
+                        <option value="紅白酒">紅白酒</option>
+                        <option value="高粱">高粱</option>
+                        <option value="威士忌">威士忌</option>
+                    </select>
+                    <input type="number" id="sp-alc-qty" placeholder="數量" inputmode="numeric" min="1" class="w-16 border border-gray-300 rounded px-2 py-1 text-sm text-center">
+                    <select id="sp-alc-unit" class="w-16 border border-gray-300 rounded px-1 py-1 text-sm text-center">
+                        <option value="瓶">瓶</option>
+                        <option value="箱">箱</option>
+                        <option value="一手">一手</option>
+                    </select>`;
             } else if (type === 'money') {
                 container.innerHTML = `<div class="flex items-center gap-1 w-full"><input type="number" id="sp-money-val" placeholder="金額 (100為單位)" inputmode="numeric" step="100" min="100" class="flex-1 border border-gray-300 rounded px-2 py-1 text-sm"><span class="text-sm text-gray-500">元</span></div>`;
             } else {
@@ -275,12 +332,12 @@
             const type = document.querySelector('input[name="addSponsorType"]:checked').value;
             let text = "";
             if (type === 'alcohol') {
-                const name = document.getElementById('sp-alc-name').value.trim();
+                const name = document.getElementById('sp-alc-name').value;
                 const qty = document.getElementById('sp-alc-qty').value;
                 const unit = document.getElementById('sp-alc-unit').value;
-                if (!name || !qty || parseInt(qty) <= 0) { showToast("請輸入完整資訊"); return; }
+                if (!qty || parseInt(qty) <= 0) { showToast("請輸入數量"); return; }
                 text = `酒類: ${name} ${qty}${unit}`;
-                document.getElementById('sp-alc-name').value='';document.getElementById('sp-alc-qty').value='';
+                document.getElementById('sp-alc-qty').value='';
             } else if (type === 'money') {
                 const val = document.getElementById('sp-money-val').value;
                 const num = parseInt(val);
@@ -297,6 +354,7 @@
             renderSponsorList();
         }
         
+        // ... (Sponsor remove/list same) ...
         function removeSponsor(index) { sponsorList.splice(index, 1); renderSponsorList(); }
         function renderSponsorList() {
             const container = document.getElementById('sponsor-list-container'); container.innerHTML = '';
@@ -304,160 +362,91 @@
             lucide.createIcons();
         }
 
-        // --- Core Logic ---
-        function formatDate(isoStr) { if (!isoStr || isoStr.indexOf('~') !== -1) return isoStr; const d = new Date(isoStr); if (isNaN(d.getTime())) return isoStr; const weekMap = ['日', '一', '二', '三', '四', '五', '六']; return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} (${weekMap[d.getDay()]}) ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
-        function populateCountOptions() { const familySel = document.getElementById('family-count'); const guestSel = document.getElementById('add-guest-count'); for (let i = 1; i <= 10; i++) { familySel.add(new Option(`${i} 人`, i)); guestSel.add(new Option(`${i} 人`, i)); } }
-        function addGuest() { const name = document.getElementById('add-guest-name').value.trim(); const count = parseInt(document.getElementById('add-guest-count').value); if (!name) { showToast("請輸入來賓姓名"); return; } guestList.push({ name, count }); document.getElementById('add-guest-name').value = ''; renderGuestList(); }
-        function removeGuest(index) { guestList.splice(index, 1); renderGuestList(); }
-        function renderGuestList() { const container = document.getElementById('guest-list-container'); container.innerHTML = ''; guestList.forEach((g, i) => { container.innerHTML += `<div class="flex justify-between items-center bg-white border border-gray-200 px-3 py-1 rounded text-sm"><span>${g.name} (${g.count}人)</span> <i data-lucide="x" class="w-4 h-4 tag-remove" onclick="removeGuest(${i})"></i></div>`; }); lucide.createIcons(); }
-
-        // --- Missing Navigation Functions ---
-        function goHome() {
-            document.getElementById('view-home').classList.remove('hidden');
-            document.getElementById('view-activity').classList.add('hidden');
-            document.getElementById('view-create').classList.add('hidden');
-            document.getElementById('btn-back').classList.add('hidden');
-            document.getElementById('header-title').innerText = "活動與報名";
-            currentEvent = null;
-            currentCategory = '';
-        }
-
-        function enterCategory(type) {
-            currentCategory = type;
-            document.getElementById('view-home').classList.add('hidden');
-            document.getElementById('view-activity').classList.remove('hidden');
-            document.getElementById('btn-back').classList.remove('hidden');
+        // --- 6. Pickup Map Logic (Updated) ---
+        function updatePickupMap() {
+            const val = document.getElementById('pickup-loc').value;
+            const btn = document.getElementById('pickup-map-btn');
             
-            const titleMap = { 'general': '一般活動', 'banquet': '大型餐會', 'travel': '旅遊活動' };
-            document.getElementById('header-title').innerText = titleMap[type] || '活動報名';
+            // Logic: pickupOpts in currentEvent are stored as strings. 
+            // New format: "LocationName|URL" or just "LocationName"
+            // The select option value might be just the name if we parse it.
             
-            const selector = document.getElementById('event-selector');
-            selector.innerHTML = '<option value="">請選擇場次</option>';
-            
-            const filteredEvents = allEvents.filter(e => e.type === type && e.isActive);
-            filteredEvents.forEach(e => selector.add(new Option(e.name, e.id)));
-            
-            // Clear view
-            document.getElementById('event-info-card').classList.add('opacity-50');
-            document.getElementById('submit-btn').disabled = true;
-            document.getElementById('submit-btn').classList.remove('bg-[#06c755]', 'hover:bg-green-600');
-            document.getElementById('submit-btn').classList.add('bg-gray-300', 'cursor-not-allowed');
-            document.getElementById('regForm').reset();
-            
-            // Re-bind user data
-            if(userProfile.userId) {
-                document.getElementById('user-name').value = userProfile.displayName;
-                document.getElementById('user-id').value = userProfile.userId;
+            if (val && currentEvent && currentEvent.pickupOpts) {
+                // Find the option string that starts with this name
+                const rawOpt = currentEvent.pickupOpts.find(opt => opt.startsWith(val));
+                if (rawOpt && rawOpt.includes('|')) {
+                    const url = rawOpt.split('|')[1];
+                    btn.classList.remove('hidden');
+                    btn.href = url;
+                    return;
+                }
             }
+            btn.classList.add('hidden');
         }
 
-        function showCreateView() {
-            document.getElementById('view-home').classList.add('hidden');
-            document.getElementById('view-create').classList.remove('hidden');
-            document.getElementById('btn-back').classList.remove('hidden');
-            document.getElementById('header-title').innerText = "建立新活動";
-        }
-
-        function renderItinerary(str) {
-            const container = document.getElementById('itinerary-accordion-content');
+        // --- UI Nav & Render ---
+        function renderEventGrid(type) {
+            const container = document.getElementById('event-grid-container');
+            const loading = document.getElementById('event-list-loading');
+            
+            if (!isDataLoaded) {
+                loading.classList.remove('hidden');
+                container.innerHTML = '';
+                document.getElementById('no-events-msg').classList.add('hidden');
+                return;
+            }
+            
+            loading.classList.add('hidden');
             container.innerHTML = '';
-            if (!str) return;
-            const parts = str.split(';');
-            parts.forEach(part => {
-                if (part.includes('|')) {
-                    const [title, desc] = part.split('|');
-                    container.innerHTML += `
-                        <div class="mb-2 last:mb-0">
-                            <span class="font-bold text-green-700 text-xs bg-green-100 px-2 py-0.5 rounded mr-2">${title}</span>
-                            <span class="text-sm text-gray-700">${desc}</span>
-                        </div>`;
-                }
-            });
-        }
-
-        // --- Event Flow ---
-        async function onEventSelected() {
-            const id = document.getElementById('event-selector').value;
-            currentEvent = allEvents.find(e => e.id === id);
             
-            // Reset
-            guestList = []; renderGuestList();
-            sponsorList = []; renderSponsorList();
-            document.getElementById('regForm').reset();
-            document.getElementById('user-name').value = userProfile.displayName;
-            document.getElementById('formAction').value = 'register';
-            document.getElementById('submit-btn').innerHTML = '<span>確認報名</span><i data-lucide="send" class="w-4 h-4"></i>';
-            document.getElementById('form-title').innerHTML = '<i data-lucide="edit-3" class="w-5 h-5 text-[#06c755]"></i> 填寫報名資料';
-            document.getElementById('cancel-reg-btn').classList.add('hidden');
-
-            if (currentEvent) {
-                await fetchStats(); 
-                await checkMyRegistration(); 
-                renderEventDetails(); 
+            // Filter: isActive == "開放" OR true
+            const filteredEvents = allEvents.filter(e => e.type === type && isEventOpen(e));
+            
+            if (filteredEvents.length === 0) {
+                document.getElementById('no-events-msg').classList.remove('hidden');
             } else {
-                renderEventDetails();
-            }
-            
-            const controls = document.getElementById('manager-controls');
-            const toggleBtn = document.getElementById('btn-status-toggle');
-            if (currentEvent && currentEvent.creatorId && currentEvent.creatorId === userProfile.userId) {
-                controls.classList.remove('hidden');
-                toggleBtn.innerText = currentEvent.isActive ? "關閉活動" : "開啟活動";
-                toggleBtn.className = currentEvent.isActive ? "text-xs bg-red-100 text-red-600 px-3 py-1 rounded-full font-bold border border-red-200 hover:bg-red-200" : "text-xs bg-green-100 text-green-600 px-3 py-1 rounded-full font-bold border border-green-200 hover:bg-green-200";
-            } else { controls.classList.add('hidden'); }
-        }
-
-        async function checkMyRegistration() {
-            if (!GAS_URL || !currentEvent) return;
-            try {
-                const res = await fetch(`${GAS_URL}?action=checkRegistration&eventId=${currentEvent.id}&userId=${userProfile.userId}`);
-                const data = await res.json();
-                if (data.exists) {
-                    const r = data.record;
-                    document.getElementById('family-count').value = r.familyCount;
-                    document.getElementById('pickup-loc').value = r.pickup;
-                    document.getElementById('room-type').value = r.roomType;
-                    document.getElementById('table-count').value = r.tableCount;
+                document.getElementById('no-events-msg').classList.add('hidden');
+                filteredEvents.forEach(e => {
+                    const card = document.createElement('div');
+                    card.className = "bg-white p-4 rounded-xl shadow border border-gray-100 card-hover cursor-pointer flex flex-col gap-2";
+                    card.onclick = () => enterEventDetail(e.id);
                     
-                    if (r.guestName && r.guestName !== '無') {
-                        const rawGuests = r.guestName.split(', ');
-                        rawGuests.forEach(g => {
-                            const match = g.match(/(.*)\((\d+)\)/);
-                            if (match) guestList.push({ name: match[1], count: parseInt(match[2]) });
-                        });
-                        renderGuestList();
-                    }
-                    if (r.sponsorship && r.sponsorship !== '無') {
-                        sponsorList = r.sponsorship.split(', ');
-                        renderSponsorList();
-                    }
+                    let icon = 'calendar';
+                    let color = 'text-green-600';
+                    let bg = 'bg-green-100';
+                    if(e.type === 'banquet') { icon='utensils'; color='text-orange-600'; bg='bg-orange-100'; }
+                    if(e.type === 'travel') { icon='bus'; color='text-blue-600'; bg='bg-blue-100'; }
 
-                    document.getElementById('formAction').value = 'update';
-                    document.getElementById('submit-btn').innerHTML = '<span>更新報名</span><i data-lucide="refresh-cw" class="w-4 h-4"></i>';
-                    document.getElementById('form-title').innerText = "修改報名資料";
-                    document.getElementById('cancel-reg-btn').classList.remove('hidden');
-                    showToast("載入您的報名資料");
-                }
-            } catch (e) { console.error(e); }
+                    card.innerHTML = `
+                        <div class="flex items-start gap-3">
+                            <div class="${bg} p-2 rounded-full ${color} shrink-0"><i data-lucide="${icon}" class="w-6 h-6"></i></div>
+                            <div class="flex-1 min-w-0">
+                                <h3 class="font-bold text-gray-800 text-lg truncate">${e.name}</h3>
+                                <div class="text-xs text-gray-500 mt-1 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> ${formatDate(e.time)}</div>
+                                <div class="text-xs text-gray-500 mt-0.5 flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i> ${e.location}</div>
+                            </div>
+                            <i data-lucide="chevron-right" class="w-5 h-5 text-gray-300 self-center"></i>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+                lucide.createIcons();
+            }
         }
-
+        
         function renderEventDetails() {
-            const infoCard = document.getElementById('event-info-card');
             const submitBtn = document.getElementById('submit-btn');
-            if (!currentEvent) { infoCard.classList.add('opacity-50'); submitBtn.disabled = true; return; }
-            infoCard.classList.remove('opacity-50'); 
             
-            if (!currentEvent.isActive) {
-                submitBtn.disabled = true; submitBtn.innerText = "活動已結束";
+            // Check status using new helper
+            if (!isEventOpen(currentEvent)) {
+                submitBtn.disabled = true; submitBtn.innerText = "活動已關閉";
                 submitBtn.className = "w-full bg-gray-400 text-white font-bold py-3.5 rounded-xl cursor-not-allowed flex justify-center items-center gap-2";
             } else {
                 submitBtn.disabled = false; 
-                if(document.getElementById('formAction').value !== 'update') {
-                    submitBtn.innerText = "確認報名"; 
-                }
                 submitBtn.className = "w-full bg-[#06c755] text-white font-bold py-3.5 rounded-xl hover:bg-green-600 transition shadow-md active:scale-95 flex justify-center items-center gap-2";
             }
-
+            
+            // ... (Rest of basic rendering) ...
             document.getElementById('display-name').innerText = currentEvent.name;
             document.getElementById('display-organizer').innerText = currentEvent.organizer;
             const timeContainer = document.getElementById('display-time-container');
@@ -481,7 +470,19 @@
                 travelField.classList.remove('hidden');
                 if (currentEvent.itinerary) { itinerarySection.classList.remove('hidden'); renderItinerary(currentEvent.itinerary); }
                 secLabel.innerText = "房/位需求";
-                populateSelect(document.getElementById('pickup-loc'), currentEvent.pickupOpts, '請選擇地點');
+                
+                // Parse Pickup Options (Name|URL -> Name in Select)
+                const puSelect = document.getElementById('pickup-loc');
+                puSelect.innerHTML = '';
+                puSelect.add(new Option('請選擇地點', ''));
+                if(currentEvent.pickupOpts) {
+                    currentEvent.pickupOpts.forEach(opt => {
+                        // opt format: "Name|URL" or "Name"
+                        const name = opt.includes('|') ? opt.split('|')[0] : opt;
+                        puSelect.add(new Option(name, name));
+                    });
+                }
+                
                 populateRoomSelectWithStats(document.getElementById('room-type'), currentEvent.roomOpts);
             } else if (currentEvent.type === 'banquet') {
                 banquetField.classList.remove('hidden'); secLabel.innerText = "預訂桌數";
@@ -490,230 +491,126 @@
             lucide.createIcons();
         }
 
-        function populateRoomSelectWithStats(el, options) {
-            el.innerHTML = '';
-            el.add(new Option('請選擇', ''));
-            if(options) {
-                options.forEach(opt => {
-                    let name = opt;
-                    let limit = null;
-                    if(opt.includes(':')) {
-                        const parts = opt.split(':');
-                        name = parts[0];
-                        limit = parts[1];
-                    }
-                    const count = currentStats.roomCounts[name] || 0;
-                    let label = name;
-                    if (limit) label += ` (已選: ${count}/${limit})`;
-                    else label += ` (已選: ${count})`;
-                    el.add(new Option(label, name)); 
-                });
-            }
-        }
-
-        async function handleSubmit(e) {
-            e.preventDefault();
-            const btn = document.getElementById('submit-btn'); btn.disabled=true; 
-            const action = document.getElementById('formAction').value;
-            btn.innerText = action === 'update' ? "更新中..." : "報名中...";
+        // --- History List (Status = 關閉 or false) ---
+        function renderHistoryList() { 
+            const container = document.getElementById('history-items'); 
+            const loader = document.getElementById('history-loading');
             
-            let finalGuestName = '無'; let totalGuestCount = 0;
-            if (guestList.length > 0) {
-                finalGuestName = guestList.map(g => `${g.name}(${g.count})`).join(', ');
-                totalGuestCount = guestList.reduce((sum, g) => sum + g.count, 0);
+            if(!isDataLoaded) {
+                 loader.classList.remove('hidden');
+                 container.innerHTML = '';
+                 return;
             }
-            let finalSponsor = '無';
-            if (sponsorList.length > 0) finalSponsor = sponsorList.join(', ');
-
-            const formData = {
-                action: action, 
-                eventId: document.getElementById('eventId').value,
-                eventType: document.getElementById('eventType').value,
-                eventName: document.getElementById('eventName').value,
-                userId: document.getElementById('user-id').value,
-                userName: document.getElementById('user-name').value,
-                familyCount: document.getElementById('family-count').value,
-                guestName: finalGuestName,
-                guestCount: totalGuestCount,
-                sponsorship: finalSponsor,
-                pickupLoc: document.getElementById('pickup-loc').value,
-                roomType: document.getElementById('room-type').value,
-                tableCount: document.getElementById('table-count').value
-            };
-
-            if (GAS_URL) {
-                try {
-                    await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(formData), mode: 'no-cors' });
-                } catch (e) {}
-            }
-            showToast(action === 'update' ? "更新成功" : "報名成功"); 
-            setTimeout(() => { goHome(); btn.disabled=false; }, 1000);
+            loader.classList.add('hidden');
+            container.innerHTML = ''; 
+            
+            const historyEvents = allEvents.filter(e => !isEventOpen(e)); 
+            
+            if (historyEvents.length === 0) { 
+                container.innerHTML = '<div class="text-center text-gray-500 text-sm">暫無歷史活動</div>'; 
+                return; 
+            } 
+            
+            historyEvents.forEach(evt => { 
+                const div = document.createElement('div'); 
+                div.className = "bg-white p-4 rounded-xl shadow-sm border border-gray-200 cursor-pointer hover:bg-gray-50"; 
+                div.onclick = () => { currentCategory = evt.type; enterEventDetail(evt.id); }; 
+                div.innerHTML = `<div class="flex justify-between items-center"><h4 class="font-bold text-gray-800">${evt.name}</h4><span class="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded">已結束</span></div><p class="text-xs text-gray-500 mt-1">${formatDate(evt.time)}</p>`; 
+                container.appendChild(div); 
+            }); 
         }
 
-        async function handleCancel() {
-            if (!confirm("確定要取消此活動的報名嗎？")) return;
-            const btn = document.getElementById('cancel-reg-btn'); btn.disabled=true; btn.innerText="取消中...";
-            const payload = { action: 'cancelRegistration', eventId: currentEvent.id, userId: userProfile.userId };
-            if (GAS_URL) {
-                try {
-                    await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
-                } catch(e) {}
-            }
-            showToast("已取消報名");
-            setTimeout(() => { goHome(); btn.disabled=false; }, 1000);
+        // ... (Rest of existing functions: goHome, handleBackNav, enterCategory, enterEventDetail, populateCountOptions, etc. remain unchanged) ...
+        // ... (Include all previous helper functions below to ensure full functionality) ...
+        
+        function goHome() {
+            viewHistoryStack = ['home'];
+            document.getElementById('view-home').classList.remove('hidden');
+            document.getElementById('view-event-list').classList.add('hidden');
+            document.getElementById('view-activity-detail').classList.add('hidden');
+            document.getElementById('view-create').classList.add('hidden');
+            document.getElementById('btn-back').classList.add('hidden');
+            document.getElementById('header-title').innerText = "活動與報名";
+            currentEvent = null;
+            currentCategory = '';
         }
+        function handleBackNav() {
+            const current = viewHistoryStack[viewHistoryStack.length - 1];
+            if (current === 'detail') {
+                viewHistoryStack.pop();
+                document.getElementById('view-activity-detail').classList.add('hidden');
+                document.getElementById('view-event-list').classList.remove('hidden');
+                document.getElementById('header-title').innerText = getCategoryTitle(currentCategory);
+                currentEvent = null;
+            } else if (current === 'list' || current === 'create') {
+                goHome();
+            }
+        }
+        function getCategoryTitle(t) { const titleMap = { 'general': '一般活動', 'banquet': '大型餐會', 'travel': '旅遊活動' }; return titleMap[t] || '活動列表'; }
+        function enterCategory(type) {
+            currentCategory = type;
+            viewHistoryStack.push('list');
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-event-list').classList.remove('hidden');
+            document.getElementById('btn-back').classList.remove('hidden');
+            document.getElementById('header-title').innerText = getCategoryTitle(type);
+            renderEventGrid(type);
+        }
+        async function enterEventDetail(eventId) {
+            document.getElementById('regForm').reset();
+            document.getElementById('event-info-card').classList.add('opacity-50');
+            document.getElementById('display-name').innerText = "載入中...";
+            document.getElementById('submit-btn').disabled = true;
+            document.getElementById('pickup-map-btn').classList.add('hidden');
+            guestList = []; renderGuestList();
+            sponsorList = []; renderSponsorList();
 
-        async function fetchStats() {
+            currentEvent = allEvents.find(e => e.id === eventId);
             if (!currentEvent) return;
-            if (GAS_URL) {
-                try {
-                    const res = await fetch(`${GAS_URL}?action=stats&eventId=${currentEvent.id}`);
-                    currentStats = await res.json();
-                } catch (e) { }
-            } else {
-                currentStats = { totalPeople: 5, secondary: 1, roomCounts: {'雙人房': 2}, pickupCounts: {'台北車站':3}, sponsorSummary: {}, tableCount: 1 };
-            }
-            document.getElementById('stat-total').innerText = currentStats.totalPeople;
-            document.getElementById('stat-sec-val').innerText = currentStats.secondary;
-        }
 
+            viewHistoryStack.push('detail');
+            document.getElementById('view-event-list').classList.add('hidden');
+            document.getElementById('view-activity-detail').classList.remove('hidden');
+            document.getElementById('header-title').innerText = currentEvent.name;
+
+            document.getElementById('user-name').value = userProfile.displayName;
+            document.getElementById('formAction').value = 'register';
+            document.getElementById('submit-btn').innerHTML = '<span>確認報名</span><i data-lucide="send" class="w-4 h-4"></i>';
+            document.getElementById('form-title').innerHTML = '<i data-lucide="edit-3" class="w-5 h-5 text-[#06c755]"></i> 填寫報名資料';
+            document.getElementById('cancel-reg-btn').classList.add('hidden');
+
+            renderEventDetails(); 
+            await Promise.all([fetchStats(), checkMyRegistration()]); 
+            document.getElementById('event-info-card').classList.remove('opacity-50');
+        }
+        function formatDate(isoStr) { if (!isoStr || isoStr.indexOf('~') !== -1) return isoStr; const d = new Date(isoStr); if (isNaN(d.getTime())) return isoStr; const weekMap = ['日', '一', '二', '三', '四', '五', '六']; return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} (${weekMap[d.getDay()]}) ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
+        function populateCountOptions() { const familySel = document.getElementById('family-count'); const guestSel = document.getElementById('add-guest-count'); for (let i = 1; i <= 10; i++) { familySel.add(new Option(`${i} 人`, i)); guestSel.add(new Option(`${i} 人`, i)); } }
+        function addGuest() { const name = document.getElementById('add-guest-name').value.trim(); const count = parseInt(document.getElementById('add-guest-count').value); if (!name) { showToast("請輸入來賓姓名"); return; } guestList.push({ name, count }); document.getElementById('add-guest-name').value = ''; renderGuestList(); }
+        function removeGuest(index) { guestList.splice(index, 1); renderGuestList(); }
+        function renderGuestList() { const container = document.getElementById('guest-list-container'); container.innerHTML = ''; guestList.forEach((g, i) => { container.innerHTML += `<div class="flex justify-between items-center bg-white border border-gray-200 px-3 py-1 rounded text-sm"><span>${g.name} (${g.count}人)</span> <i data-lucide="x" class="w-4 h-4 tag-remove" onclick="removeGuest(${i})"></i></div>`; }); lucide.createIcons(); }
+        function showCreateView() { viewHistoryStack.push('create'); document.getElementById('view-home').classList.add('hidden'); document.getElementById('view-create').classList.remove('hidden'); document.getElementById('btn-back').classList.remove('hidden'); document.getElementById('header-title').innerText = "建立新活動"; }
+        function renderItinerary(str) { const container = document.getElementById('itinerary-accordion-content'); container.innerHTML = ''; if (!str) return; const parts = str.split(';'); parts.forEach(part => { if (part.includes('|')) { const [title, desc] = part.split('|'); container.innerHTML += `<div class="mb-2 last:mb-0"><span class="font-bold text-green-700 text-xs bg-green-100 px-2 py-0.5 rounded mr-2">${title}</span><span class="text-sm text-gray-700">${desc}</span></div>`; } }); }
+        async function checkMyRegistration() { if (!GAS_URL || !currentEvent) return; try { const res = await fetch(`${GAS_URL}?action=checkRegistration&eventId=${currentEvent.id}&userId=${userProfile.userId}`); const data = await res.json(); if (data.exists) { const r = data.record; document.getElementById('family-count').value = r.familyCount; document.getElementById('pickup-loc').value = r.pickup; document.getElementById('room-type').value = r.roomType; document.getElementById('table-count').value = r.tableCount; updatePickupMap(); if (r.guestName && r.guestName !== '無') { const rawGuests = r.guestName.split(', '); rawGuests.forEach(g => { const match = g.match(/(.*)\((\d+)\)/); if (match) guestList.push({ name: match[1], count: parseInt(match[2]) }); }); renderGuestList(); } if (r.sponsorship && r.sponsorship !== '無') { sponsorList = r.sponsorship.split(', '); renderSponsorList(); } document.getElementById('formAction').value = 'update'; document.getElementById('submit-btn').innerHTML = '<span>更新報名</span><i data-lucide="refresh-cw" class="w-4 h-4"></i>'; document.getElementById('form-title').innerText = "修改報名資料"; document.getElementById('cancel-reg-btn').classList.remove('hidden'); showToast("載入您的報名資料"); } } catch (e) { console.error(e); } }
+        function populateRoomSelectWithStats(el, options) { el.innerHTML = ''; el.add(new Option('請選擇', '')); if(options) { options.forEach(opt => { let name = opt; let limit = null; if(opt.includes(':')) { const parts = opt.split(':'); name = parts[0]; limit = parts[1]; } const count = currentStats.roomCounts[name] || 0; let label = name; if (limit) label += ` (已選: ${count}/${limit})`; else label += ` (已選: ${count})`; el.add(new Option(label, name)); }); } }
+        async function handleSubmit(e) { e.preventDefault(); const btn = document.getElementById('submit-btn'); btn.disabled=true; const action = document.getElementById('formAction').value; btn.innerText = action === 'update' ? "更新中..." : "報名中..."; let finalGuestName = '無'; let totalGuestCount = 0; if (guestList.length > 0) { finalGuestName = guestList.map(g => `${g.name}(${g.count})`).join(', '); totalGuestCount = guestList.reduce((sum, g) => sum + g.count, 0); } let finalSponsor = '無'; if (sponsorList.length > 0) finalSponsor = sponsorList.join(', '); const formData = { action: action, eventId: document.getElementById('eventId').value, eventType: document.getElementById('eventType').value, eventName: document.getElementById('eventName').value, userId: document.getElementById('user-id').value, userName: document.getElementById('user-name').value, familyCount: document.getElementById('family-count').value, guestName: finalGuestName, guestCount: totalGuestCount, sponsorship: finalSponsor, pickupLoc: document.getElementById('pickup-loc').value, roomType: document.getElementById('room-type').value, tableCount: document.getElementById('table-count').value }; if (GAS_URL) { try { await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(formData), mode: 'no-cors' }); } catch (e) {} } showToast(action === 'update' ? "更新成功" : "報名成功"); setTimeout(() => { goHome(); btn.disabled=false; }, 1000); }
+        async function handleCancel() { if (!confirm("確定要取消此活動的報名嗎？")) return; const btn = document.getElementById('cancel-reg-btn'); btn.disabled=true; btn.innerText="取消中..."; const payload = { action: 'cancelRegistration', eventId: currentEvent.id, userId: userProfile.userId }; if (GAS_URL) { try { await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' }); } catch(e) {} } showToast("已取消報名"); setTimeout(() => { goHome(); btn.disabled=false; }, 1000); }
+        async function fetchStats() { if (!currentEvent) return; if (GAS_URL) { try { const res = await fetch(`${GAS_URL}?action=stats&eventId=${currentEvent.id}`); currentStats = await res.json(); } catch (e) { } } else { currentStats = { totalPeople: 5, secondary: 1, roomCounts: {'雙人房': 2}, pickupCounts: {'台北車站':3}, sponsorSummary: {}, tableCount: 1 }; } document.getElementById('stat-total').innerText = currentStats.totalPeople; document.getElementById('stat-sec-val').innerText = currentStats.secondary; }
+        function shareStats() { if (!currentEvent) return; const link = LIFF_ID ? `https://liff.line.me/${LIFF_ID}?eventId=${currentEvent.id}` : window.location.href; const msg = `📅 ${currentEvent.name}\n人數: ${currentStats.totalPeople} 人\n\n點擊報名: ${link}`; if (liff.isInClient() && liff.isApiAvailable('shareTargetPicker')) { liff.shareTargetPicker([ { type: "text", text: msg } ]).then(function (res) { if (res) showToast("分享成功"); }).catch(function (error) { copyToClipboard(msg); }); } else { copyToClipboard(msg); } }
+        function copyToClipboard(text) { navigator.clipboard.writeText(text).then(() => showToast("已複製到剪貼簿")); }
         function showToast(m){const t=document.getElementById('toast');document.getElementById('toast-msg').innerText=m;t.classList.remove('opacity-0','top-4');t.classList.add('top-10');setTimeout(()=>{t.classList.add('opacity-0','top-4');t.classList.remove('top-10')},3000);}
-        
-        function closeDetailsModal(){
-            const content = document.getElementById('modal-content');
-            content.classList.remove('scale-100', 'opacity-100');
-            content.classList.add('scale-95', 'opacity-0');
-            setTimeout(() => document.getElementById('details-modal').classList.add('hidden'), 300);
-        }
-
+        function closeDetailsModal(){ const content = document.getElementById('modal-content'); content.classList.remove('scale-100', 'opacity-100'); content.classList.add('scale-95', 'opacity-0'); setTimeout(() => document.getElementById('details-modal').classList.add('hidden'), 300); }
         function pad(num) { return num.toString().padStart(2, '0'); }
-
-        function copyDetailsToClipboard(){
-            if (!currentEvent) return;
-            let text = `【${currentEvent.name}】\n主辦人：${currentEvent.organizer}\n時間：${formatDate(currentEvent.time)}\n地點：${currentEvent.location}\n地址：${currentEvent.address}\n\n`;
-            
-            // List rendering
-            if (lastFetchedDetails.length > 0) {
-                lastFetchedDetails.forEach((item, index) => {
-                    // Item: {name, family, guestName, guestCount, sponsor, room}
-                    // Format: 01. Name *Total
-                    let total = 1 + (item.family || 0) + (item.guestCount || 0);
-                    text += `${pad(index + 1)}. ${item.name}`;
-                    if (total > 1) {
-                        text += ` *${total}`;
-                    }
-                    if (item.guestName && item.guestName !== '無') {
-                        text += `\n      來賓：${item.guestName}`;
-                    }
-                    text += `\n`;
-                });
-            } else {
-                text += `(暫無報名資料)\n`;
-            }
-
-            text += `\n報名網址：\n${liff.isInClient() ? liff.getPermanentLink() : location.href}`;
-
-            navigator.clipboard.writeText(text).then(() => showToast("已複製活動名單"));
-        }
-        
-        async function openDetailsModal(){ 
-            if(!currentEvent)return; 
-            
-            document.getElementById('details-modal').classList.remove('hidden'); 
-            
-            const sumDiv = document.getElementById('modal-summary');
-            let summaryHTML = `<div class="font-bold mb-1">📊 統計摘要</div>`;
-            if (currentEvent.type === 'travel') {
-                summaryHTML += `<div>🚌 <b>上車地點:</b> ${Object.entries(currentStats.pickupCounts).map(([k,v])=>`${k}(${v})`).join(', ') || '無'}</div>`;
-                summaryHTML += `<div>🛏 <b>房型:</b> ${Object.entries(currentStats.roomCounts).map(([k,v])=>`${k}(${v})`).join(', ') || '無'}</div>`;
-            } else if (currentEvent.type === 'banquet') {
-                summaryHTML += `<div>🍽 <b>總認桌:</b> ${currentStats.tableCount} 桌</div>`;
-            }
-            sumDiv.innerHTML = summaryHTML;
-
-            setTimeout(() => {
-                const content = document.getElementById('modal-content');
-                content.classList.remove('scale-95', 'opacity-0');
-                content.classList.add('scale-100', 'opacity-100');
-            }, 50); 
-
-            // Clear old cache
-            lastFetchedDetails = [];
-
-            if(GAS_URL) {
-                try {
-                    const r=await fetch(`${GAS_URL}?action=getDetails&eventId=${currentEvent.id}`); 
-                    const d=await r.json(); 
-                    lastFetchedDetails = d; // Store for copy
-                    document.getElementById('modal-loading').classList.add('hidden'); 
-                    
-                    const ul=document.getElementById('details-list'); 
-                    ul.innerHTML = '';
-                    ul.classList.remove('hidden'); 
-                    
-                    if(!d || d.length === 0) {
-                        document.getElementById('modal-empty').classList.remove('hidden'); 
-                    } else {
-                        document.getElementById('modal-empty').classList.add('hidden');
-                        d.forEach((item,i)=>{
-                            // Display logic inside modal can be simpler
-                            let label = `${item.name}`;
-                            let total = 1 + (item.family||0) + (item.guestCount||0);
-                            if (total > 1) label += ` (共${total}人)`;
-                            if (item.guestName && item.guestName !== '無') label += `\n   └ 來賓: ${item.guestName}`;
-                            
-                            // Extras
-                            const notes = [];
-                            if (item.sponsor && item.sponsor.indexOf('無') === -1) notes.push(item.sponsor);
-                            if (item.room) notes.push(item.room);
-                            if (notes.length > 0) label += ` - ${notes.join(', ')}`;
-
-                            ul.innerHTML+=`<li class="border-b py-2 flex gap-2"><span class="text-xs text-gray-400 w-6 shrink-0">${pad(i+1)}.</span><span class="whitespace-pre-wrap">${label}</span></li>`;
-                        }); 
-                    }
-                } catch(e) {
-                    console.error(e);
-                    document.getElementById('modal-loading').classList.add('hidden');
-                    showToast("載入失敗");
-                }
-            } else {
-                // Mock Logic
-                await new Promise(r => setTimeout(r, 600));
-                document.getElementById('modal-loading').classList.add('hidden');
-                
-                const ul = document.getElementById('details-list'); 
-                ul.innerHTML = '';
-                ul.classList.remove('hidden');
-                
-                const mockData = [
-                    {name:'王小明', family:1, guestCount:0, guestName:'無', sponsor:'無', room:'雙人房'},
-                    {name:'陳池文', family:1, guestCount:0, guestName:'無', sponsor:'無', room:'無'},
-                    {name:'洪健庭', family:0, guestCount:1, guestName:'蔡嘟嘟(1)', sponsor:'無', room:'無'}
-                ];
-                lastFetchedDetails = mockData;
-
-                document.getElementById('modal-empty').classList.add('hidden');
-                mockData.forEach((item,i)=>{
-                     let label = `${item.name}`;
-                     let total = 1 + item.family + item.guestCount;
-                     if(total>1) label += ` (共${total}人)`;
-                     if(item.guestName && item.guestName !== '無') label += `\n   └ 來賓: ${item.guestName}`;
-                     ul.innerHTML+=`<li class="border-b py-2 flex gap-2"><span class="text-xs text-gray-400 w-6 shrink-0">${pad(i+1)}.</span><span class="whitespace-pre-wrap">${label}</span></li>`;
-                });
-            }
-        }
-        
+        function copyDetailsToClipboard(){ if (!currentEvent) return; let text = `【${currentEvent.name}】\n主辦人：${currentEvent.organizer}\n時間：${formatDate(currentEvent.time)}\n地點：${currentEvent.location}\n地址：${currentEvent.address}\n\n`; if (lastFetchedDetails.length > 0) { text += `--- 參加名單 ---\n`; lastFetchedDetails.forEach((item, index) => { let total = 1 + (item.family || 0) + (item.guestCount || 0); if (total > 0) { text += `${pad(index + 1)}. ${item.name}`; if (total > 1) text += ` *${total}`; if (item.guestName && item.guestName !== '無') text += `\n      來賓：${item.guestName}`; text += `\n`; } }); } else { text += `(暫無報名資料)\n`; } text += `\n報名網址：\n${LIFF_ID ? 'https://liff.line.me/'+LIFF_ID : location.href}`; navigator.clipboard.writeText(text).then(() => showToast("已複製活動名單")); }
+        async function openDetailsModal(){ if(!currentEvent)return; document.getElementById('details-modal').classList.remove('hidden'); const sumDiv = document.getElementById('modal-summary'); let summaryHTML = `<div class="font-bold mb-1">📊 統計摘要</div>`; if (currentEvent.type === 'travel') { summaryHTML += `<div>🚌 <b>上車地點:</b> ${Object.entries(currentStats.pickupCounts).map(([k,v])=>`${k}(${v})`).join(', ') || '無'}</div>`; summaryHTML += `<div>🛏 <b>房型:</b> ${Object.entries(currentStats.roomCounts).map(([k,v])=>`${k}(${v})`).join(', ') || '無'}</div>`; } else if (currentEvent.type === 'banquet') { summaryHTML += `<div>🍽 <b>總認桌:</b> ${currentStats.tableCount} 桌</div>`; } sumDiv.innerHTML = summaryHTML; setTimeout(() => { const content = document.getElementById('modal-content'); content.classList.remove('scale-95', 'opacity-0'); content.classList.add('scale-100', 'opacity-100'); }, 50); lastFetchedDetails = []; const container = document.getElementById('details-lists-container'); const listPeople = document.getElementById('details-list-people'); const listItems = document.getElementById('details-list-items'); const sep = document.getElementById('details-separator'); const emptyMsg = document.getElementById('modal-empty'); container.classList.add('hidden'); emptyMsg.classList.remove('hidden'); document.getElementById('modal-loading').classList.remove('hidden'); listPeople.innerHTML = ''; listItems.innerHTML = ''; sep.classList.add('hidden'); let rawData = []; if(GAS_URL) { try { const r=await fetch(`${GAS_URL}?action=getDetails&eventId=${currentEvent.id}`); rawData = await r.json(); } catch(e) { console.error(e); } } else { await new Promise(r => setTimeout(r, 600)); rawData = [ {name:'王小明', family:1, guestCount:0, guestName:'無', sponsor:'無', room:'雙人房'}, {name:'陳池文', family:1, guestCount:0, guestName:'無', sponsor:'紅包: 1000元', room:'無'}, {name:'洪健庭', family:0, guestCount:1, guestName:'蔡嘟嘟(1)', sponsor:'酒類: 威士忌 1瓶', room:'無'} ]; } lastFetchedDetails = rawData; document.getElementById('modal-loading').classList.add('hidden'); if (rawData.length > 0) { emptyMsg.classList.add('hidden'); container.classList.remove('hidden'); rawData.forEach((item, i) => { let label = `${item.name}`; let total = 1 + (item.family||0) + (item.guestCount||0); if(total > 1) label += ` (共${total}人)`; if(item.guestName && item.guestName !== '無') label += `\n   └ 來賓: ${item.guestName}`; if(item.room && item.room !== '無') label += ` | ${item.room}`; listPeople.innerHTML+=`<li class="border-b py-2 flex gap-2"><span class="text-xs text-gray-400 w-6 shrink-0">${pad(i+1)}.</span><span class="whitespace-pre-wrap">${label}</span></li>`; }); let hasItems = false; rawData.forEach((item) => { let itemsArr = []; if (item.sponsor && item.sponsor !== '無') itemsArr.push(item.sponsor); if (item.tableCount > 0) itemsArr.push(`認桌: ${item.tableCount}`); if (itemsArr.length > 0) { hasItems = true; listItems.innerHTML+=`<li class="border-b py-2 flex gap-2"><span class="font-bold text-gray-700 w-16 shrink-0 truncate">${item.name}</span><span class="text-gray-600">${itemsArr.join(', ')}</span></li>`; } }); if (hasItems) { sep.classList.remove('hidden'); } } }
         async function fetchEvents() { if (GAS_URL) { try { const res = await fetch(`${GAS_URL}?action=getEvents`); allEvents = await res.json(); } catch (e) { allEvents = MOCK_EVENTS; } } else { allEvents = MOCK_EVENTS; } }
         async function fetchSettings() { if (GAS_URL) { try { const res = await fetch(`${GAS_URL}?action=getSettings`); systemSettings = await res.json(); } catch (e) { systemSettings = MOCK_SETTINGS; } } else { systemSettings = MOCK_SETTINGS; } populateCreateDropdowns(); }
         function populateCreateDropdowns() { const orgSelect = document.getElementById('new-organizer-select'); const locSelect = document.getElementById('new-location-select'); orgSelect.innerHTML = '<option value="">請選擇主辦人</option>'; systemSettings.organizers.forEach(org => orgSelect.add(new Option(org, org))); locSelect.innerHTML = '<option value="">請選擇地點</option>'; systemSettings.locations.forEach(loc => locSelect.add(new Option(loc.name, loc.name))); }
         function onLocationChange() { const locName = document.getElementById('new-location-select').value; const loc = systemSettings.locations.find(l => l.name === locName); document.getElementById('new-address').value = loc ? loc.address : ''; }
         function toggleCreateFields() { const type = document.getElementById('new-type').value; const single = document.getElementById('new-field-time-single'); const range = document.getElementById('new-field-time-range'); const itin = document.getElementById('new-field-itinerary'); if (type === 'travel') { single.classList.add('hidden'); range.classList.remove('hidden'); itin.classList.remove('hidden'); } else { single.classList.remove('hidden'); range.classList.add('hidden'); itin.classList.add('hidden'); } }
-        async function handleCreateEvent(e) { e.preventDefault(); const btn = document.getElementById('create-btn'); btn.disabled=true; btn.innerText="建立中..."; const type = document.getElementById('new-type').value; let timeStr = ""; if (type === 'travel') { const s = document.getElementById('new-date-start').value; const end = document.getElementById('new-date-end').value; timeStr = `${s.replace(/-/g,'/')}~${end.replace(/-/g,'/')}`; } else { const t = document.getElementById('new-time-single').value; timeStr = t; } const payload = { action: 'createEvent', eventType: type, eventName: document.getElementById('new-name').value, organizer: document.getElementById('new-organizer-select').value, time: timeStr, location: document.getElementById('new-location-select').value, address: document.getElementById('new-address').value, itinerary: type==='travel'?document.getElementById('new-itinerary').value:'', creatorId: userProfile.userId, creatorName: userProfile.displayName }; if(GAS_URL) await fetch(GAS_URL, {method:'POST', body:JSON.stringify(payload), mode:'no-cors'}); else MOCK_EVENTS.push({...payload, id:'new_'+Date.now(), isActive:true, pickupOpts:[], roomOpts:[]}); showToast("建立成功"); await fetchEvents(); goHome(); btn.disabled=false; }
+        async function handleCreateEvent(e) { e.preventDefault(); const btn = document.getElementById('create-btn'); btn.disabled=true; btn.innerText="建立中..."; const type = document.getElementById('new-type').value; let timeStr = ""; if (type === 'travel') { const s = document.getElementById('new-date-start').value; const end = document.getElementById('new-date-end').value; timeStr = `${s.replace(/-/g,'/')}~${end.replace(/-/g,'/')}`; } else { const t = document.getElementById('new-time-single').value; timeStr = t; } const payload = { action: 'createEvent', eventType: type, eventName: document.getElementById('new-name').value, organizer: document.getElementById('new-organizer-select').value, time: timeStr, location: document.getElementById('new-location-select').value, address: document.getElementById('new-address').value, itinerary: type==='travel'?document.getElementById('new-itinerary').value:'', creatorId: userProfile.userId, creatorName: userProfile.displayName }; if(GAS_URL) await fetch(GAS_URL, {method:'POST', body:JSON.stringify(payload), mode:'no-cors'}); else MOCK_EVENTS.push({...payload, id:'new_'+Date.now(), isActive: "開放", pickupOpts:[], roomOpts:[]}); showToast("建立成功"); await fetchEvents(); goHome(); btn.disabled=false; }
         function populateSelect(e,a,d){e.innerHTML='';e.add(new Option(d||'請選擇',''));if(a)a.forEach(o=>e.add(new Option(o,o)));}
-        async function toggleEventStatus() { if (!currentEvent) return; const btn = document.getElementById('btn-status-toggle'); const originalText = btn.innerText; btn.innerText = "處理中..."; btn.disabled = true; const payload = { action: 'toggleStatus', eventId: currentEvent.id }; try { if (GAS_URL) { await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' }); } else { currentEvent.isActive = !currentEvent.isActive; showToast(`活動已${currentEvent.isActive ? '開啟' : '關閉'}`); } await fetchEvents(); if (showingHistory) goHome(); else onEventSelected(); } catch(e) { showToast("操作失敗"); } finally { btn.innerText = originalText; btn.disabled = false; } }
+        async function toggleEventStatus() { if (!currentEvent) return; const btn = document.getElementById('btn-status-toggle'); const originalText = btn.innerText; btn.innerText = "處理中..."; btn.disabled = true; const newStatus = isEventOpen(currentEvent) ? "關閉" : "開放"; const payload = { action: 'toggleStatus', eventId: currentEvent.id, status: newStatus }; try { if (GAS_URL) { await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' }); } else { currentEvent.isActive = newStatus; showToast(`活動已${newStatus}`); } await fetchEvents(); if (showingHistory) goHome(); else enterEventDetail(currentEvent.id); } catch(e) { showToast("操作失敗"); } finally { btn.innerText = originalText; btn.disabled = false; } }
         function toggleHistoryView() { showingHistory = !showingHistory; const btn = document.getElementById('btn-history-toggle'); const activeList = document.getElementById('active-categories'); const historyList = document.getElementById('history-list'); const createBtn = document.getElementById('btn-create-event'); if (showingHistory) { btn.innerHTML = '<i data-lucide="arrow-left" class="w-3 h-3"></i> <span>返回進行中活動</span>'; activeList.classList.add('hidden'); createBtn.classList.add('hidden'); historyList.classList.remove('hidden'); renderHistoryList(); } else { btn.innerHTML = '<i data-lucide="history" class="w-3 h-3"></i> <span>查看歷史活動</span>'; activeList.classList.remove('hidden'); createBtn.classList.remove('hidden'); historyList.classList.add('hidden'); } lucide.createIcons(); }
-        function renderHistoryList() { const container = document.getElementById('history-items'); container.innerHTML = ''; const historyEvents = allEvents.filter(e => !e.isActive); if (historyEvents.length === 0) { container.innerHTML = '<div class="text-center text-gray-500 text-sm">暫無歷史活動</div>'; return; } historyEvents.forEach(evt => { const div = document.createElement('div'); div.className = "bg-white p-4 rounded-xl shadow-sm border border-gray-200 cursor-pointer hover:bg-gray-50"; div.onclick = () => enterHistoryEvent(evt); div.innerHTML = `<div class="flex justify-between items-center"><h4 class="font-bold text-gray-800">${evt.name}</h4><span class="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded">已結束</span></div><p class="text-xs text-gray-500 mt-1">${formatDate(evt.time)}</p>`; container.appendChild(div); }); }
-        function enterHistoryEvent(evt) { currentCategory = evt.type; document.getElementById('view-home').classList.add('hidden'); document.getElementById('view-activity').classList.remove('hidden'); document.getElementById('btn-back').classList.remove('hidden'); document.getElementById('header-title').innerText = "歷史活動詳情"; const selector = document.getElementById('event-selector'); selector.innerHTML = ''; selector.add(new Option(`${evt.name}`, evt.id)); selector.disabled = true; onEventSelected(); }
     </script>
 </body>
 </html>
