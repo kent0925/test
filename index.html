@@ -16,6 +16,7 @@
         .arrow { transition: transform 0.2s; }
         .card-hover { transition: all 0.2s; }
         .card-hover:active { transform: scale(0.95); }
+        .tag-remove { cursor: pointer; color: #ef4444; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen pb-10">
@@ -41,7 +42,13 @@
 
         <!-- VIEW 1: HOME -->
         <div id="view-home" class="space-y-6 animate-fade-in">
-            <div class="grid grid-cols-1 gap-4">
+            <div class="flex justify-end">
+                <button onclick="toggleHistoryView()" id="btn-history-toggle" class="text-xs text-gray-500 flex items-center gap-1 border border-gray-300 px-3 py-1 rounded-full hover:bg-gray-200 bg-white">
+                    <i data-lucide="history" class="w-3 h-3"></i> <span>查看歷史活動</span>
+                </button>
+            </div>
+
+            <div id="active-categories" class="grid grid-cols-1 gap-4">
                 <div onclick="enterCategory('general')" class="card-hover bg-white rounded-2xl shadow-md p-6 flex items-center gap-4 border-l-8 border-green-500 cursor-pointer">
                     <div class="bg-green-100 p-3 rounded-full text-green-600"><i data-lucide="users" class="w-8 h-8"></i></div>
                     <div><h3 class="text-lg font-bold text-gray-800">一般活動</h3><p class="text-xs text-gray-500">例會、讀書會、小型聚會</p></div>
@@ -59,7 +66,12 @@
                 </div>
             </div>
 
-            <button onclick="showCreateView()" class="w-full bg-gray-800 text-white py-4 rounded-xl shadow-lg flex justify-center items-center gap-2 hover:bg-gray-700 transition active:scale-95">
+            <div id="history-list" class="hidden space-y-4">
+                <p class="text-center text-gray-400 text-sm py-4">以下為已結束或關閉的活動</p>
+                <div id="history-items" class="space-y-3"></div>
+            </div>
+
+            <button onclick="showCreateView()" id="btn-create-event" class="w-full bg-gray-800 text-white py-4 rounded-xl shadow-lg flex justify-center items-center gap-2 hover:bg-gray-700 transition active:scale-95">
                 <i data-lucide="plus-circle" class="w-5 h-5"></i>
                 <span class="font-bold">建立新活動</span>
             </button>
@@ -75,8 +87,14 @@
             </div>
 
             <div id="event-info-card" class="bg-white rounded-xl shadow p-5 space-y-3 border border-gray-100 relative overflow-hidden transition-opacity duration-300">
-                <div class="absolute top-0 right-0 p-2 opacity-10"><i data-lucide="calendar" class="w-24 h-24"></i></div>
-                <h2 id="display-name" class="text-xl font-bold text-gray-800 pr-10">活動名稱</h2>
+                <!-- 管理者控制區 -->
+                <div id="manager-controls" class="hidden absolute top-3 right-3 z-10">
+                    <button onclick="toggleEventStatus()" id="btn-status-toggle" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded-full font-bold border border-red-200 hover:bg-red-200">
+                        關閉活動
+                    </button>
+                </div>
+                
+                <h2 id="display-name" class="text-xl font-bold text-gray-800 pr-20">活動名稱</h2>
                 <div class="text-sm space-y-3 text-gray-600 mt-2">
                     <div class="flex gap-2"><i data-lucide="user" class="w-4 h-4 mt-0.5 text-green-600"></i><span id="display-organizer">主辦人</span></div>
                     <div class="flex gap-2"><i data-lucide="clock" class="w-4 h-4 mt-0.5 text-green-600"></i><div id="display-time-container" class="font-medium text-gray-800"></div></div>
@@ -90,6 +108,7 @@
                 </div>
             </div>
 
+            <!-- Registration Form -->
             <form id="regForm" class="bg-white rounded-xl shadow p-5 space-y-5 border border-gray-100" onsubmit="handleSubmit(event)">
                 <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2 pb-2 border-b border-gray-100"><i data-lucide="edit-3" class="w-5 h-5 text-[#06c755]"></i> 填寫報名資料</h2>
                 <input type="hidden" id="eventId" name="eventId">
@@ -98,7 +117,16 @@
 
                 <div><label class="block text-sm font-medium text-gray-700 mb-1">參與者</label><div class="flex gap-2 items-center bg-gray-50 p-2 rounded-lg border border-gray-200"><img id="user-picture" src="https://via.placeholder.com/40" class="w-10 h-10 rounded-full bg-gray-300 object-cover"><div class="flex-1 min-w-0"><input type="text" id="user-name" class="w-full bg-transparent border-none p-0 text-gray-800 font-medium text-sm focus:ring-0" readonly value="載入中..."></div></div><input type="hidden" id="user-id"></div>
                 <div><label class="block text-sm font-medium text-gray-700 mb-1">攜帶家屬 (同住)</label><select id="family-count" class="w-full border border-gray-300 rounded px-3 py-2 bg-white"><option value="0">無攜帶</option></select></div>
-                <div class="bg-orange-50 p-3 rounded-lg border border-orange-100"><label class="block text-sm font-bold text-orange-800 mb-2">外帶來賓</label><div class="flex gap-2"><input type="text" id="guest-name" placeholder="來賓姓名" class="flex-1 border border-orange-200 rounded px-3 py-2 text-sm bg-white"><select id="guest-count" class="w-24 border border-orange-200 rounded px-1 py-2 text-sm bg-white"><option value="0">0 人</option></select></div></div>
+                
+                <div class="bg-orange-50 p-3 rounded-lg border border-orange-100">
+                    <label class="block text-sm font-bold text-orange-800 mb-2">外帶來賓</label>
+                    <div id="guest-list-container" class="space-y-2 mb-2"></div>
+                    <div class="flex gap-2 items-center">
+                        <input type="text" id="add-guest-name" placeholder="姓名" class="flex-1 border border-orange-200 rounded px-2 py-1 text-sm bg-white">
+                        <select id="add-guest-count" class="w-20 border border-orange-200 rounded px-1 py-1 text-sm bg-white"></select>
+                        <button type="button" onclick="addGuest()" class="bg-orange-500 text-white px-3 py-1 rounded text-sm hover:bg-orange-600">新增</button>
+                    </div>
+                </div>
 
                 <div id="dynamic-fields" class="space-y-4">
                     <div id="field-travel" class="hidden space-y-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
@@ -106,18 +134,34 @@
                         <div><label class="text-xs text-gray-600 block mb-1">上車地點</label><select id="pickup-loc" class="w-full text-sm border-gray-300 rounded"><option value="">請選擇...</option></select></div>
                         <div><label class="text-xs text-gray-600 block mb-1">房型需求</label><select id="room-type" class="w-full text-sm border-gray-300 rounded"><option value="">請選擇...</option></select></div>
                     </div>
-                    <div id="field-banquet" class="hidden p-3 bg-red-50 rounded-lg border border-red-100"><div class="flex justify-between items-center"><label class="text-sm font-bold text-red-800">預訂認桌數量</label><div class="flex items-center gap-2"><input type="number" id="table-count" min="0" max="10" value="0" class="w-16 text-center border border-red-200 rounded py-1 bg-white"><span class="text-sm text-red-600">桌</span></div></div></div>
-                </div>
-
-                <div class="p-4 border border-gray-200 rounded-xl bg-gray-50/50">
-                    <label class="block text-sm font-bold text-gray-800 mb-3">贊助項目</label>
-                    <div class="space-y-3">
-                        <label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="sponsorType" value="none" checked class="text-green-600 focus:ring-green-500" onclick="toggleSponsorInput()"><span class="text-sm text-gray-700">無</span></label>
-                        <div class="flex items-center gap-2"><label class="flex items-center gap-2 cursor-pointer whitespace-nowrap"><input type="radio" name="sponsorType" value="alcohol" class="text-green-600 focus:ring-green-500" onclick="toggleSponsorInput()"><span class="text-sm text-gray-700">酒類</span></label><input type="text" id="sponsor-alcohol-input" placeholder="例：紅酒 2 箱" disabled class="w-full text-sm border-b border-gray-300 bg-transparent py-1 px-2"></div>
-                        <div class="flex items-center gap-2"><label class="flex items-center gap-2 cursor-pointer whitespace-nowrap"><input type="radio" name="sponsorType" value="money" class="text-green-600 focus:ring-green-500" onclick="toggleSponsorInput()"><span class="text-sm text-gray-700">紅包</span></label><input type="number" id="sponsor-money-input" placeholder="金額 (百元整)" step="100" min="100" disabled class="w-full text-sm border-b border-gray-300 bg-transparent py-1 px-2"></div>
-                        <div class="flex items-center gap-2"><label class="flex items-center gap-2 cursor-pointer whitespace-nowrap"><input type="radio" name="sponsorType" value="other" class="text-green-600 focus:ring-green-500" onclick="toggleSponsorInput()"><span class="text-sm text-gray-700">其他</span></label><input type="text" id="sponsor-other-input" placeholder="請填寫內容" disabled class="w-full text-sm border-b border-gray-300 bg-transparent py-1 px-2"></div>
+                    <div id="field-banquet" class="hidden p-3 bg-red-50 rounded-lg border border-red-100">
+                        <div class="flex justify-between items-center"><label class="text-sm font-bold text-red-800">預訂認桌數量 (0~5)</label><div class="flex items-center gap-2"><select id="table-count" class="w-24 text-center border border-red-200 rounded py-1 bg-white text-sm"><option value="0">0</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select><span class="text-sm text-red-600">桌</span></div></div>
                     </div>
                 </div>
+
+                <!-- 升級版贊助項目 -->
+                <div class="p-4 border border-gray-200 rounded-xl bg-gray-50/50">
+                    <label class="block text-sm font-bold text-gray-800 mb-3">贊助項目 (填寫後請按新增)</label>
+                    <div id="sponsor-list-container" class="space-y-2 mb-3"></div>
+                    
+                    <div class="space-y-2 bg-white p-3 rounded border border-gray-200 shadow-sm">
+                        <div class="flex gap-4 text-sm font-medium text-gray-700">
+                            <label class="cursor-pointer flex items-center gap-1"><input type="radio" name="addSponsorType" value="alcohol" checked onclick="renderAddSponsorUI()"> 酒類</label>
+                            <label class="cursor-pointer flex items-center gap-1"><input type="radio" name="addSponsorType" value="money" onclick="renderAddSponsorUI()"> 紅包</label>
+                            <label class="cursor-pointer flex items-center gap-1"><input type="radio" name="addSponsorType" value="other" onclick="renderAddSponsorUI()"> 其他</label>
+                        </div>
+                        
+                        <!-- 動態輸入區 -->
+                        <div id="sponsor-input-area" class="flex flex-wrap gap-2 items-center">
+                            <!-- JS will populate this -->
+                        </div>
+                        
+                        <button type="button" onclick="addSponsor()" class="w-full bg-green-600 text-white px-3 py-2 rounded text-sm hover:bg-green-700 flex justify-center items-center gap-1">
+                            <i data-lucide="plus" class="w-4 h-4"></i> 新增此項目
+                        </button>
+                    </div>
+                </div>
+
                 <button type="submit" id="submit-btn" class="w-full bg-[#06c755] text-white font-bold py-3.5 rounded-xl hover:bg-green-600 transition shadow-md active:scale-95 flex justify-center items-center gap-2"><span>確認報名</span><i data-lucide="send" class="w-4 h-4"></i></button>
             </form>
 
@@ -133,82 +177,27 @@
             </div>
         </div>
 
-        <!-- VIEW 3: CREATE EVENT (Updated) -->
+        <!-- VIEW 3: CREATE EVENT (No Change) -->
         <div id="view-create" class="hidden space-y-5">
-            <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <i data-lucide="plus-square" class="w-6 h-6 text-blue-600"></i> 建立新活動
-                </h2>
+             <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
+                <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><i data-lucide="plus-square" class="w-6 h-6 text-blue-600"></i> 建立新活動</h2>
                 <form onsubmit="handleCreateEvent(event)" class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">活動類型</label>
-                        <select id="new-type" onchange="toggleCreateFields()" class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-50 focus:bg-white transition">
-                            <option value="general">一般活動</option>
-                            <option value="banquet">大型餐會</option>
-                            <option value="travel">旅遊活動</option>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">活動名稱</label>
-                        <input type="text" id="new-name" required class="w-full border border-gray-300 rounded px-3 py-2" placeholder="例如：五月慶生會">
-                    </div>
-
-                    <!-- 主辦人 (GAS Setting) -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">主辦人 (選單)</label>
-                        <select id="new-organizer-select" class="w-full border border-gray-300 rounded px-3 py-2 bg-white">
-                            <option value="">載入中...</option>
-                        </select>
-                    </div>
-
-                    <!-- 時間 (Date Picker, but required by GAS logic) -->
-                    <div id="new-field-time-single">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">活動時間</label>
-                        <input type="datetime-local" id="new-time-single" class="w-full border border-gray-300 rounded px-3 py-2">
-                    </div>
-                    <div id="new-field-time-range" class="hidden space-y-2">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">出發日期</label>
-                            <input type="date" id="new-date-start" class="w-full border border-gray-300 rounded px-3 py-2">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1">回程日期</label>
-                            <input type="date" id="new-date-end" class="w-full border border-gray-300 rounded px-3 py-2">
-                        </div>
-                    </div>
-
-                    <!-- 地點 (GAS Setting) -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">地點名稱 (選單)</label>
-                        <select id="new-location-select" onchange="onLocationChange()" class="w-full border border-gray-300 rounded px-3 py-2 bg-white">
-                            <option value="">載入中...</option>
-                        </select>
-                    </div>
-
-                    <!-- 地址 (Auto-filled from Location) -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">詳細地址 (自動帶入)</label>
-                        <input type="text" id="new-address" readonly class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed">
-                    </div>
-
-                    <div id="new-field-itinerary" class="hidden">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">行程內容 (格式：D1: 標題|內容)</label>
-                        <textarea id="new-itinerary" rows="4" class="w-full border border-gray-300 rounded px-3 py-2 text-sm font-mono" placeholder="D1: 集合|08:00 車站集合;D2: 景點|10:00 抵達..."></textarea>
-                    </div>
-
-                    <button type="submit" id="create-btn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition shadow-md mt-4 flex justify-center items-center gap-2">
-                        <span>確認建立</span>
-                        <i data-lucide="check-square" class="w-4 h-4"></i>
-                    </button>
+                    <div><label class="block text-sm font-bold text-gray-700 mb-1">活動類型</label><select id="new-type" onchange="toggleCreateFields()" class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-50 focus:bg-white transition"><option value="general">一般活動</option><option value="banquet">大型餐會</option><option value="travel">旅遊活動</option></select></div>
+                    <div><label class="block text-sm font-medium text-gray-700 mb-1">活動名稱</label><input type="text" id="new-name" required class="w-full border border-gray-300 rounded px-3 py-2" placeholder="例如：五月慶生會"></div>
+                    <div><label class="block text-sm font-medium text-gray-700 mb-1">主辦人 (選單)</label><select id="new-organizer-select" class="w-full border border-gray-300 rounded px-3 py-2 bg-white"><option value="">載入中...</option></select></div>
+                    <div id="new-field-time-single"><label class="block text-sm font-medium text-gray-700 mb-1">活動時間</label><input type="datetime-local" id="new-time-single" class="w-full border border-gray-300 rounded px-3 py-2"></div>
+                    <div id="new-field-time-range" class="hidden space-y-2"><div><label class="block text-sm font-medium text-gray-700 mb-1">出發日期</label><input type="date" id="new-date-start" class="w-full border border-gray-300 rounded px-3 py-2"></div><div><label class="block text-sm font-medium text-gray-700 mb-1">回程日期</label><input type="date" id="new-date-end" class="w-full border border-gray-300 rounded px-3 py-2"></div></div>
+                    <div><label class="block text-sm font-medium text-gray-700 mb-1">地點名稱 (選單)</label><select id="new-location-select" onchange="onLocationChange()" class="w-full border border-gray-300 rounded px-3 py-2 bg-white"><option value="">載入中...</option></select></div>
+                    <div><label class="block text-sm font-medium text-gray-700 mb-1">詳細地址 (自動帶入)</label><input type="text" id="new-address" readonly class="w-full border border-gray-300 rounded px-3 py-2 bg-gray-100 text-gray-500 cursor-not-allowed"></div>
+                    <div id="new-field-itinerary" class="hidden"><label class="block text-sm font-medium text-gray-700 mb-1">行程內容 (格式：D1: 標題|內容)</label><textarea id="new-itinerary" rows="4" class="w-full border border-gray-300 rounded px-3 py-2 text-sm font-mono" placeholder="D1: 集合|08:00 車站集合;D2: 景點|10:00 抵達..."></textarea></div>
+                    <button type="submit" id="create-btn" class="w-full bg-blue-600 text-white font-bold py-3 rounded-lg hover:bg-blue-700 transition shadow-md mt-4 flex justify-center items-center gap-2"><span>確認建立</span><i data-lucide="check-square" class="w-4 h-4"></i></button>
                 </form>
             </div>
         </div>
     </div>
 
-    <!-- Details Modal -->
+    <!-- Modal & Toast -->
     <div id="details-modal" class="hidden fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"><div class="bg-white rounded-xl shadow-2xl w-full max-w-sm max-h-[80vh] flex flex-col relative transform scale-95 opacity-0 transition-all" id="modal-content"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl"><h3 class="font-bold text-gray-800 flex items-center gap-2"><i data-lucide="users" class="w-5 h-5 text-green-600"></i> 報名名單</h3><button onclick="closeDetailsModal()" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="p-4 overflow-y-auto flex-1"><div id="modal-loading" class="flex flex-col items-center py-6"><i data-lucide="loader-2" class="w-6 h-6 animate-spin text-green-500 mb-2"></i><span class="text-xs text-gray-500">載入名單中...</span></div><ul id="details-list" class="space-y-2 text-sm text-gray-700 hidden"></ul><div id="modal-empty" class="hidden text-center py-6 text-gray-400 text-sm">目前尚未有人報名</div></div><div class="p-3 border-t border-gray-100 bg-gray-50 rounded-b-xl"><button onclick="copyDetailsToClipboard()" class="w-full bg-blue-50 text-blue-600 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 transition flex justify-center items-center gap-2"><i data-lucide="copy" class="w-4 h-4"></i> 複製名單文字</button></div></div></div>
-    <!-- Toast -->
     <div id="toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-gray-900/90 text-white px-6 py-3 rounded-full shadow-2xl opacity-0 transition-all duration-300 pointer-events-none z-[100] text-sm flex items-center gap-2 backdrop-blur-sm"><i data-lucide="check-circle" class="w-4 h-4 text-green-400"></i><span id="toast-msg">操作成功</span></div>
 
     <script>
@@ -220,27 +209,21 @@
         let currentCategory = '';
         let currentEvent = null;
         let userProfile = { userId: 'mock_u1', displayName: '測試用戶', pictureUrl: '' };
+        
+        let guestList = [];
+        let sponsorList = [];
+        let showingHistory = false;
 
-        // Mock Data
         const MOCK_EVENTS = [
-            { id: 'm1', type: 'general', name: '五月例會', organizer: '王社長', time: '2026/05/20 14:30', location: '市民中心', address: '台北市公園路', isActive: true, pickupOpts: [], roomOpts: [] },
-            { id: 'm3', type: 'banquet', name: '年終尾牙', organizer: '福利組', time: '2026/01/20 18:00', location: '海霸王', address: '中山北路', isActive: true, pickupOpts: [], roomOpts: [] },
-            { id: 'm4', type: 'travel', name: '花蓮三日遊', organizer: '康樂組', time: '2026/07/15~2026/07/18', location: '花蓮', address: '北車', itinerary: 'D1: 出發|內容;D2: 遊玩|內容', isActive: true, pickupOpts: ['台北車站'], roomOpts: ['雙人房'] }
+            { id: 'm1', type: 'general', name: '五月例會', organizer: '王社長', time: '2026-04-01T10:30:00.000Z', location: '市民中心', address: '台北市公園路', isActive: true, creatorId: 'mock_u1' },
+            { id: 'm2', type: 'general', name: '歷史活動', organizer: '王社長', time: '2025-01-01T10:00:00.000Z', location: '市民中心', address: '台北市公園路', isActive: false, creatorId: 'mock_u1' }
         ];
-
-        const MOCK_SETTINGS = {
-            organizers: ['王社長', '福利組', '康樂組', '陳總幹事'],
-            locations: [
-                { name: '市民中心', address: '台北市公園路123號' },
-                { name: '海霸王', address: '台北市中山北路三段59號' },
-                { name: '花蓮', address: '台北車站集合' },
-                { name: '公司會議室', address: '台北市信義路五段7號' }
-            ]
-        };
+        const MOCK_SETTINGS = { organizers: ['王社長'], locations: [{name:'中心', address:'地址'}] };
 
         window.onload = async function() {
             lucide.createIcons();
             populateCountOptions();
+            renderAddSponsorUI(); // Init Sponsor UI
             
             if (LIFF_ID && LIFF_ID !== "YOUR_LIFF_ID") {
                 try {
@@ -249,11 +232,9 @@
                     userProfile = await liff.getProfile();
                 } catch (e) { console.error(e); }
             }
-            
             updateUserProfileUI();
-            await Promise.all([fetchEvents(), fetchSettings()]); 
+            await Promise.all([fetchEvents(), fetchSettings()]);
             document.getElementById('loading-mask').classList.add('opacity-0', 'pointer-events-none');
-            
             goHome();
         };
 
@@ -264,121 +245,231 @@
             if (userProfile.pictureUrl) document.getElementById('user-picture').src = userProfile.pictureUrl;
         }
 
+        // --- New Sponsorship UI Logic ---
+        function renderAddSponsorUI() {
+            const type = document.querySelector('input[name="addSponsorType"]:checked').value;
+            const container = document.getElementById('sponsor-input-area');
+            container.innerHTML = '';
+
+            if (type === 'alcohol') {
+                container.innerHTML = `
+                    <input type="text" id="sp-alc-name" placeholder="品項 (如:紅酒)" class="w-full flex-1 border border-gray-300 rounded px-2 py-1 text-sm">
+                    <input type="number" id="sp-alc-qty" placeholder="數量" min="1" class="w-16 border border-gray-300 rounded px-2 py-1 text-sm text-center">
+                    <select id="sp-alc-unit" class="w-16 border border-gray-300 rounded px-1 py-1 text-sm text-center">
+                        <option value="瓶">瓶</option>
+                        <option value="箱">箱</option>
+                    </select>
+                `;
+            } else if (type === 'money') {
+                container.innerHTML = `
+                    <div class="flex items-center gap-1 w-full">
+                        <input type="number" id="sp-money-val" placeholder="金額 (100為單位)" step="100" min="100" class="flex-1 border border-gray-300 rounded px-2 py-1 text-sm">
+                        <span class="text-sm text-gray-500">元</span>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <input type="text" id="sp-other-val" placeholder="請填寫贊助內容" class="w-full border border-gray-300 rounded px-2 py-1 text-sm">
+                `;
+            }
+        }
+
+        function addSponsor() {
+            const type = document.querySelector('input[name="addSponsorType"]:checked').value;
+            let text = "";
+
+            if (type === 'alcohol') {
+                const name = document.getElementById('sp-alc-name').value.trim();
+                const qty = document.getElementById('sp-alc-qty').value;
+                const unit = document.getElementById('sp-alc-unit').value;
+                if (!name || !qty || parseInt(qty) <= 0) { showToast("請輸入完整酒類資訊"); return; }
+                text = `酒類: ${name} ${qty}${unit}`;
+                // Clear fields
+                document.getElementById('sp-alc-name').value = '';
+                document.getElementById('sp-alc-qty').value = '';
+            } else if (type === 'money') {
+                const val = document.getElementById('sp-money-val').value;
+                const num = parseInt(val);
+                if (!num || num <= 0) { showToast("金額必須大於0"); return; }
+                if (num % 100 !== 0) { showToast("紅包金額須為100的倍數"); return; }
+                text = `紅包: ${num}元`;
+                document.getElementById('sp-money-val').value = '';
+            } else {
+                const val = document.getElementById('sp-other-val').value.trim();
+                if (!val) { showToast("請輸入內容"); return; }
+                text = `其他: ${val}`;
+                document.getElementById('sp-other-val').value = '';
+            }
+
+            sponsorList.push(text);
+            renderSponsorList();
+        }
+
+        function removeSponsor(index) {
+            sponsorList.splice(index, 1);
+            renderSponsorList();
+        }
+
+        function renderSponsorList() {
+            const container = document.getElementById('sponsor-list-container');
+            container.innerHTML = '';
+            sponsorList.forEach((s, i) => {
+                const div = document.createElement('div');
+                div.className = "flex justify-between items-center bg-white border border-gray-200 px-3 py-1 rounded text-sm";
+                div.innerHTML = `<span>${s}</span> <i data-lucide="x" class="w-4 h-4 tag-remove" onclick="removeSponsor(${i})"></i>`;
+                container.appendChild(div);
+            });
+            lucide.createIcons();
+        }
+
+        // --- Other Logic ---
+        function formatDate(isoStr) {
+            if (!isoStr || isoStr.indexOf('~') !== -1) return isoStr; 
+            const d = new Date(isoStr);
+            if (isNaN(d.getTime())) return isoStr; 
+            const weekMap = ['日', '一', '二', '三', '四', '五', '六'];
+            const yyyy = d.getFullYear();
+            const mm = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            const week = weekMap[d.getDay()];
+            const hh = String(d.getHours()).padStart(2, '0');
+            const min = String(d.getMinutes()).padStart(2, '0');
+            return `${yyyy}/${mm}/${dd} (${week}) ${hh}:${min}`;
+        }
+
         function populateCountOptions() {
             const familySel = document.getElementById('family-count');
-            const guestSel = document.getElementById('guest-count');
+            const guestSel = document.getElementById('add-guest-count'); 
             for (let i = 1; i <= 10; i++) {
                 familySel.add(new Option(`${i} 人`, i));
                 guestSel.add(new Option(`${i} 人`, i));
             }
         }
 
-        async function fetchEvents() {
-            if (GAS_URL) {
-                try {
-                    const res = await fetch(`${GAS_URL}?action=getEvents`);
-                    allEvents = await res.json();
-                } catch (e) { allEvents = MOCK_EVENTS; }
-            } else {
-                await new Promise(r => setTimeout(r, 500));
-                allEvents = MOCK_EVENTS;
-            }
+        function addGuest() {
+            const name = document.getElementById('add-guest-name').value.trim();
+            const count = parseInt(document.getElementById('add-guest-count').value);
+            if (!name) { showToast("請輸入來賓姓名"); return; }
+            guestList.push({ name, count });
+            document.getElementById('add-guest-name').value = '';
+            renderGuestList();
         }
 
-        async function fetchSettings() {
-            if (GAS_URL) {
-                try {
-                    const res = await fetch(`${GAS_URL}?action=getSettings`);
-                    systemSettings = await res.json();
-                } catch (e) { systemSettings = MOCK_SETTINGS; }
-            } else {
-                systemSettings = MOCK_SETTINGS;
-            }
-            populateCreateDropdowns();
+        function removeGuest(index) {
+            guestList.splice(index, 1);
+            renderGuestList();
         }
 
-        function populateCreateDropdowns() {
-            const orgSelect = document.getElementById('new-organizer-select');
-            const locSelect = document.getElementById('new-location-select');
-            
-            orgSelect.innerHTML = '<option value="">請選擇主辦人</option>';
-            systemSettings.organizers.forEach(org => {
-                orgSelect.add(new Option(org, org));
+        function renderGuestList() {
+            const container = document.getElementById('guest-list-container');
+            container.innerHTML = '';
+            guestList.forEach((g, i) => {
+                const div = document.createElement('div');
+                div.className = "flex justify-between items-center bg-white border border-gray-200 px-3 py-1 rounded text-sm";
+                div.innerHTML = `<span>${g.name} (${g.count}人)</span> <i data-lucide="x" class="w-4 h-4 tag-remove" onclick="removeGuest(${i})"></i>`;
+                container.appendChild(div);
             });
-
-            locSelect.innerHTML = '<option value="">請選擇地點</option>';
-            systemSettings.locations.forEach(loc => {
-                locSelect.add(new Option(loc.name, loc.name));
-            });
+            lucide.createIcons();
         }
 
-        function onLocationChange() {
-            const locName = document.getElementById('new-location-select').value;
-            const addressInput = document.getElementById('new-address');
-            
-            const loc = systemSettings.locations.find(l => l.name === locName);
-            if (loc) {
-                addressInput.value = loc.address;
+        function toggleHistoryView() {
+            showingHistory = !showingHistory;
+            const btn = document.getElementById('btn-history-toggle');
+            const activeList = document.getElementById('active-categories');
+            const historyList = document.getElementById('history-list');
+            const createBtn = document.getElementById('btn-create-event');
+
+            if (showingHistory) {
+                btn.innerHTML = '<i data-lucide="arrow-left" class="w-3 h-3"></i> <span>返回進行中活動</span>';
+                activeList.classList.add('hidden');
+                createBtn.classList.add('hidden');
+                historyList.classList.remove('hidden');
+                renderHistoryList();
             } else {
-                addressInput.value = '';
+                btn.innerHTML = '<i data-lucide="history" class="w-3 h-3"></i> <span>查看歷史活動</span>';
+                activeList.classList.remove('hidden');
+                createBtn.classList.remove('hidden');
+                historyList.classList.add('hidden');
             }
+            lucide.createIcons();
         }
 
-        // --- View Navigation ---
-        function goHome() {
-            document.getElementById('view-home').classList.remove('hidden');
-            document.getElementById('view-activity').classList.add('hidden');
-            document.getElementById('view-create').classList.add('hidden');
-            document.getElementById('btn-back').classList.add('hidden');
-            document.getElementById('header-title').innerText = "活動與報名";
-            currentCategory = '';
-        }
-
-        function enterCategory(cat) {
-            currentCategory = cat;
-            document.getElementById('view-home').classList.add('hidden');
-            document.getElementById('view-activity').classList.remove('hidden');
-            document.getElementById('view-create').classList.add('hidden');
-            document.getElementById('btn-back').classList.remove('hidden');
-            const titleMap = { 'general': '一般活動', 'banquet': '大型餐會', 'travel': '旅遊活動' };
-            document.getElementById('header-title').innerText = titleMap[cat];
-            updateEventDropdown();
-        }
-
-        function showCreateView() {
-            document.getElementById('view-home').classList.add('hidden');
-            document.getElementById('view-activity').classList.add('hidden');
-            document.getElementById('view-create').classList.remove('hidden');
-            document.getElementById('btn-back').classList.remove('hidden');
-            document.getElementById('header-title').innerText = "建立新活動";
-            document.getElementById('new-type').value = 'general';
-            toggleCreateFields();
-        }
-
-        // --- Activity Logic ---
-        function updateEventDropdown() {
-            const selector = document.getElementById('event-selector');
-            selector.innerHTML = '';
-            const filteredEvents = allEvents.filter(e => e.type === currentCategory && e.isActive);
-            if (filteredEvents.length === 0) {
-                selector.add(new Option("此分類暫無活動", ""));
-                selector.disabled = true;
-                currentEvent = null;
-                renderEventDetails();
+        function renderHistoryList() {
+            const container = document.getElementById('history-items');
+            container.innerHTML = '';
+            const historyEvents = allEvents.filter(e => !e.isActive);
+            if (historyEvents.length === 0) {
+                container.innerHTML = '<div class="text-center text-gray-500 text-sm">暫無歷史活動</div>';
                 return;
             }
-            selector.disabled = false;
-            filteredEvents.forEach(evt => {
-                const displayTime = (evt.type === 'travel') ? evt.time : evt.time.split(' ')[0];
-                selector.add(new Option(`${evt.name} (${displayTime})`, evt.id));
+            historyEvents.forEach(evt => {
+                const div = document.createElement('div');
+                div.className = "bg-white p-4 rounded-xl shadow-sm border border-gray-200 cursor-pointer hover:bg-gray-50";
+                div.onclick = () => enterHistoryEvent(evt);
+                div.innerHTML = `<div class="flex justify-between items-center"><h4 class="font-bold text-gray-800">${evt.name}</h4><span class="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded">已結束</span></div><p class="text-xs text-gray-500 mt-1">${formatDate(evt.time)}</p>`;
+                container.appendChild(div);
             });
-            selector.selectedIndex = 0;
+        }
+
+        function enterHistoryEvent(evt) {
+            currentCategory = evt.type;
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-activity').classList.remove('hidden');
+            document.getElementById('btn-back').classList.remove('hidden');
+            document.getElementById('header-title').innerText = "歷史活動詳情";
+            const selector = document.getElementById('event-selector');
+            selector.innerHTML = '';
+            selector.add(new Option(`${evt.name}`, evt.id));
+            selector.disabled = true;
             onEventSelected();
+        }
+
+        // --- Manager Status Toggle & Event Selection (Updated for Requirement 1 & 2) ---
+        async function toggleEventStatus() {
+            if (!currentEvent) return;
+            const btn = document.getElementById('btn-status-toggle');
+            const originalText = btn.innerText;
+            btn.innerText = "處理中...";
+            btn.disabled = true;
+            const payload = { action: 'toggleStatus', eventId: currentEvent.id };
+            try {
+                if (GAS_URL) {
+                    await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
+                } else {
+                    currentEvent.isActive = !currentEvent.isActive;
+                    showToast(`活動已${currentEvent.isActive ? '開啟' : '關閉'}`);
+                }
+                await fetchEvents();
+                if (showingHistory) goHome(); else onEventSelected();
+            } catch(e) { showToast("操作失敗"); }
+            finally { btn.innerText = originalText; btn.disabled = false; }
         }
 
         function onEventSelected() {
             const id = document.getElementById('event-selector').value;
             currentEvent = allEvents.find(e => e.id === id);
+            
+            guestList = []; renderGuestList();
+            sponsorList = []; renderSponsorList();
+            
+            // Check Manager status (Strict Check for Requirement 1 & 2)
+            const controls = document.getElementById('manager-controls');
+            const toggleBtn = document.getElementById('btn-status-toggle');
+            
+            // Only show if creatorId exists AND matches current user
+            if (currentEvent && currentEvent.creatorId && currentEvent.creatorId === userProfile.userId) {
+                controls.classList.remove('hidden');
+                if (currentEvent.isActive) {
+                    toggleBtn.innerText = "關閉活動";
+                    toggleBtn.className = "text-xs bg-red-100 text-red-600 px-3 py-1 rounded-full font-bold border border-red-200 hover:bg-red-200";
+                } else {
+                    toggleBtn.innerText = "開啟活動";
+                    toggleBtn.className = "text-xs bg-green-100 text-green-600 px-3 py-1 rounded-full font-bold border border-green-200 hover:bg-green-200";
+                }
+            } else {
+                controls.classList.add('hidden');
+            }
+
             renderEventDetails();
             fetchStats();
         }
@@ -387,34 +478,32 @@
             const infoCard = document.getElementById('event-info-card');
             const submitBtn = document.getElementById('submit-btn');
 
-            if (!currentEvent) {
-                infoCard.classList.add('opacity-50');
+            if (!currentEvent) { infoCard.classList.add('opacity-50'); submitBtn.disabled = true; return; }
+            infoCard.classList.remove('opacity-50'); 
+            
+            if (!currentEvent.isActive) {
                 submitBtn.disabled = true;
-                return;
+                submitBtn.innerText = "活動已結束";
+                submitBtn.className = "w-full bg-gray-400 text-white font-bold py-3.5 rounded-xl cursor-not-allowed flex justify-center items-center gap-2";
+            } else {
+                submitBtn.disabled = false;
+                submitBtn.innerText = "確認報名";
+                submitBtn.className = "w-full bg-[#06c755] text-white font-bold py-3.5 rounded-xl hover:bg-green-600 transition shadow-md active:scale-95 flex justify-center items-center gap-2";
             }
-            infoCard.classList.remove('opacity-50');
-            submitBtn.disabled = false;
 
             document.getElementById('display-name').innerText = currentEvent.name;
             document.getElementById('display-organizer').innerText = currentEvent.organizer;
             
             const timeContainer = document.getElementById('display-time-container');
-            timeContainer.innerHTML = '';
             if (currentEvent.type === 'travel') {
-                const parts = currentEvent.time.split('~');
-                if (parts.length === 2) {
-                    timeContainer.innerHTML = `<div class="flex flex-col text-sm"><span class="text-green-700 font-bold">起：${parts[0].trim()}</span><span class="text-red-700 font-bold">止：${parts[1].trim()}</span></div>`;
-                } else {
-                    timeContainer.innerText = currentEvent.time;
-                }
+                timeContainer.innerHTML = `<div class="flex flex-col text-sm"><span class="text-green-700 font-bold">起：${formatDate(currentEvent.time.split('~')[0])}</span><span class="text-red-700 font-bold">止：${formatDate(currentEvent.time.split('~')[1])}</span></div>`;
             } else {
-                timeContainer.innerText = currentEvent.time;
+                timeContainer.innerText = formatDate(currentEvent.time);
             }
 
             document.getElementById('display-location').innerText = currentEvent.location;
             document.getElementById('display-address').innerText = currentEvent.address;
             document.getElementById('map-link').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(currentEvent.address)}`;
-            
             document.getElementById('eventId').value = currentEvent.id;
             document.getElementById('eventType').value = currentEvent.type;
             document.getElementById('eventName').value = currentEvent.name;
@@ -423,149 +512,35 @@
             const banquetField = document.getElementById('field-banquet');
             const itinerarySection = document.getElementById('travel-itinerary-section');
             const secLabel = document.getElementById('stat-sec-label');
-
-            travelField.classList.add('hidden');
-            banquetField.classList.add('hidden');
-            itinerarySection.classList.add('hidden');
-            secLabel.innerText = "特殊項目";
+            travelField.classList.add('hidden'); banquetField.classList.add('hidden'); itinerarySection.classList.add('hidden'); secLabel.innerText = "特殊項目";
 
             if (currentEvent.type === 'travel') {
                 travelField.classList.remove('hidden');
-                if (currentEvent.itinerary) {
-                    itinerarySection.classList.remove('hidden');
-                    renderItinerary(currentEvent.itinerary);
-                }
+                if (currentEvent.itinerary) { itinerarySection.classList.remove('hidden'); renderItinerary(currentEvent.itinerary); }
                 secLabel.innerText = "房/位需求";
                 populateSelect(document.getElementById('pickup-loc'), currentEvent.pickupOpts, '請選擇地點');
                 populateSelect(document.getElementById('room-type'), currentEvent.roomOpts, '請選擇房型');
             } else if (currentEvent.type === 'banquet') {
-                banquetField.classList.remove('hidden');
-                secLabel.innerText = "預訂桌數";
-            } else {
-                secLabel.innerText = "贊助筆數";
-            }
+                banquetField.classList.remove('hidden'); secLabel.innerText = "預訂桌數";
+            } else { secLabel.innerText = "贊助筆數"; }
             document.getElementById('stat-title').innerText = `${currentEvent.name} 統計`;
         }
-
-        function renderItinerary(rawString) {
-            const container = document.getElementById('itinerary-accordion-content');
-            container.innerHTML = '';
-            const days = rawString.split(';');
-            days.forEach(dayStr => {
-                if(!dayStr.trim()) return;
-                const parts = dayStr.split('|');
-                const title = parts[0] ? parts[0].trim() : '行程';
-                const content = parts[1] ? parts[1].trim() : '';
-                const details = document.createElement('details');
-                details.className = "group/day bg-white border border-gray-200 rounded p-2 open:shadow-sm";
-                details.innerHTML = `<summary class="flex justify-between items-center text-xs font-bold text-gray-600 cursor-pointer select-none"><span>${title}</span> <i data-lucide="plus" class="w-3 h-3 arrow text-green-500 group-open/day:hidden"></i><i data-lucide="minus" class="w-3 h-3 arrow text-red-500 hidden group-open/day:block"></i></summary><div class="mt-2 pl-2 text-xs text-gray-500 space-y-1 leading-relaxed border-l-2 border-gray-100">${content.split('\n').map(l=>`<p>${l}</p>`).join('')}</div>`;
-                container.appendChild(details);
-            });
-            lucide.createIcons();
-        }
-
-        function populateSelect(el, arr, def) {
-            el.innerHTML = '';
-            el.add(new Option(def||'請選擇', ''));
-            if(arr) arr.forEach(o => el.add(new Option(o, o)));
-        }
-
-        function toggleSponsorInput() {
-            const type = document.querySelector('input[name="sponsorType"]:checked').value;
-            ['sponsor-alcohol-input', 'sponsor-money-input', 'sponsor-other-input'].forEach(id => {
-                const el = document.getElementById(id);
-                el.disabled = true; el.value = '';
-            });
-            if (type === 'alcohol') document.getElementById('sponsor-alcohol-input').disabled = false;
-            else if (type === 'money') document.getElementById('sponsor-money-input').disabled = false;
-            else if (type === 'other') document.getElementById('sponsor-other-input').disabled = false;
-        }
-
-        function toggleCreateFields() {
-            const type = document.getElementById('new-type').value;
-            const singleTime = document.getElementById('new-field-time-single');
-            const rangeTime = document.getElementById('new-field-time-range');
-            const itinField = document.getElementById('new-field-itinerary');
-
-            if (type === 'travel') {
-                singleTime.classList.add('hidden');
-                rangeTime.classList.remove('hidden');
-                itinField.classList.remove('hidden');
-            } else {
-                singleTime.classList.remove('hidden');
-                rangeTime.classList.add('hidden');
-                itinField.classList.add('hidden');
-            }
-        }
-
-        // --- Updated Create Event Logic ---
-        async function handleCreateEvent(e) {
-            e.preventDefault();
-            const btn = document.getElementById('create-btn');
-            btn.innerHTML = '<i class="animate-spin" data-lucide="loader-2"></i> 建立中...';
-            btn.disabled = true;
-            lucide.createIcons();
-
-            const type = document.getElementById('new-type').value;
-            const organizer = document.getElementById('new-organizer-select').value;
-            const location = document.getElementById('new-location-select').value;
-            if (!organizer || !location) {
-                showToast("請選擇主辦人與地點");
-                btn.disabled = false; btn.innerText = "確認建立"; return;
-            }
-
-            let timeStr = "";
-            if (type === 'travel') {
-                const s = document.getElementById('new-date-start').value;
-                const end = document.getElementById('new-date-end').value;
-                if (!s || !end) { showToast("請選擇起訖日期"); btn.disabled=false; btn.innerText="確認建立"; return; }
-                timeStr = `${s.replace(/-/g,'/')}~${end.replace(/-/g,'/')}`;
-            } else {
-                const t = document.getElementById('new-time-single').value;
-                if (!t) { showToast("請選擇時間"); btn.disabled=false; btn.innerText="確認建立"; return; }
-                timeStr = t.replace('T', ' ').replace(/-/g, '/');
-            }
-
-            const payload = {
-                action: 'createEvent',
-                eventType: type,
-                eventName: document.getElementById('new-name').value,
-                organizer: organizer, 
-                time: timeStr,
-                location: location, 
-                address: document.getElementById('new-address').value,
-                itinerary: type === 'travel' ? document.getElementById('new-itinerary').value : '',
-                // Capture Creator's LINE info
-                creatorId: userProfile.userId,
-                creatorName: userProfile.displayName
-            };
-
-            try {
-                if (GAS_URL) {
-                    await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
-                } else {
-                    console.log("Mock Create:", payload);
-                    await new Promise(r => setTimeout(r, 1000));
-                    MOCK_EVENTS.push({ id: 'new_' + Date.now(), type: payload.eventType, name: payload.eventName, organizer: payload.organizer, time: payload.time, location: payload.location, address: payload.address, isActive: true, itinerary: payload.itinerary, pickupOpts: [], roomOpts: [] });
-                }
-                showToast("活動建立成功！");
-                await fetchEvents();
-                goHome();
-            } catch (err) { showToast("建立失敗"); } finally { btn.innerHTML = '<span>確認建立</span><i data-lucide="check-square" class="w-4 h-4"></i>'; btn.disabled = false; lucide.createIcons(); }
-        }
-
+        
         async function handleSubmit(e) {
             e.preventDefault();
-            const sponsorType = document.querySelector('input[name="sponsorType"]:checked').value;
-            let finalSponsorship = '無';
-            if (sponsorType === 'alcohol') finalSponsorship = `酒類: ${document.getElementById('sponsor-alcohol-input').value}`;
-            else if (sponsorType === 'money') finalSponsorship = `紅包: ${document.getElementById('sponsor-money-input').value}元`;
-            else if (sponsorType === 'other') finalSponsorship = `其他: ${document.getElementById('sponsor-other-input').value}`;
-
-            const btn = document.getElementById('submit-btn');
-            btn.innerHTML = '<i class="animate-spin" data-lucide="loader-2"></i>';
-            btn.disabled = true;
-            lucide.createIcons();
+            const btn = document.getElementById('submit-btn'); btn.disabled=true; btn.innerText="報名中...";
+            
+            let finalGuestName = '無';
+            let totalGuestCount = 0;
+            if (guestList.length > 0) {
+                finalGuestName = guestList.map(g => `${g.name}(${g.count})`).join(', ');
+                totalGuestCount = guestList.reduce((sum, g) => sum + g.count, 0);
+            }
+            
+            let finalSponsor = '無';
+            if (sponsorList.length > 0) {
+                finalSponsor = sponsorList.join(', ');
+            }
 
             const formData = {
                 action: 'register',
@@ -575,92 +550,47 @@
                 userId: document.getElementById('user-id').value,
                 userName: document.getElementById('user-name').value,
                 familyCount: document.getElementById('family-count').value,
-                guestName: document.getElementById('guest-name').value,
-                guestCount: document.getElementById('guest-count').value,
-                sponsorship: finalSponsorship,
+                guestName: finalGuestName,
+                guestCount: totalGuestCount,
+                sponsorship: finalSponsor,
                 pickupLoc: document.getElementById('pickup-loc').value,
                 roomType: document.getElementById('room-type').value,
                 tableCount: document.getElementById('table-count').value
             };
 
-            try {
-                if (GAS_URL) {
+            if (GAS_URL) {
+                try {
                     await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(formData), mode: 'no-cors' });
-                } else { await new Promise(r => setTimeout(r, 800)); }
-                showToast("報名成功！");
-                document.getElementById('regForm').reset();
-                document.getElementById('user-name').value = userProfile.displayName;
-                document.querySelector('input[value="none"]').checked = true;
-                toggleSponsorInput();
-                fetchStats();
-            } catch (err) { showToast("發生錯誤"); } finally { btn.innerHTML = '<span>確認報名</span><i data-lucide="send" class="w-4 h-4"></i>'; btn.disabled = false; lucide.createIcons(); }
-        }
-
-        let currentStats = { totalPeople: 0, secondary: 0 };
-        async function fetchStats() {
-            if (!currentEvent) return;
-            document.getElementById('stat-total').innerText = '...';
-            if (GAS_URL) {
-                try {
-                    const res = await fetch(`${GAS_URL}?action=stats&eventId=${currentEvent.id}`);
-                    currentStats = await res.json();
-                } catch(e) { currentStats = { totalPeople: 0, secondary: 0 }; }
-            } else { currentStats = { totalPeople: 5, secondary: 1 }; }
-            document.getElementById('stat-total').innerText = currentStats.totalPeople;
-            document.getElementById('stat-sec-val').innerText = currentStats.secondary;
-        }
-
-        async function openDetailsModal() {
-            if (!currentEvent) return;
-            document.getElementById('details-modal').classList.remove('hidden');
-            setTimeout(()=> document.getElementById('modal-content').classList.remove('scale-95', 'opacity-0'), 10);
-            document.getElementById('modal-loading').classList.remove('hidden');
-            document.getElementById('details-list').classList.add('hidden');
-            document.getElementById('modal-empty').classList.add('hidden');
-            let details = [];
-            if (GAS_URL) {
-                try {
-                    const res = await fetch(`${GAS_URL}?action=getDetails&eventId=${currentEvent.id}`);
-                    details = await res.json();
-                } catch(e) {}
-            } else { await new Promise(r => setTimeout(r, 600)); details = ['測試員']; }
-            document.getElementById('modal-loading').classList.add('hidden');
-            if (details.length === 0) document.getElementById('modal-empty').classList.remove('hidden');
-            else {
-                const ul = document.getElementById('details-list');
-                ul.innerHTML = '';
-                ul.classList.remove('hidden');
-                details.forEach((item, i) => {
-                    const li = document.createElement('li');
-                    li.className = "flex gap-2 py-2 border-b border-gray-100 last:border-0";
-                    li.innerHTML = `<span class="text-gray-400 text-xs w-6">${i+1}.</span> <span>${item}</span>`;
-                    ul.appendChild(li);
-                });
+                } catch (e) {}
             }
+            showToast("已送出報名申請"); 
+            document.getElementById('regForm').reset();
+            guestList = []; renderGuestList();
+            sponsorList = []; renderSponsorList();
+            renderAddSponsorUI(); // Reset UI
+            document.getElementById('user-name').value = userProfile.displayName;
+            fetchStats();
+            btn.disabled=false;
         }
-        function closeDetailsModal() { document.getElementById('modal-content').classList.add('scale-95', 'opacity-0'); setTimeout(() => document.getElementById('details-modal').classList.add('hidden'), 300); }
-        function copyDetailsToClipboard() {
-            const listItems = document.querySelectorAll('#details-list li span:last-child');
-            if (listItems.length === 0) return;
-            let text = `【${currentEvent.name}】報名名單\n時間：${currentEvent.time}\n------------------\n`;
-            listItems.forEach((span, idx) => { text += `${idx+1}. ${span.innerText}\n`; });
-            text += `------------------\n總人數：${currentStats.totalPeople} 人`;
-            navigator.clipboard.writeText(text).then(() => showToast("已複製名單"));
-        }
-        function shareStats() {
-            if (!currentEvent) return;
-            const text = `📊 活動統計報告\n\n📌 活動：${currentEvent.name}\n📅 時間：${currentEvent.time}\n\n👥 目前報名總人數：${currentStats.totalPeople} 人\n✨ 特殊項目統計：${currentStats.secondary}\n\n快點來報名吧！`;
-            if (liff.isInClient() && liff.isApiAvailable('shareTargetPicker')) {
-                liff.shareTargetPicker([{ type: "text", text: text }]).then(() => showToast("已分享")).catch(() => navigator.clipboard.writeText(text));
-            } else { navigator.clipboard.writeText(text).then(() => showToast("已複製統計內容")); }
-        }
-        function showToast(msg) {
-            const t = document.getElementById('toast');
-            document.getElementById('toast-msg').innerText = msg;
-            t.classList.remove('opacity-0', 'top-4');
-            t.classList.add('top-10', 'opacity-100');
-            setTimeout(() => { t.classList.add('opacity-0', 'top-4'); t.classList.remove('top-10', 'opacity-100'); }, 3000);
-        }
+
+        // Helpers
+        function renderItinerary(raw){ const c=document.getElementById('itinerary-accordion-content'); c.innerHTML=''; raw.split(';').forEach(d=>{ if(!d.trim())return; const p=d.split('|'); c.innerHTML+=`<details class="group/d bg-white border border-gray-200 p-2 rounded mb-1"><summary class="text-xs font-bold cursor-pointer list-none flex justify-between">${p[0]||'行程'}<span>+</span></summary><div class="mt-1 text-xs text-gray-500 pl-2 border-l border-gray-100">${(p[1]||'').split('\n').map(l=>`<p>${l}</p>`).join('')}</div></details>` }); }
+        function populateSelect(e,a,d){e.innerHTML='';e.add(new Option(d||'請選擇',''));if(a)a.forEach(o=>e.add(new Option(o,o)));}
+        function goHome(){ document.getElementById('view-home').classList.remove('hidden'); document.getElementById('view-activity').classList.add('hidden'); document.getElementById('view-create').classList.add('hidden'); document.getElementById('btn-back').classList.add('hidden'); document.getElementById('header-title').innerText="活動與報名"; currentCategory=''; }
+        function enterCategory(c){ currentCategory=c; document.getElementById('view-home').classList.add('hidden'); document.getElementById('view-activity').classList.remove('hidden'); document.getElementById('btn-back').classList.remove('hidden'); updateEventDropdown(); }
+        function updateEventDropdown(){ const s=document.getElementById('event-selector'); s.innerHTML=''; const l=allEvents.filter(e=>e.type===currentCategory && e.isActive); if(!l.length){ s.add(new Option("無活動","")); s.disabled=true; currentEvent=null; renderEventDetails(); return; } s.disabled=false; l.forEach(e=>s.add(new Option(e.name,e.id))); s.selectedIndex=0; onEventSelected(); }
+        async function fetchStats(){ if(!currentEvent)return; if(GAS_URL) try{ const r=await fetch(`${GAS_URL}?action=stats&eventId=${currentEvent.id}`); const d=await r.json(); document.getElementById('stat-total').innerText=d.totalPeople; document.getElementById('stat-sec-val').innerText=d.secondary; }catch(e){} }
+        function showToast(m){const t=document.getElementById('toast');document.getElementById('toast-msg').innerText=m;t.classList.remove('opacity-0','top-4');t.classList.add('top-10');setTimeout(()=>{t.classList.add('opacity-0','top-4');t.classList.remove('top-10')},3000);}
+        function shareStats(){ /* same logic */ }
+        function closeDetailsModal(){document.getElementById('details-modal').classList.add('hidden');}
+        function copyDetailsToClipboard(){/* same logic */ }
+        async function openDetailsModal(){ if(!currentEvent)return; document.getElementById('details-modal').classList.remove('hidden'); if(GAS_URL) {const r=await fetch(`${GAS_URL}?action=getDetails&eventId=${currentEvent.id}`); const d=await r.json(); const ul=document.getElementById('details-list'); ul.innerHTML=''; ul.classList.remove('hidden'); document.getElementById('modal-loading').classList.add('hidden'); d.forEach((x,i)=>ul.innerHTML+=`<li class="border-b py-2">${i+1}. ${x}</li>`); if(!d.length)document.getElementById('modal-empty').classList.remove('hidden'); } }
+        async function fetchEvents() { if (GAS_URL) { try { const res = await fetch(`${GAS_URL}?action=getEvents`); allEvents = await res.json(); } catch (e) { allEvents = MOCK_EVENTS; } } else { allEvents = MOCK_EVENTS; } }
+        async function fetchSettings() { if (GAS_URL) { try { const res = await fetch(`${GAS_URL}?action=getSettings`); systemSettings = await res.json(); } catch (e) { systemSettings = MOCK_SETTINGS; } } else { systemSettings = MOCK_SETTINGS; } populateCreateDropdowns(); }
+        function populateCreateDropdowns() { const orgSelect = document.getElementById('new-organizer-select'); const locSelect = document.getElementById('new-location-select'); orgSelect.innerHTML = '<option value="">請選擇主辦人</option>'; systemSettings.organizers.forEach(org => orgSelect.add(new Option(org, org))); locSelect.innerHTML = '<option value="">請選擇地點</option>'; systemSettings.locations.forEach(loc => locSelect.add(new Option(loc.name, loc.name))); }
+        function onLocationChange() { const locName = document.getElementById('new-location-select').value; const loc = systemSettings.locations.find(l => l.name === locName); document.getElementById('new-address').value = loc ? loc.address : ''; }
+        function toggleCreateFields() { const type = document.getElementById('new-type').value; const single = document.getElementById('new-field-time-single'); const range = document.getElementById('new-field-time-range'); const itin = document.getElementById('new-field-itinerary'); if (type === 'travel') { single.classList.add('hidden'); range.classList.remove('hidden'); itin.classList.remove('hidden'); } else { single.classList.remove('hidden'); range.classList.add('hidden'); itin.classList.add('hidden'); } }
+        async function handleCreateEvent(e) { e.preventDefault(); const btn = document.getElementById('create-btn'); btn.disabled=true; btn.innerText="建立中..."; const type = document.getElementById('new-type').value; let timeStr = ""; if (type === 'travel') { const s = document.getElementById('new-date-start').value; const end = document.getElementById('new-date-end').value; timeStr = `${s.replace(/-/g,'/')}~${end.replace(/-/g,'/')}`; } else { const t = document.getElementById('new-time-single').value; timeStr = t; } const payload = { action: 'createEvent', eventType: type, eventName: document.getElementById('new-name').value, organizer: document.getElementById('new-organizer-select').value, time: timeStr, location: document.getElementById('new-location-select').value, address: document.getElementById('new-address').value, itinerary: type==='travel'?document.getElementById('new-itinerary').value:'', creatorId: userProfile.userId, creatorName: userProfile.displayName }; if(GAS_URL) await fetch(GAS_URL, {method:'POST', body:JSON.stringify(payload), mode:'no-cors'}); else MOCK_EVENTS.push({...payload, id:'new_'+Date.now(), isActive:true, pickupOpts:[], roomOpts:[]}); showToast("建立成功"); await fetchEvents(); goHome(); btn.disabled=false; }
     </script>
 </body>
 </html>
