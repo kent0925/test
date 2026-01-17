@@ -197,10 +197,7 @@
                 <button onclick="closeDetailsModal()" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             
-            <!-- 新增：統計摘要區塊 -->
-            <div id="modal-summary" class="bg-gray-50 p-3 text-xs text-gray-600 border-b border-gray-100 space-y-1">
-                <!-- JS will fill this -->
-            </div>
+            <div id="modal-summary" class="bg-gray-50 p-3 text-xs text-gray-600 border-b border-gray-100 space-y-1"></div>
 
             <div class="p-4 overflow-y-auto flex-1">
                 <div id="modal-loading" class="flex flex-col items-center py-6"><i data-lucide="loader-2" class="w-6 h-6 animate-spin text-green-500 mb-2"></i><span class="text-xs text-gray-500">載入名單中...</span></div>
@@ -560,7 +557,16 @@
                 document.getElementById('modal-loading').classList.add('hidden'); 
                 d.forEach((x,i)=>ul.innerHTML+=`<li class="border-b py-2 flex gap-2"><span class="text-xs text-gray-400 w-5">${i+1}.</span><span>${x}</span></li>`); 
                 if(!d.length)document.getElementById('modal-empty').classList.remove('hidden'); 
-            } 
+            } else {
+                // Mock Logic
+                await new Promise(r => setTimeout(r, 600));
+                const ul = document.getElementById('details-list'); 
+                ul.innerHTML = ''; 
+                ul.classList.remove('hidden');
+                document.getElementById('modal-loading').classList.add('hidden');
+                const mockDetails = ['王小明 (共2人)', '李大媽', '陳先生 (共3人) - 贊助紅包'];
+                mockDetails.forEach((x,i)=>ul.innerHTML+=`<li class="border-b py-2 flex gap-2"><span class="text-xs text-gray-400 w-5">${i+1}.</span><span>${x}</span></li>`);
+            }
         }
         
         async function fetchEvents() { if (GAS_URL) { try { const res = await fetch(`${GAS_URL}?action=getEvents`); allEvents = await res.json(); } catch (e) { allEvents = MOCK_EVENTS; } } else { allEvents = MOCK_EVENTS; } }
