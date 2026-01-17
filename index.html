@@ -84,9 +84,7 @@
                  <div class="bg-white p-4 rounded-xl shadow h-24 w-full skeleton"></div>
                  <div class="bg-white p-4 rounded-xl shadow h-24 w-full skeleton"></div>
              </div>
-             <div id="event-grid-container" class="grid grid-cols-1 gap-4">
-                 <!-- Cards will be injected here. No dropdowns. -->
-             </div>
+             <div id="event-grid-container" class="grid grid-cols-1 gap-4"></div>
              <div id="no-events-msg" class="hidden text-center text-gray-500 py-10">
                  <p>目前沒有此類型的活動</p>
                  <p class="text-xs text-gray-400 mt-2" id="debug-msg"></p>
@@ -520,9 +518,9 @@
                     document.getElementById('room-type').value = r.roomType; 
                     document.getElementById('table-count').value = r.tableCount; 
                     updatePickupMap(); 
-                    // FIXED: Safe guestName handling
+                    // FIXED: Safe guestName handling with String()
                     if (r.guestName && r.guestName !== '無') { 
-                        const rawGuests = String(r.guestName).split(', '); // Force string conversion
+                        const rawGuests = String(r.guestName).split(', '); 
                         rawGuests.forEach(g => { 
                             const match = g.match(/(.*)\((\d+)\)$/); 
                             if (match) { 
@@ -548,7 +546,7 @@
         async function handleCancel() { if (!confirm("確定要取消此活動的報名嗎？")) return; const btn = document.getElementById('cancel-reg-btn'); btn.disabled=true; btn.innerText="取消中..."; const payload = { action: 'cancelRegistration', eventId: currentEvent.id, userId: userProfile.userId }; if (GAS_URL) { try { await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' }); } catch(e) {} } showToast("已取消報名"); setTimeout(() => { goHome(); btn.disabled=false; }, 1000); }
         async function fetchStats() { if (!currentEvent) return; if (GAS_URL) { try { const res = await fetch(`${GAS_URL}?action=stats&eventId=${currentEvent.id}`); currentStats = await res.json(); } catch (e) { } } else { currentStats = { totalPeople: 5, secondary: 1, roomCounts: {'雙人房': 2}, pickupCounts: {'台北車站':3}, sponsorSummary: {}, tableCount: 1 }; } document.getElementById('stat-total').innerText = currentStats.totalPeople; document.getElementById('stat-sec-val').innerText = currentStats.secondary; }
         
-        // --- 1. Copy Text with Total Count ---
+        // --- 1. Copy Text with Total Count & Safe Replace ---
         function generateShareText(details) {
             if (!currentEvent) return '';
             let text = `【${currentEvent.name}】\n主辦人：${currentEvent.organizer}\n時間：${formatDate(currentEvent.time)}\n地點：${currentEvent.location}\n地址：${currentEvent.address}\n`;
@@ -560,7 +558,7 @@
                     grandTotal += (1 + (item.family || 0) + (item.guestCount || 0));
                 });
             }
-            text += `目前報名總人數：${grandTotal} 人\n\n`; // Added Total Count Line
+            text += `目前報名總人數：${grandTotal} 人\n\n`;
 
             if (details && details.length > 0) {
                  text += `--- 參加名單 ---\n`;
@@ -570,8 +568,8 @@
                         text += `${pad(index + 1)}. ${item.name}`;
                         if (total > 1) text += ` *${total}`; 
                         if (item.guestName && item.guestName !== '無') {
-                            // Filter out (1) for display
-                            let displayGuest = item.guestName.replace(/\(1\)/g, '');
+                            // FIXED: Force string conversion to prevent replace error
+                            let displayGuest = String(item.guestName).replace(/\(1\)/g, '');
                             text += `\n      來賓：${displayGuest}`;
                         }
                         text += `\n`;
@@ -679,8 +677,8 @@
                     let total = 1 + (item.family||0) + (item.guestCount||0); 
                     if(total > 1) label += ` *${total}`; 
                     if(item.guestName && item.guestName !== '無') {
-                        // Filter out (1) for display
-                        let displayGuest = item.guestName.replace(/\(1\)/g, '');
+                        // FIXED: Safe guestName replace
+                        let displayGuest = String(item.guestName).replace(/\(1\)/g, '');
                         label += `\n   └ 來賓: ${displayGuest}`; 
                     }
                     if(item.room && item.room !== '無') label += ` | ${item.room}`; 
