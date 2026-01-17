@@ -39,8 +39,6 @@
         </div>
     </header>
 
-    <!-- Removing global loading mask for faster perceived speed -->
-
     <div class="max-w-md mx-auto p-4">
 
         <!-- VIEW 1: HOME (Categories) -->
@@ -83,7 +81,6 @@
         <!-- VIEW 2: EVENT SELECTION (Card Grid) -->
         <div id="view-event-list" class="hidden space-y-4">
              <div id="event-list-loading" class="hidden space-y-3">
-                 <!-- Skeletons -->
                  <div class="bg-white p-4 rounded-xl shadow h-24 w-full skeleton"></div>
                  <div class="bg-white p-4 rounded-xl shadow h-24 w-full skeleton"></div>
              </div>
@@ -93,14 +90,12 @@
 
         <!-- VIEW 3: ACTIVITY DETAIL & FORM -->
         <div id="view-activity-detail" class="hidden space-y-5">
-            
             <div id="event-info-card" class="bg-white rounded-xl shadow p-5 space-y-3 border border-gray-100 relative overflow-hidden transition-opacity duration-300">
                 <div id="manager-controls" class="hidden absolute top-3 right-3 z-10">
                     <button onclick="toggleEventStatus()" id="btn-status-toggle" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded-full font-bold border border-red-200 hover:bg-red-200">
                         關閉活動
                     </button>
                 </div>
-                
                 <h2 id="display-name" class="text-xl font-bold text-gray-800 pr-20">活動名稱</h2>
                 <div class="text-sm space-y-3 text-gray-600 mt-2">
                     <div class="flex gap-2"><i data-lucide="user" class="w-4 h-4 mt-0.5 text-green-600"></i><span id="display-organizer">主辦人</span></div>
@@ -139,16 +134,13 @@
                 <div id="dynamic-fields" class="space-y-4">
                     <div id="field-travel" class="hidden space-y-3 p-3 bg-blue-50 rounded-lg border border-blue-100">
                         <div class="text-xs font-bold text-blue-600 mb-1">旅遊專屬選項</div>
-                        
                         <div>
                             <label class="text-xs text-gray-600 block mb-1">上車地點</label>
                             <div class="flex gap-2 items-center">
                                 <select id="pickup-loc" onchange="updatePickupMap()" class="w-full text-sm border-gray-300 rounded"><option value="">請選擇...</option></select>
-                                <!-- Map Button -->
                                 <a id="pickup-map-btn" href="#" target="_blank" class="hidden bg-white p-2 border border-gray-200 rounded text-blue-500 shadow-sm hover:bg-blue-50 active:scale-95 transition" title="查看地圖"><i data-lucide="map-pin" class="w-4 h-4"></i></a>
                             </div>
                         </div>
-                        
                         <div><label class="text-xs text-gray-600 block mb-1">房型需求 (已選 / 數量)</label><select id="room-type" class="w-full text-sm border-gray-300 rounded"><option value="">請選擇...</option></select></div>
                     </div>
                     <div id="field-banquet" class="hidden p-3 bg-red-50 rounded-lg border border-red-100">
@@ -207,7 +199,7 @@
         </div>
     </div>
 
-    <!-- Modal (Same as before) -->
+    <!-- Modal -->
     <div id="details-modal" class="hidden fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm max-h-[80vh] flex flex-col relative transform scale-95 opacity-0 transition-all" id="modal-content">
             <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl">
@@ -251,17 +243,16 @@
         const MOCK_EVENTS = [
             { id: 'm1', type: 'general', name: '五月例會', organizer: '王社長', time: '2026-04-01T10:30:00.000Z', location: '市民中心', address: '台北市公園路', isActive: "開放", creatorId: 'mock_u1' },
             { id: 'm2', type: 'general', name: '四月例會', organizer: '王社長', time: '2026-03-01T10:30:00.000Z', location: '市民中心', address: '台北市公園路', isActive: "關閉", creatorId: 'mock_u1' },
-            { id: 'm4', type: 'travel', name: '花蓮三日遊', organizer: '康樂組', time: '2026/07/15~2026/07/18', location: '花蓮', address: '北車', itinerary: 'D1: 出發|內容;D2: 遊玩|內容', isActive: "開放", pickupOpts: ['台北車站|https://goo.gl/maps/123', '板橋車站|https://goo.gl/maps/456'], roomOpts: ['雙人房:5'] }
+            { id: 'm4', type: 'travel', name: '花蓮三日遊', organizer: '康樂組', time: '2026/07/15~2026/07/18', location: '花蓮', address: '北車', itinerary: 'D1: 出發|內容;D2: 遊玩|內容', isActive: "開放 ", pickupOpts: ['台北車站|https://goo.gl/maps/123', '板橋車站|https://goo.gl/maps/456'], roomOpts: ['雙人房:5'] }
         ];
         const MOCK_SETTINGS = { organizers: ['王社長'], locations: [{name:'中心', address:'地址'}] };
 
-        // 1. Immediate UI Render (Faster)
         window.onload = function() {
             lucide.createIcons();
             populateCountOptions();
             renderAddSponsorUI(); 
-            goHome(); // Show Home immediately
-            initApp(); // Load data in background
+            goHome(); 
+            initApp(); 
         };
 
         async function initApp() {
@@ -272,17 +263,11 @@
                         const profile = await liff.getProfile();
                         userProfile = { userId: profile.userId, displayName: profile.displayName, pictureUrl: profile.pictureUrl };
                         updateUserProfileUI();
-                    } else {
-                         // Optional: liff.login(); if strict
                     }
                 } catch (e) { console.error(e); }
             }
-            
-            // Parallel fetch
             await Promise.all([fetchEvents(), fetchSettings()]);
             isDataLoaded = true;
-            
-            // Re-render if user is already on a list view
             if(viewHistoryStack[viewHistoryStack.length-1] === 'list') {
                  renderEventGrid(currentCategory);
             }
@@ -295,19 +280,26 @@
             if (userProfile.pictureUrl) document.getElementById('user-picture').src = userProfile.pictureUrl;
         }
 
-        // --- IsActive Logic Helper ---
-        function isEventOpen(e) {
-            // Compatible with boolean or string "開放"
-            return e.isActive === true || e.isActive === "開放";
+        // --- UPDATED: Robust Logic Helper ---
+        function normalizeType(t) {
+            return t ? String(t).toLowerCase().trim() : '';
         }
 
-        // --- Sponsor UI (Fixed Alcohol Options) ---
+        function isEventOpen(e) {
+            if (!e.isActive) return false;
+            // Handle boolean true
+            if (e.isActive === true) return true;
+            // Handle string "開放" (trim spaces) or "TRUE"
+            const val = String(e.isActive).trim();
+            return val === '開放' || val.toUpperCase() === 'TRUE';
+        }
+
+        // --- Sponsor UI ---
         function renderAddSponsorUI() {
             const type = document.querySelector('input[name="addSponsorType"]:checked').value;
             const container = document.getElementById('sponsor-input-area');
             container.innerHTML = '';
             if (type === 'alcohol') {
-                // FIXED: Select dropdown for alcohol type
                 container.innerHTML = `
                     <select id="sp-alc-name" class="w-full flex-1 border border-gray-300 rounded px-2 py-1 text-sm">
                         <option value="啤酒">啤酒</option>
@@ -353,8 +345,6 @@
             sponsorList.push(text);
             renderSponsorList();
         }
-        
-        // ... (Sponsor remove/list same) ...
         function removeSponsor(index) { sponsorList.splice(index, 1); renderSponsorList(); }
         function renderSponsorList() {
             const container = document.getElementById('sponsor-list-container'); container.innerHTML = '';
@@ -362,17 +352,11 @@
             lucide.createIcons();
         }
 
-        // --- 6. Pickup Map Logic (Updated) ---
+        // --- Pickup Map Logic ---
         function updatePickupMap() {
             const val = document.getElementById('pickup-loc').value;
             const btn = document.getElementById('pickup-map-btn');
-            
-            // Logic: pickupOpts in currentEvent are stored as strings. 
-            // New format: "LocationName|URL" or just "LocationName"
-            // The select option value might be just the name if we parse it.
-            
             if (val && currentEvent && currentEvent.pickupOpts) {
-                // Find the option string that starts with this name
                 const rawOpt = currentEvent.pickupOpts.find(opt => opt.startsWith(val));
                 if (rawOpt && rawOpt.includes('|')) {
                     const url = rawOpt.split('|')[1];
@@ -399,8 +383,12 @@
             loading.classList.add('hidden');
             container.innerHTML = '';
             
-            // Filter: isActive == "開放" OR true
-            const filteredEvents = allEvents.filter(e => e.type === type && isEventOpen(e));
+            // Filter Logic (Case Insensitive + Trimmed Status)
+            const targetType = normalizeType(type);
+            const filteredEvents = allEvents.filter(e => {
+                const eType = normalizeType(e.type);
+                return eType === targetType && isEventOpen(e);
+            });
             
             if (filteredEvents.length === 0) {
                 document.getElementById('no-events-msg').classList.remove('hidden');
@@ -410,24 +398,10 @@
                     const card = document.createElement('div');
                     card.className = "bg-white p-4 rounded-xl shadow border border-gray-100 card-hover cursor-pointer flex flex-col gap-2";
                     card.onclick = () => enterEventDetail(e.id);
-                    
-                    let icon = 'calendar';
-                    let color = 'text-green-600';
-                    let bg = 'bg-green-100';
+                    let icon = 'calendar'; let color = 'text-green-600'; let bg = 'bg-green-100';
                     if(e.type === 'banquet') { icon='utensils'; color='text-orange-600'; bg='bg-orange-100'; }
                     if(e.type === 'travel') { icon='bus'; color='text-blue-600'; bg='bg-blue-100'; }
-
-                    card.innerHTML = `
-                        <div class="flex items-start gap-3">
-                            <div class="${bg} p-2 rounded-full ${color} shrink-0"><i data-lucide="${icon}" class="w-6 h-6"></i></div>
-                            <div class="flex-1 min-w-0">
-                                <h3 class="font-bold text-gray-800 text-lg truncate">${e.name}</h3>
-                                <div class="text-xs text-gray-500 mt-1 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> ${formatDate(e.time)}</div>
-                                <div class="text-xs text-gray-500 mt-0.5 flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i> ${e.location}</div>
-                            </div>
-                            <i data-lucide="chevron-right" class="w-5 h-5 text-gray-300 self-center"></i>
-                        </div>
-                    `;
+                    card.innerHTML = `<div class="flex items-start gap-3"><div class="${bg} p-2 rounded-full ${color} shrink-0"><i data-lucide="${icon}" class="w-6 h-6"></i></div><div class="flex-1 min-w-0"><h3 class="font-bold text-gray-800 text-lg truncate">${e.name}</h3><div class="text-xs text-gray-500 mt-1 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> ${formatDate(e.time)}</div><div class="text-xs text-gray-500 mt-0.5 flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i> ${e.location}</div></div><i data-lucide="chevron-right" class="w-5 h-5 text-gray-300 self-center"></i></div>`;
                     container.appendChild(card);
                 });
                 lucide.createIcons();
@@ -436,8 +410,6 @@
         
         function renderEventDetails() {
             const submitBtn = document.getElementById('submit-btn');
-            
-            // Check status using new helper
             if (!isEventOpen(currentEvent)) {
                 submitBtn.disabled = true; submitBtn.innerText = "活動已關閉";
                 submitBtn.className = "w-full bg-gray-400 text-white font-bold py-3.5 rounded-xl cursor-not-allowed flex justify-center items-center gap-2";
@@ -445,8 +417,6 @@
                 submitBtn.disabled = false; 
                 submitBtn.className = "w-full bg-[#06c755] text-white font-bold py-3.5 rounded-xl hover:bg-green-600 transition shadow-md active:scale-95 flex justify-center items-center gap-2";
             }
-            
-            // ... (Rest of basic rendering) ...
             document.getElementById('display-name').innerText = currentEvent.name;
             document.getElementById('display-organizer').innerText = currentEvent.organizer;
             const timeContainer = document.getElementById('display-time-container');
@@ -470,19 +440,15 @@
                 travelField.classList.remove('hidden');
                 if (currentEvent.itinerary) { itinerarySection.classList.remove('hidden'); renderItinerary(currentEvent.itinerary); }
                 secLabel.innerText = "房/位需求";
-                
-                // Parse Pickup Options (Name|URL -> Name in Select)
                 const puSelect = document.getElementById('pickup-loc');
                 puSelect.innerHTML = '';
                 puSelect.add(new Option('請選擇地點', ''));
                 if(currentEvent.pickupOpts) {
                     currentEvent.pickupOpts.forEach(opt => {
-                        // opt format: "Name|URL" or "Name"
                         const name = opt.includes('|') ? opt.split('|')[0] : opt;
                         puSelect.add(new Option(name, name));
                     });
                 }
-                
                 populateRoomSelectWithStats(document.getElementById('room-type'), currentEvent.roomOpts);
             } else if (currentEvent.type === 'banquet') {
                 banquetField.classList.remove('hidden'); secLabel.innerText = "預訂桌數";
@@ -491,26 +457,14 @@
             lucide.createIcons();
         }
 
-        // --- History List (Status = 關閉 or false) ---
+        // --- History List (Status != Open) ---
         function renderHistoryList() { 
             const container = document.getElementById('history-items'); 
             const loader = document.getElementById('history-loading');
-            
-            if(!isDataLoaded) {
-                 loader.classList.remove('hidden');
-                 container.innerHTML = '';
-                 return;
-            }
-            loader.classList.add('hidden');
-            container.innerHTML = ''; 
-            
+            if(!isDataLoaded) { loader.classList.remove('hidden'); container.innerHTML = ''; return; }
+            loader.classList.add('hidden'); container.innerHTML = ''; 
             const historyEvents = allEvents.filter(e => !isEventOpen(e)); 
-            
-            if (historyEvents.length === 0) { 
-                container.innerHTML = '<div class="text-center text-gray-500 text-sm">暫無歷史活動</div>'; 
-                return; 
-            } 
-            
+            if (historyEvents.length === 0) { container.innerHTML = '<div class="text-center text-gray-500 text-sm">暫無歷史活動</div>'; return; } 
             historyEvents.forEach(evt => { 
                 const div = document.createElement('div'); 
                 div.className = "bg-white p-4 rounded-xl shadow-sm border border-gray-200 cursor-pointer hover:bg-gray-50"; 
@@ -520,69 +474,12 @@
             }); 
         }
 
-        // ... (Rest of existing functions: goHome, handleBackNav, enterCategory, enterEventDetail, populateCountOptions, etc. remain unchanged) ...
-        // ... (Include all previous helper functions below to ensure full functionality) ...
-        
-        function goHome() {
-            viewHistoryStack = ['home'];
-            document.getElementById('view-home').classList.remove('hidden');
-            document.getElementById('view-event-list').classList.add('hidden');
-            document.getElementById('view-activity-detail').classList.add('hidden');
-            document.getElementById('view-create').classList.add('hidden');
-            document.getElementById('btn-back').classList.add('hidden');
-            document.getElementById('header-title').innerText = "活動與報名";
-            currentEvent = null;
-            currentCategory = '';
-        }
-        function handleBackNav() {
-            const current = viewHistoryStack[viewHistoryStack.length - 1];
-            if (current === 'detail') {
-                viewHistoryStack.pop();
-                document.getElementById('view-activity-detail').classList.add('hidden');
-                document.getElementById('view-event-list').classList.remove('hidden');
-                document.getElementById('header-title').innerText = getCategoryTitle(currentCategory);
-                currentEvent = null;
-            } else if (current === 'list' || current === 'create') {
-                goHome();
-            }
-        }
+        // --- Helpers ---
+        function goHome() { viewHistoryStack = ['home']; document.getElementById('view-home').classList.remove('hidden'); document.getElementById('view-event-list').classList.add('hidden'); document.getElementById('view-activity-detail').classList.add('hidden'); document.getElementById('view-create').classList.add('hidden'); document.getElementById('btn-back').classList.add('hidden'); document.getElementById('header-title').innerText = "活動與報名"; currentEvent = null; currentCategory = ''; }
+        function handleBackNav() { const current = viewHistoryStack[viewHistoryStack.length - 1]; if (current === 'detail') { viewHistoryStack.pop(); document.getElementById('view-activity-detail').classList.add('hidden'); document.getElementById('view-event-list').classList.remove('hidden'); document.getElementById('header-title').innerText = getCategoryTitle(currentCategory); currentEvent = null; } else if (current === 'list' || current === 'create') { goHome(); } }
         function getCategoryTitle(t) { const titleMap = { 'general': '一般活動', 'banquet': '大型餐會', 'travel': '旅遊活動' }; return titleMap[t] || '活動列表'; }
-        function enterCategory(type) {
-            currentCategory = type;
-            viewHistoryStack.push('list');
-            document.getElementById('view-home').classList.add('hidden');
-            document.getElementById('view-event-list').classList.remove('hidden');
-            document.getElementById('btn-back').classList.remove('hidden');
-            document.getElementById('header-title').innerText = getCategoryTitle(type);
-            renderEventGrid(type);
-        }
-        async function enterEventDetail(eventId) {
-            document.getElementById('regForm').reset();
-            document.getElementById('event-info-card').classList.add('opacity-50');
-            document.getElementById('display-name').innerText = "載入中...";
-            document.getElementById('submit-btn').disabled = true;
-            document.getElementById('pickup-map-btn').classList.add('hidden');
-            guestList = []; renderGuestList();
-            sponsorList = []; renderSponsorList();
-
-            currentEvent = allEvents.find(e => e.id === eventId);
-            if (!currentEvent) return;
-
-            viewHistoryStack.push('detail');
-            document.getElementById('view-event-list').classList.add('hidden');
-            document.getElementById('view-activity-detail').classList.remove('hidden');
-            document.getElementById('header-title').innerText = currentEvent.name;
-
-            document.getElementById('user-name').value = userProfile.displayName;
-            document.getElementById('formAction').value = 'register';
-            document.getElementById('submit-btn').innerHTML = '<span>確認報名</span><i data-lucide="send" class="w-4 h-4"></i>';
-            document.getElementById('form-title').innerHTML = '<i data-lucide="edit-3" class="w-5 h-5 text-[#06c755]"></i> 填寫報名資料';
-            document.getElementById('cancel-reg-btn').classList.add('hidden');
-
-            renderEventDetails(); 
-            await Promise.all([fetchStats(), checkMyRegistration()]); 
-            document.getElementById('event-info-card').classList.remove('opacity-50');
-        }
+        function enterCategory(type) { currentCategory = type; viewHistoryStack.push('list'); document.getElementById('view-home').classList.add('hidden'); document.getElementById('view-event-list').classList.remove('hidden'); document.getElementById('btn-back').classList.remove('hidden'); document.getElementById('header-title').innerText = getCategoryTitle(type); renderEventGrid(type); }
+        async function enterEventDetail(eventId) { document.getElementById('regForm').reset(); document.getElementById('event-info-card').classList.add('opacity-50'); document.getElementById('display-name').innerText = "載入中..."; document.getElementById('submit-btn').disabled = true; document.getElementById('pickup-map-btn').classList.add('hidden'); guestList = []; renderGuestList(); sponsorList = []; renderSponsorList(); currentEvent = allEvents.find(e => e.id === eventId); if (!currentEvent) return; viewHistoryStack.push('detail'); document.getElementById('view-event-list').classList.add('hidden'); document.getElementById('view-activity-detail').classList.remove('hidden'); document.getElementById('header-title').innerText = currentEvent.name; document.getElementById('user-name').value = userProfile.displayName; document.getElementById('formAction').value = 'register'; document.getElementById('submit-btn').innerHTML = '<span>確認報名</span><i data-lucide="send" class="w-4 h-4"></i>'; document.getElementById('form-title').innerHTML = '<i data-lucide="edit-3" class="w-5 h-5 text-[#06c755]"></i> 填寫報名資料'; document.getElementById('cancel-reg-btn').classList.add('hidden'); renderEventDetails(); await Promise.all([fetchStats(), checkMyRegistration()]); document.getElementById('event-info-card').classList.remove('opacity-50'); }
         function formatDate(isoStr) { if (!isoStr || isoStr.indexOf('~') !== -1) return isoStr; const d = new Date(isoStr); if (isNaN(d.getTime())) return isoStr; const weekMap = ['日', '一', '二', '三', '四', '五', '六']; return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} (${weekMap[d.getDay()]}) ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; }
         function populateCountOptions() { const familySel = document.getElementById('family-count'); const guestSel = document.getElementById('add-guest-count'); for (let i = 1; i <= 10; i++) { familySel.add(new Option(`${i} 人`, i)); guestSel.add(new Option(`${i} 人`, i)); } }
         function addGuest() { const name = document.getElementById('add-guest-name').value.trim(); const count = parseInt(document.getElementById('add-guest-count').value); if (!name) { showToast("請輸入來賓姓名"); return; } guestList.push({ name, count }); document.getElementById('add-guest-name').value = ''; renderGuestList(); }
