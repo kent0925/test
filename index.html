@@ -114,7 +114,7 @@
                 <input type="hidden" id="eventName" name="eventName">
                 <input type="hidden" id="formAction" value="register"> 
 
-                <div><label class="block text-sm font-medium text-gray-700 mb-1">參與者</label><div class="flex gap-2 items-center bg-gray-50 p-2 rounded-lg border border-gray-200"><img id="user-picture" src="https://via.placeholder.com/40" class="w-10 h-10 rounded-full bg-gray-300 object-cover"><div class="flex-1 min-w-0"><input type="text" id="user-name" class="w-full bg-transparent border-none p-0 text-gray-800 font-medium text-sm focus:ring-0" readonly value="載入中..."></div></div><input type="hidden" id="user-id"></div>
+                <div><label class="block text-sm font-medium text-gray-700 mb-1">參與者</label><div class="flex gap-2 items-center bg-gray-50 p-2 rounded-lg border border-gray-200"><img id="user-picture" src="https://placehold.co/40" class="w-10 h-10 rounded-full bg-gray-300 object-cover"><div class="flex-1 min-w-0"><input type="text" id="user-name" class="w-full bg-transparent border-none p-0 text-gray-800 font-medium text-sm focus:ring-0" readonly value="載入中..."></div></div><input type="hidden" id="user-id"></div>
                 <div><label class="block text-sm font-medium text-gray-700 mb-1">攜帶家屬 (同住)</label><select id="family-count" class="w-full border border-gray-300 rounded px-3 py-2 bg-white"><option value="0">無攜帶</option></select></div>
                 
                 <div class="bg-orange-50 p-3 rounded-lg border border-orange-100">
@@ -310,6 +310,70 @@
         function addGuest() { const name = document.getElementById('add-guest-name').value.trim(); const count = parseInt(document.getElementById('add-guest-count').value); if (!name) { showToast("請輸入來賓姓名"); return; } guestList.push({ name, count }); document.getElementById('add-guest-name').value = ''; renderGuestList(); }
         function removeGuest(index) { guestList.splice(index, 1); renderGuestList(); }
         function renderGuestList() { const container = document.getElementById('guest-list-container'); container.innerHTML = ''; guestList.forEach((g, i) => { container.innerHTML += `<div class="flex justify-between items-center bg-white border border-gray-200 px-3 py-1 rounded text-sm"><span>${g.name} (${g.count}人)</span> <i data-lucide="x" class="w-4 h-4 tag-remove" onclick="removeGuest(${i})"></i></div>`; }); lucide.createIcons(); }
+
+        // --- Missing Navigation Functions ---
+        function goHome() {
+            document.getElementById('view-home').classList.remove('hidden');
+            document.getElementById('view-activity').classList.add('hidden');
+            document.getElementById('view-create').classList.add('hidden');
+            document.getElementById('btn-back').classList.add('hidden');
+            document.getElementById('header-title').innerText = "活動與報名";
+            currentEvent = null;
+            currentCategory = '';
+        }
+
+        function enterCategory(type) {
+            currentCategory = type;
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-activity').classList.remove('hidden');
+            document.getElementById('btn-back').classList.remove('hidden');
+            
+            const titleMap = { 'general': '一般活動', 'banquet': '大型餐會', 'travel': '旅遊活動' };
+            document.getElementById('header-title').innerText = titleMap[type] || '活動報名';
+            
+            const selector = document.getElementById('event-selector');
+            selector.innerHTML = '<option value="">請選擇場次</option>';
+            
+            const filteredEvents = allEvents.filter(e => e.type === type && e.isActive);
+            filteredEvents.forEach(e => selector.add(new Option(e.name, e.id)));
+            
+            // Clear view
+            document.getElementById('event-info-card').classList.add('opacity-50');
+            document.getElementById('submit-btn').disabled = true;
+            document.getElementById('submit-btn').classList.remove('bg-[#06c755]', 'hover:bg-green-600');
+            document.getElementById('submit-btn').classList.add('bg-gray-300', 'cursor-not-allowed');
+            document.getElementById('regForm').reset();
+            
+            // Re-bind user data
+            if(userProfile.userId) {
+                document.getElementById('user-name').value = userProfile.displayName;
+                document.getElementById('user-id').value = userProfile.userId;
+            }
+        }
+
+        function showCreateView() {
+            document.getElementById('view-home').classList.add('hidden');
+            document.getElementById('view-create').classList.remove('hidden');
+            document.getElementById('btn-back').classList.remove('hidden');
+            document.getElementById('header-title').innerText = "建立新活動";
+        }
+
+        function renderItinerary(str) {
+            const container = document.getElementById('itinerary-accordion-content');
+            container.innerHTML = '';
+            if (!str) return;
+            const parts = str.split(';');
+            parts.forEach(part => {
+                if (part.includes('|')) {
+                    const [title, desc] = part.split('|');
+                    container.innerHTML += `
+                        <div class="mb-2 last:mb-0">
+                            <span class="font-bold text-green-700 text-xs bg-green-100 px-2 py-0.5 rounded mr-2">${title}</span>
+                            <span class="text-sm text-gray-700">${desc}</span>
+                        </div>`;
+                }
+            });
+        }
 
         // --- Event Flow ---
         async function onEventSelected() {
