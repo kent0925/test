@@ -579,9 +579,7 @@
                 text += `(暫無報名資料)\n`;
             }
 
-            const url = (LIFF_ID && LIFF_ID !== "YOUR_LIFF_ID") 
-                ? `https://liff.line.me/${LIFF_ID}?eventId=${currentEvent.id}` 
-                : location.href;
+            const url = `https://liff.line.me/${LIFF_ID}?eventId=${currentEvent.id}`;
             text += `\n報名網址：\n${url}`;
             
             return text;
