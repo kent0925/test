@@ -584,7 +584,62 @@
         function shareStats(){ /* same logic */ }
         function closeDetailsModal(){document.getElementById('details-modal').classList.add('hidden');}
         function copyDetailsToClipboard(){/* same logic */ }
-        async function openDetailsModal(){ if(!currentEvent)return; document.getElementById('details-modal').classList.remove('hidden'); if(GAS_URL) {const r=await fetch(`${GAS_URL}?action=getDetails&eventId=${currentEvent.id}`); const d=await r.json(); const ul=document.getElementById('details-list'); ul.innerHTML=''; ul.classList.remove('hidden'); document.getElementById('modal-loading').classList.add('hidden'); d.forEach((x,i)=>ul.innerHTML+=`<li class="border-b py-2">${i+1}. ${x}</li>`); if(!d.length)document.getElementById('modal-empty').classList.remove('hidden'); } }
+        
+        async function openDetailsModal() {
+            if (!currentEvent) return;
+            
+            // Show Modal
+            const modal = document.getElementById('details-modal');
+            const content = document.getElementById('modal-content');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+
+            // Reset UI state
+            document.getElementById('modal-loading').classList.remove('hidden');
+            const ul = document.getElementById('details-list');
+            ul.classList.add('hidden');
+            ul.innerHTML = '';
+            document.getElementById('modal-empty').classList.add('hidden');
+
+            let details = [];
+            
+            if (GAS_URL) {
+                try {
+                    const res = await fetch(`${GAS_URL}?action=getDetails&eventId=${currentEvent.id}`);
+                    details = await res.json();
+                } catch (e) {
+                    console.error("Failed to fetch details", e);
+                    showToast("無法載入名單");
+                }
+            } else {
+                // Mock Data
+                await new Promise(r => setTimeout(r, 600));
+                details = [
+                    '王小明 (共2人) - 酒類: 紅酒1瓶', 
+                    '李大媽 (共1人)', 
+                    '陳先生 (共3人) - 紅包: 2000元'
+                ];
+            }
+
+            // Render
+            document.getElementById('modal-loading').classList.add('hidden');
+            
+            if (details.length === 0) {
+                document.getElementById('modal-empty').classList.remove('hidden');
+            } else {
+                ul.classList.remove('hidden');
+                details.forEach((item, index) => {
+                    const li = document.createElement('li');
+                    li.className = "flex gap-2 py-2 border-b border-gray-100 last:border-0 text-gray-700";
+                    li.innerHTML = `<span class="text-gray-400 text-xs w-6 shrink-0">${index + 1}.</span> <span>${item}</span>`;
+                    ul.appendChild(li);
+                });
+            }
+        }
+
         async function fetchEvents() { if (GAS_URL) { try { const res = await fetch(`${GAS_URL}?action=getEvents`); allEvents = await res.json(); } catch (e) { allEvents = MOCK_EVENTS; } } else { allEvents = MOCK_EVENTS; } }
         async function fetchSettings() { if (GAS_URL) { try { const res = await fetch(`${GAS_URL}?action=getSettings`); systemSettings = await res.json(); } catch (e) { systemSettings = MOCK_SETTINGS; } } else { systemSettings = MOCK_SETTINGS; } populateCreateDropdowns(); }
         function populateCreateDropdowns() { const orgSelect = document.getElementById('new-organizer-select'); const locSelect = document.getElementById('new-location-select'); orgSelect.innerHTML = '<option value="">請選擇主辦人</option>'; systemSettings.organizers.forEach(org => orgSelect.add(new Option(org, org))); locSelect.innerHTML = '<option value="">請選擇地點</option>'; systemSettings.locations.forEach(loc => locSelect.add(new Option(loc.name, loc.name))); }
