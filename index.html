@@ -85,7 +85,10 @@
                  <div class="bg-white p-4 rounded-xl shadow h-24 w-full skeleton"></div>
              </div>
              <div id="event-grid-container" class="grid grid-cols-1 gap-4"></div>
-             <div id="no-events-msg" class="hidden text-center text-gray-500 py-10">目前沒有此類型的活動</div>
+             <div id="no-events-msg" class="hidden text-center text-gray-500 py-10">
+                 <p>目前沒有此類型的活動</p>
+                 <p class="text-xs text-gray-400 mt-2" id="debug-msg"></p>
+             </div>
         </div>
 
         <!-- VIEW 3: ACTIVITY DETAIL & FORM -->
@@ -280,18 +283,24 @@
             if (userProfile.pictureUrl) document.getElementById('user-picture').src = userProfile.pictureUrl;
         }
 
-        // --- UPDATED: Robust Logic Helper ---
+        // --- UPDATED: Robust Logic Helper for Chinese Input ---
         function normalizeType(t) {
-            return t ? String(t).toLowerCase().trim() : '';
+            if (!t) return '';
+            const s = String(t).toLowerCase().trim();
+            // Chinese mapping
+            if (s === '一般' || s === '一般活動') return 'general';
+            if (s === '餐會' || s === '大型餐會') return 'banquet';
+            if (s === '旅遊' || s === '旅遊活動') return 'travel';
+            return s;
         }
 
         function isEventOpen(e) {
-            if (!e.isActive) return false;
+            if (e.isActive === undefined || e.isActive === null) return false;
             // Handle boolean true
             if (e.isActive === true) return true;
-            // Handle string "開放" (trim spaces) or "TRUE"
-            const val = String(e.isActive).trim();
-            return val === '開放' || val.toUpperCase() === 'TRUE';
+            // Handle string "開放", "是", "啟用", "TRUE", "Open" (case insensitive, trimmed)
+            const val = String(e.isActive).trim().toLowerCase();
+            return val === '開放' || val === 'true' || val === '是' || val === '啟用' || val === 'open';
         }
 
         // --- Sponsor UI ---
@@ -383,7 +392,7 @@
             loading.classList.add('hidden');
             container.innerHTML = '';
             
-            // Filter Logic (Case Insensitive + Trimmed Status)
+            // Robust Filter Logic
             const targetType = normalizeType(type);
             const filteredEvents = allEvents.filter(e => {
                 const eType = normalizeType(e.type);
@@ -391,7 +400,15 @@
             });
             
             if (filteredEvents.length === 0) {
-                document.getElementById('no-events-msg').classList.remove('hidden');
+                const msgEl = document.getElementById('no-events-msg');
+                msgEl.classList.remove('hidden');
+                // Debug Helper for User
+                if (allEvents.length > 0) {
+                   const count = allEvents.length;
+                   document.getElementById('debug-msg').innerText = `(已讀取 ${count} 筆資料，但無符合條件。請檢查 Sheet 的 EventType/IsActive)`;
+                } else {
+                   document.getElementById('debug-msg').innerText = "";
+                }
             } else {
                 document.getElementById('no-events-msg').classList.add('hidden');
                 filteredEvents.forEach(e => {
