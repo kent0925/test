@@ -533,7 +533,14 @@
         function enterCategory(c){ currentCategory=c; document.getElementById('view-home').classList.add('hidden'); document.getElementById('view-activity').classList.remove('hidden'); document.getElementById('btn-back').classList.remove('hidden'); updateEventDropdown(); }
         function updateEventDropdown(){ const s=document.getElementById('event-selector'); s.innerHTML=''; const l=allEvents.filter(e=>e.type===currentCategory && e.isActive); if(!l.length){ s.add(new Option("無活動","")); s.disabled=true; currentEvent=null; renderEventDetails(); return; } s.disabled=false; l.forEach(e=>s.add(new Option(e.name,e.id))); s.selectedIndex=0; onEventSelected(); }
         function showToast(m){const t=document.getElementById('toast');document.getElementById('toast-msg').innerText=m;t.classList.remove('opacity-0','top-4');t.classList.add('top-10');setTimeout(()=>{t.classList.add('opacity-0','top-4');t.classList.remove('top-10')},3000);}
-        function closeDetailsModal(){document.getElementById('details-modal').classList.add('hidden');}
+        
+        function closeDetailsModal(){
+            const content = document.getElementById('modal-content');
+            content.classList.remove('scale-100', 'opacity-100');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => document.getElementById('details-modal').classList.add('hidden'), 300);
+        }
+
         function copyDetailsToClipboard(){/* same logic */ }
         
         async function openDetailsModal(){ 
@@ -550,6 +557,13 @@
                 summaryHTML += `<div>🍽 <b>總認桌:</b> ${currentStats.tableCount} 桌</div>`;
             }
             sumDiv.innerHTML = summaryHTML;
+
+            // Start Animation
+            setTimeout(() => {
+                const content = document.getElementById('modal-content');
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
 
             if(GAS_URL) {
                 const r=await fetch(`${GAS_URL}?action=getDetails&eventId=${currentEvent.id}`); const d=await r.json(); 
