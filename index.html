@@ -32,7 +32,6 @@
         <div class="text-xs bg-white/20 px-2 py-1 rounded" id="header-user">訪客</div>
     </header>
 
-    <!-- Loading Mask -->
     <div id="loading-mask" class="fixed inset-0 bg-white z-[70] flex flex-col items-center justify-center transition-opacity duration-300">
         <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-[#06c755]"></div>
         <p class="mt-4 text-gray-500 text-sm">系統載入中...</p>
@@ -171,7 +170,7 @@
             </div>
         </div>
 
-        <!-- VIEW 3: CREATE EVENT (Same) -->
+        <!-- VIEW 3: CREATE EVENT -->
         <div id="view-create" class="hidden space-y-5">
              <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
                 <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><i data-lucide="plus-square" class="w-6 h-6 text-blue-600"></i> 建立新活動</h2>
@@ -190,8 +189,28 @@
         </div>
     </div>
 
-    <!-- Modal & Toast -->
-    <div id="details-modal" class="hidden fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"><div class="bg-white rounded-xl shadow-2xl w-full max-w-sm max-h-[80vh] flex flex-col relative transform scale-95 opacity-0 transition-all" id="modal-content"><div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl"><h3 class="font-bold text-gray-800 flex items-center gap-2"><i data-lucide="users" class="w-5 h-5 text-green-600"></i> 報名名單</h3><button onclick="closeDetailsModal()" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button></div><div class="p-4 overflow-y-auto flex-1"><div id="modal-loading" class="flex flex-col items-center py-6"><i data-lucide="loader-2" class="w-6 h-6 animate-spin text-green-500 mb-2"></i><span class="text-xs text-gray-500">載入名單中...</span></div><ul id="details-list" class="space-y-2 text-sm text-gray-700 hidden"></ul><div id="modal-empty" class="hidden text-center py-6 text-gray-400 text-sm">目前尚未有人報名</div></div><div class="p-3 border-t border-gray-100 bg-gray-50 rounded-b-xl"><button onclick="copyDetailsToClipboard()" class="w-full bg-blue-50 text-blue-600 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 transition flex justify-center items-center gap-2"><i data-lucide="copy" class="w-4 h-4"></i> 複製名單文字</button></div></div></div>
+    <!-- Modal -->
+    <div id="details-modal" class="hidden fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm max-h-[80vh] flex flex-col relative transform scale-95 opacity-0 transition-all" id="modal-content">
+            <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl">
+                <h3 class="font-bold text-gray-800 flex items-center gap-2"><i data-lucide="bar-chart" class="w-5 h-5 text-green-600"></i> 詳細統計 & 名單</h3>
+                <button onclick="closeDetailsModal()" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <!-- 新增：統計摘要區塊 -->
+            <div id="modal-summary" class="bg-gray-50 p-3 text-xs text-gray-600 border-b border-gray-100 space-y-1">
+                <!-- JS will fill this -->
+            </div>
+
+            <div class="p-4 overflow-y-auto flex-1">
+                <div id="modal-loading" class="flex flex-col items-center py-6"><i data-lucide="loader-2" class="w-6 h-6 animate-spin text-green-500 mb-2"></i><span class="text-xs text-gray-500">載入名單中...</span></div>
+                <ul id="details-list" class="space-y-2 text-sm text-gray-700 hidden"></ul>
+                <div id="modal-empty" class="hidden text-center py-6 text-gray-400 text-sm">目前尚未有人報名</div>
+            </div>
+            <div class="p-3 border-t border-gray-100 bg-gray-50 rounded-b-xl"><button onclick="copyDetailsToClipboard()" class="w-full bg-blue-50 text-blue-600 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 transition flex justify-center items-center gap-2"><i data-lucide="copy" class="w-4 h-4"></i> 複製名單文字</button></div>
+        </div>
+    </div>
+    
     <div id="toast" class="fixed top-4 left-1/2 transform -translate-x-1/2 bg-gray-900/90 text-white px-6 py-3 rounded-full shadow-2xl opacity-0 transition-all duration-300 pointer-events-none z-[100] text-sm flex items-center gap-2 backdrop-blur-sm"><i data-lucide="check-circle" class="w-4 h-4 text-green-400"></i><span id="toast-msg">操作成功</span></div>
 
     <script>
@@ -211,7 +230,7 @@
 
         const MOCK_EVENTS = [
             { id: 'm1', type: 'general', name: '五月例會', organizer: '王社長', time: '2026-04-01T10:30:00.000Z', location: '市民中心', address: '台北市公園路', isActive: true, creatorId: 'mock_u1' },
-            { id: 'm2', type: 'general', name: '歷史活動', organizer: '王社長', time: '2025-01-01T10:00:00.000Z', location: '市民中心', address: '台北市公園路', isActive: false, creatorId: 'mock_u1' }
+            { id: 'm4', type: 'travel', name: '花蓮三日遊', organizer: '康樂組', time: '2026/07/15~2026/07/18', location: '花蓮', address: '北車', itinerary: 'D1: 出發|內容;D2: 遊玩|內容', isActive: true, pickupOpts: ['台北車站'], roomOpts: ['雙人房:5'] }
         ];
         const MOCK_SETTINGS = { organizers: ['王社長'], locations: [{name:'中心', address:'地址'}] };
 
@@ -317,7 +336,6 @@
                 renderEventDetails();
             }
             
-            // Manager Controls
             const controls = document.getElementById('manager-controls');
             const toggleBtn = document.getElementById('btn-status-toggle');
             if (currentEvent && currentEvent.creatorId && currentEvent.creatorId === userProfile.userId) {
@@ -410,13 +428,11 @@
             lucide.createIcons();
         }
 
-        // Updated Room Options with Capacity Support
         function populateRoomSelectWithStats(el, options) {
             el.innerHTML = '';
             el.add(new Option('請選擇', ''));
             if(options) {
                 options.forEach(opt => {
-                    // Try parse "Name:Limit"
                     let name = opt;
                     let limit = null;
                     if(opt.includes(':')) {
@@ -424,17 +440,11 @@
                         name = parts[0];
                         limit = parts[1];
                     }
-                    
                     const count = currentStats.roomCounts[name] || 0;
                     let label = name;
-                    
-                    if (limit) {
-                        label += ` (已選: ${count}/${limit})`;
-                    } else {
-                        label += ` (已選: ${count})`;
-                    }
-                    
-                    el.add(new Option(label, name)); // Send only name to backend
+                    if (limit) label += ` (已選: ${count}/${limit})`;
+                    else label += ` (已選: ${count})`;
+                    el.add(new Option(label, name)); 
                 });
             }
         }
@@ -475,34 +485,22 @@
                 } catch (e) {}
             }
             showToast(action === 'update' ? "更新成功" : "報名成功"); 
-            
-            // Go back to home after success (Requirement 1)
-            setTimeout(() => {
-                goHome();
-                btn.disabled=false;
-            }, 1000);
+            setTimeout(() => { goHome(); btn.disabled=false; }, 1000);
         }
 
         async function handleCancel() {
             if (!confirm("確定要取消此活動的報名嗎？")) return;
             const btn = document.getElementById('cancel-reg-btn'); btn.disabled=true; btn.innerText="取消中...";
             const payload = { action: 'cancelRegistration', eventId: currentEvent.id, userId: userProfile.userId };
-            
             if (GAS_URL) {
                 try {
                     await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
                 } catch(e) {}
             }
             showToast("已取消報名");
-            
-            // Go back to home after cancel (Requirement 1)
-            setTimeout(() => {
-                goHome();
-                btn.disabled=false;
-            }, 1000);
+            setTimeout(() => { goHome(); btn.disabled=false; }, 1000);
         }
 
-        // --- Stats & Share ---
         async function fetchStats() {
             if (!currentEvent) return;
             if (GAS_URL) {
@@ -511,7 +509,6 @@
                     currentStats = await res.json();
                 } catch (e) { }
             } else {
-                // Mock Stats
                 currentStats = { totalPeople: 5, secondary: 1, roomCounts: {'雙人房': 2}, pickupCounts: {'台北車站':3}, sponsorSummary: {}, tableCount: 1 };
             }
             document.getElementById('stat-total').innerText = currentStats.totalPeople;
@@ -521,36 +518,51 @@
         function shareStats() {
             if (!currentEvent) return;
             let text = `📊 【${currentEvent.name}】統計報告\n📅 時間：${formatDate(currentEvent.time.split('~')[0])}\n\n👥 總人數：${currentStats.totalPeople} 人`;
-            
             if (currentEvent.type === 'banquet') {
                 text += `\n🍽 認桌數：${currentStats.tableCount} 桌`;
             } else if (currentEvent.type === 'travel') {
                 text += `\n\n🚌 上車地點：\n`;
-                for (const [k, v] of Object.entries(currentStats.pickupCounts)) {
-                    if (v > 0) text += `  - ${k}: ${v}人\n`;
-                }
+                for (const [k, v] of Object.entries(currentStats.pickupCounts)) { if (v > 0) text += `  - ${k}: ${v}人\n`; }
                 text += `\n🛏 房型需求：\n`;
-                for (const [k, v] of Object.entries(currentStats.roomCounts)) {
-                    if (v > 0) text += `  - ${k}: ${v}間\n`;
-                }
+                for (const [k, v] of Object.entries(currentStats.roomCounts)) { if (v > 0) text += `  - ${k}: ${v}間\n`; }
             }
             text += `\n\n🔗 報名網址：\n${location.href}`;
-
             if (liff.isInClient() && liff.isApiAvailable('shareTargetPicker')) {
                 liff.shareTargetPicker([{ type: "text", text: text }]).catch(() => navigator.clipboard.writeText(text).then(() => showToast("已複製統計")));
-            } else {
-                navigator.clipboard.writeText(text).then(() => showToast("已複製統計內容"));
-            }
+            } else { navigator.clipboard.writeText(text).then(() => showToast("已複製統計內容")); }
         }
 
-        // ... [Remaining Helpers identical to previous] ...
         function goHome(){ document.getElementById('view-home').classList.remove('hidden'); document.getElementById('view-activity').classList.add('hidden'); document.getElementById('view-create').classList.add('hidden'); document.getElementById('btn-back').classList.add('hidden'); document.getElementById('header-title').innerText="活動與報名"; currentCategory=''; }
         function enterCategory(c){ currentCategory=c; document.getElementById('view-home').classList.add('hidden'); document.getElementById('view-activity').classList.remove('hidden'); document.getElementById('btn-back').classList.remove('hidden'); updateEventDropdown(); }
         function updateEventDropdown(){ const s=document.getElementById('event-selector'); s.innerHTML=''; const l=allEvents.filter(e=>e.type===currentCategory && e.isActive); if(!l.length){ s.add(new Option("無活動","")); s.disabled=true; currentEvent=null; renderEventDetails(); return; } s.disabled=false; l.forEach(e=>s.add(new Option(e.name,e.id))); s.selectedIndex=0; onEventSelected(); }
         function showToast(m){const t=document.getElementById('toast');document.getElementById('toast-msg').innerText=m;t.classList.remove('opacity-0','top-4');t.classList.add('top-10');setTimeout(()=>{t.classList.add('opacity-0','top-4');t.classList.remove('top-10')},3000);}
         function closeDetailsModal(){document.getElementById('details-modal').classList.add('hidden');}
         function copyDetailsToClipboard(){/* same logic */ }
-        async function openDetailsModal(){ if(!currentEvent)return; document.getElementById('details-modal').classList.remove('hidden'); if(GAS_URL) {const r=await fetch(`${GAS_URL}?action=getDetails&eventId=${currentEvent.id}`); const d=await r.json(); const ul=document.getElementById('details-list'); ul.innerHTML=''; ul.classList.remove('hidden'); document.getElementById('modal-loading').classList.add('hidden'); d.forEach((x,i)=>ul.innerHTML+=`<li class="border-b py-2">${i+1}. ${x}</li>`); if(!d.length)document.getElementById('modal-empty').classList.remove('hidden'); } }
+        
+        async function openDetailsModal(){ 
+            if(!currentEvent)return; 
+            document.getElementById('details-modal').classList.remove('hidden'); 
+            
+            // Populate Summary
+            const sumDiv = document.getElementById('modal-summary');
+            let summaryHTML = `<div class="font-bold mb-1">📊 統計摘要</div>`;
+            if (currentEvent.type === 'travel') {
+                summaryHTML += `<div>🚌 <b>上車地點:</b> ${Object.entries(currentStats.pickupCounts).map(([k,v])=>`${k}(${v})`).join(', ') || '無'}</div>`;
+                summaryHTML += `<div>🛏 <b>房型:</b> ${Object.entries(currentStats.roomCounts).map(([k,v])=>`${k}(${v})`).join(', ') || '無'}</div>`;
+            } else if (currentEvent.type === 'banquet') {
+                summaryHTML += `<div>🍽 <b>總認桌:</b> ${currentStats.tableCount} 桌</div>`;
+            }
+            sumDiv.innerHTML = summaryHTML;
+
+            if(GAS_URL) {
+                const r=await fetch(`${GAS_URL}?action=getDetails&eventId=${currentEvent.id}`); const d=await r.json(); 
+                const ul=document.getElementById('details-list'); ul.innerHTML=''; ul.classList.remove('hidden'); 
+                document.getElementById('modal-loading').classList.add('hidden'); 
+                d.forEach((x,i)=>ul.innerHTML+=`<li class="border-b py-2 flex gap-2"><span class="text-xs text-gray-400 w-5">${i+1}.</span><span>${x}</span></li>`); 
+                if(!d.length)document.getElementById('modal-empty').classList.remove('hidden'); 
+            } 
+        }
+        
         async function fetchEvents() { if (GAS_URL) { try { const res = await fetch(`${GAS_URL}?action=getEvents`); allEvents = await res.json(); } catch (e) { allEvents = MOCK_EVENTS; } } else { allEvents = MOCK_EVENTS; } }
         async function fetchSettings() { if (GAS_URL) { try { const res = await fetch(`${GAS_URL}?action=getSettings`); systemSettings = await res.json(); } catch (e) { systemSettings = MOCK_SETTINGS; } } else { systemSettings = MOCK_SETTINGS; } populateCreateDropdowns(); }
         function populateCreateDropdowns() { const orgSelect = document.getElementById('new-organizer-select'); const locSelect = document.getElementById('new-location-select'); orgSelect.innerHTML = '<option value="">請選擇主辦人</option>'; systemSettings.organizers.forEach(org => orgSelect.add(new Option(org, org))); locSelect.innerHTML = '<option value="">請選擇地點</option>'; systemSettings.locations.forEach(loc => locSelect.add(new Option(loc.name, loc.name))); }
