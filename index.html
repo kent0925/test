@@ -53,7 +53,7 @@
     <div class="max-w-md mx-auto p-4">
 
         <!-- VIEW 1: HOME (Categories) -->
-        <div id="view-home" class="space-y-6 animate-fade-in">
+        <div id="view-home" class="view-section space-y-6 animate-fade-in">
             <div class="flex justify-end">
                 <button onclick="toggleHistoryView()" id="btn-history-toggle" class="text-xs text-gray-500 flex items-center gap-1 border border-gray-300 px-3 py-1 rounded-full hover:bg-gray-200 bg-white">
                     <i data-lucide="history" class="w-3 h-3"></i> <span>查看歷史活動</span>
@@ -90,7 +90,7 @@
         </div>
 
         <!-- VIEW 2: EVENT SELECTION (List with Tabs) -->
-        <div id="view-event-list" class="hidden space-y-4">
+        <div id="view-event-list" class="view-section hidden space-y-4">
              <!-- Filter Tabs (列表上方的選擇標籤) -->
              <div id="filter-container" class="flex gap-2 overflow-x-auto hide-scrollbar pb-1 sticky top-16 bg-gray-100 pt-2 z-40">
                  <button onclick="switchCategory('all')" id="tab-all" class="filter-tab px-4 py-1.5 rounded-full border border-gray-300 bg-white text-gray-600 text-sm font-medium whitespace-nowrap">全部</button>
@@ -111,7 +111,7 @@
         </div>
 
         <!-- VIEW 3: ACTIVITY DETAIL & FORM -->
-        <div id="view-activity-detail" class="hidden space-y-5">
+        <div id="view-activity-detail" class="view-section hidden space-y-5">
             <div id="event-info-card" class="bg-white rounded-xl shadow p-5 space-y-3 border border-gray-100 relative overflow-hidden transition-opacity duration-300">
                 <div id="manager-controls" class="hidden absolute top-3 right-3 z-10">
                     <button onclick="toggleEventStatus()" id="btn-status-toggle" class="text-xs bg-red-100 text-red-600 px-3 py-1 rounded-full font-bold border border-red-200 hover:bg-red-200">
@@ -221,7 +221,7 @@
         </div>
 
         <!-- VIEW 4: CREATE EVENT -->
-        <div id="view-create" class="hidden space-y-5">
+        <div id="view-create" class="view-section hidden space-y-5">
              <div class="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
                 <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"><i data-lucide="plus-square" class="w-6 h-6 text-blue-600"></i> 建立新活動</h2>
                 <form onsubmit="handleCreateEvent(event)" class="space-y-4">
@@ -289,7 +289,7 @@
 
         let allEvents = [];
         let systemSettings = { organizers: [], locations: [] }; 
-        let currentCategory = 'all'; // Default to 'all'
+        let currentCategory = 'all'; 
         let currentEvent = null;
         let currentStats = { totalPeople: 0, secondary: 0, roomCounts: {}, pickupCounts: {}, sponsorSummary: {}, tableCount: 0 };
         let userProfile = { userId: '', displayName: '訪客', pictureUrl: '' };
@@ -314,7 +314,6 @@
             lucide.createIcons();
             populateCountOptions();
             renderAddSponsorUI(); 
-            // goHome() is called within initApp or manually after load
             goHome(); 
             initApp(); 
         };
@@ -329,12 +328,10 @@
             if (LIFF_ID && LIFF_ID !== "YOUR_LIFF_ID") {
                 try {
                     await liff.init({ liffId: LIFF_ID });
-                    
                     if (!liff.isLoggedIn()) {
                         liff.login(); 
                         return; 
                     }
-
                     if (liff.isLoggedIn()) {
                         const profile = await liff.getProfile();
                         userProfile = { userId: profile.userId, displayName: profile.displayName, pictureUrl: profile.pictureUrl };
@@ -344,8 +341,11 @@
             }
             await Promise.all([fetchEvents(), fetchSettings()]);
             isDataLoaded = true;
-            // Originally rendered 'all', now we wait for user to click category.
-            // renderEventGrid('all'); 
+            
+            // Fix: If user is waiting on a list view (stuck on loading), render it now
+            if (document.getElementById('view-event-list').classList.contains('hidden') === false) {
+                renderEventGrid(currentCategory);
+            }
         }
 
         function updateUserProfileUI() {
@@ -369,6 +369,29 @@
             if (e.isActive === true) return true;
             const val = String(e.isActive).trim().toLowerCase();
             return val === '開放' || val === 'true' || val === '是' || val === '啟用' || val === 'open';
+        }
+
+        // --- View Switching Helper (Crucial Fix for Overlapping Views) ---
+        function switchView(viewId) {
+            // Hide all views
+            const views = ['view-home', 'view-event-list', 'view-activity-detail', 'view-create'];
+            views.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+            // Show target view
+            const target = document.getElementById(viewId);
+            if (target) target.classList.remove('hidden');
+            
+            // Handle header button visibility
+            const backBtn = document.getElementById('btn-back');
+            if (viewId === 'view-home') {
+                backBtn.classList.add('hidden');
+            } else {
+                backBtn.classList.remove('hidden');
+            }
+            
+            refreshIcons();
         }
 
         // --- Sponsor UI ---
@@ -428,7 +451,6 @@
             refreshIcons();
         }
 
-        // --- Pickup Map Logic ---
         function updatePickupMap() {
             const val = document.getElementById('pickup-loc').value;
             const btn = document.getElementById('pickup-map-btn');
@@ -444,21 +466,17 @@
             btn.classList.add('hidden');
         }
 
-        // --- UI Nav & Render ---
         function switchCategory(type) {
             currentCategory = type;
-            // Update Tab Styles
             document.querySelectorAll('.filter-tab').forEach(btn => {
                 btn.classList.remove('active', 'bg-[#06c755]', 'text-white', 'border-[#06c755]');
                 btn.classList.add('bg-white', 'text-gray-600', 'border-gray-300');
             });
-            
             const activeBtn = document.getElementById(`tab-${type}`);
             if (activeBtn) {
                 activeBtn.classList.remove('bg-white', 'text-gray-600', 'border-gray-300');
                 activeBtn.classList.add('active', 'bg-[#06c755]', 'text-white', 'border-[#06c755]');
             }
-            
             renderEventGrid(type);
         }
 
@@ -476,9 +494,8 @@
             loading.classList.add('hidden');
             container.innerHTML = '';
             
-            // Filter Logic
             const filteredEvents = allEvents.filter(e => {
-                if (type === 'all') return isEventOpen(e); // Show all open events
+                if (type === 'all') return isEventOpen(e); 
                 const eType = normalizeType(e.type);
                 const targetType = normalizeType(type);
                 return eType === targetType && isEventOpen(e);
@@ -507,21 +524,14 @@
             }
         }
         
-        // --- UPDATED: Date Formatting Logic ---
         function formatDate(isoStr) { 
             if (!isoStr) return '';
             if (isoStr.indexOf('~') !== -1) return isoStr; 
-            
             const d = new Date(isoStr); 
             if (isNaN(d.getTime())) return isoStr; 
-            
             const weekMap = ['日', '一', '二', '三', '四', '五', '六']; 
             const dateStr = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} (${weekMap[d.getDay()]})`;
-            
-            if (isoStr.trim().length <= 10) {
-                return dateStr;
-            }
-            
+            if (isoStr.trim().length <= 10) return dateStr;
             return `${dateStr} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; 
         }
 
@@ -532,9 +542,7 @@
             if (currentEvent.deadline) {
                 const deadlineDate = new Date(currentEvent.deadline);
                 const now = new Date();
-                if (now > deadlineDate) {
-                    isExpired = true;
-                }
+                if (now > deadlineDate) isExpired = true;
             }
 
             if (!isEventOpen(currentEvent)) {
@@ -569,11 +577,7 @@
                 const deadlineStr = formatDate(currentEvent.deadline);
                 const deadlineColor = isExpired ? "text-red-500 font-bold" : "text-gray-500";
                 const icon = isExpired ? "alert-circle" : "hourglass";
-                timeContainer.innerHTML += `
-                    <div class="mt-1 pt-1 border-t border-gray-100 flex items-center gap-1 text-xs ${deadlineColor}">
-                        <i data-lucide="${icon}" class="w-3 h-3"></i> 截止：${deadlineStr}
-                    </div>
-                `;
+                timeContainer.innerHTML += `<div class="mt-1 pt-1 border-t border-gray-100 flex items-center gap-1 text-xs ${deadlineColor}"><i data-lucide="${icon}" class="w-3 h-3"></i> 截止：${deadlineStr}</div>`;
             }
 
             document.getElementById('display-location').innerText = currentEvent.location;
@@ -610,7 +614,6 @@
             refreshIcons();
         }
 
-        // --- History List (Status != Open) ---
         function renderHistoryList() { 
             const container = document.getElementById('history-items'); 
             const loader = document.getElementById('history-loading');
@@ -627,14 +630,9 @@
             }); 
         }
 
-        // --- Helpers ---
         function goHome() { 
             viewHistoryStack = ['home']; 
-            document.getElementById('view-home').classList.remove('hidden'); 
-            document.getElementById('view-event-list').classList.add('hidden'); 
-            document.getElementById('view-activity-detail').classList.add('hidden'); 
-            document.getElementById('view-create').classList.add('hidden'); 
-            document.getElementById('btn-back').classList.add('hidden'); 
+            switchView('view-home');
             document.getElementById('header-title').innerText = "活動與報名"; 
             currentEvent = null; 
             currentCategory = ''; 
@@ -645,8 +643,7 @@
             const current = viewHistoryStack[viewHistoryStack.length - 1]; 
             if (current === 'detail') { 
                 viewHistoryStack.pop(); 
-                document.getElementById('view-activity-detail').classList.add('hidden'); 
-                document.getElementById('view-event-list').classList.remove('hidden'); 
+                switchView('view-event-list');
                 document.getElementById('header-title').innerText = getCategoryTitle(currentCategory); 
                 currentEvent = null; 
             } else if (current === 'list' || current === 'create') { 
@@ -659,12 +656,8 @@
         function enterCategory(type) { 
             currentCategory = type; 
             viewHistoryStack.push('list'); 
-            document.getElementById('view-home').classList.add('hidden'); 
-            document.getElementById('view-event-list').classList.remove('hidden'); 
-            document.getElementById('btn-back').classList.remove('hidden'); 
+            switchView('view-event-list');
             document.getElementById('header-title').innerText = getCategoryTitle(type); 
-            
-            // Set tab active state manually to match entered category
             switchCategory(type); 
         }
         
@@ -681,8 +674,7 @@
             if (!currentEvent) return; 
             
             viewHistoryStack.push('detail'); 
-            document.getElementById('view-event-list').classList.add('hidden'); 
-            document.getElementById('view-activity-detail').classList.remove('hidden'); 
+            switchView('view-activity-detail');
             document.getElementById('header-title').innerText = currentEvent.name; 
             
             document.getElementById('user-name').value = userProfile.displayName; 
@@ -700,16 +692,19 @@
         function addGuest() { const name = document.getElementById('add-guest-name').value.trim(); const count = parseInt(document.getElementById('add-guest-count').value); if (!name) { showToast("請輸入來賓姓名"); return; } guestList.push({ name, count }); document.getElementById('add-guest-name').value = ''; renderGuestList(); }
         function removeGuest(index) { guestList.splice(index, 1); renderGuestList(); }
         function renderGuestList() { const container = document.getElementById('guest-list-container'); container.innerHTML = ''; guestList.forEach((g, i) => { const label = g.count > 1 ? `${g.name} (${g.count}人)` : g.name; container.innerHTML += `<div class="flex justify-between items-center bg-white border border-gray-200 px-3 py-1 rounded text-sm"><span>${label}</span> <i data-lucide="x" class="w-4 h-4 tag-remove" onclick="removeGuest(${i})"></i></div>`; }); refreshIcons(); }
-        function showCreateView() { viewHistoryStack.push('create'); document.getElementById('view-home').classList.add('hidden'); document.getElementById('view-create').classList.remove('hidden'); document.getElementById('btn-back').classList.remove('hidden'); document.getElementById('header-title').innerText = "建立新活動"; }
         
-        // --- UPDATED: Grouped Itinerary Render Logic ---
+        function showCreateView() { 
+            viewHistoryStack.push('create'); 
+            switchView('view-create');
+            document.getElementById('header-title').innerText = "建立新活動"; 
+        }
+        
         function renderItinerary(str) {
             const container = document.getElementById('itinerary-accordion-content');
             container.innerHTML = '';
             if (!str) return;
 
             const daysMap = {};
-            // Parse logic
             str.split(';').forEach(item => {
                 if (!item.trim()) return;
                 let day = "行程";
@@ -719,7 +714,6 @@
                     day = parts[0].trim();
                     content = parts.slice(1).join(':').trim(); 
                 }
-                
                 let title = content;
                 let desc = "";
                 if (content.includes('|')) {
@@ -727,19 +721,15 @@
                     title = parts[0].trim();
                     desc = parts.slice(1).join('|').trim();
                 }
-
                 if (!daysMap[day]) daysMap[day] = [];
                 daysMap[day].push({ title, desc });
             });
 
-            // Render Groups
             Object.keys(daysMap).forEach((day, index) => {
                 const dayEvents = daysMap[day];
-                
                 const dayBlock = document.createElement('details');
                 dayBlock.className = "day-itinerary group/day border-l-2 border-green-300 ml-1 mb-3 open:bg-white transition-all";
-                // Modify this line:
-                dayBlock.open = (index === 0); // Only open the first day by default
+                dayBlock.open = (index === 0);
 
                 const summary = document.createElement('summary');
                 summary.className = "flex items-center gap-2 cursor-pointer py-1 px-2 hover:bg-green-50 rounded select-none text-green-800 font-bold text-sm";
@@ -757,7 +747,6 @@
                         </div>
                     `;
                 });
-
                 dayBlock.appendChild(summary);
                 dayBlock.appendChild(contentDiv);
                 container.appendChild(dayBlock);
@@ -765,22 +754,18 @@
             refreshIcons();
         }
         
-        // Confirm Helper
         function showConfirm(message) {
             return new Promise((resolve) => {
                 const modal = document.getElementById('confirm-modal');
                 const msgEl = document.getElementById('confirm-msg');
                 const yesBtn = document.getElementById('confirm-yes');
                 const noBtn = document.getElementById('confirm-no');
-
                 msgEl.innerText = message;
                 modal.classList.remove('hidden');
-
                 const close = (val) => {
                     modal.classList.add('hidden');
                     resolve(val);
                 };
-
                 yesBtn.onclick = () => close(true);
                 noBtn.onclick = () => close(false);
             });
@@ -825,7 +810,6 @@
         async function handleCancel() { if (!await showConfirm("確定要取消此活動的報名嗎？")) return; const btn = document.getElementById('cancel-reg-btn'); btn.disabled=true; btn.innerText="取消中..."; const payload = { action: 'cancelRegistration', eventId: currentEvent.id, userId: userProfile.userId }; if (GAS_URL) { try { await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' }); } catch(e) {} } showToast("已取消報名"); setTimeout(() => { goHome(); btn.disabled=false; }, 1000); }
         async function fetchStats() { if (!currentEvent) return; if (GAS_URL) { try { const res = await fetch(`${GAS_URL}?action=stats&eventId=${currentEvent.id}`); currentStats = await res.json(); } catch (e) { } } else { currentStats = { totalPeople: 5, secondary: 1, roomCounts: {'雙人房': 2}, pickupCounts: {'台北車站':3}, sponsorSummary: {}, tableCount: 1 }; } document.getElementById('stat-total').innerText = currentStats.totalPeople; document.getElementById('stat-sec-val').innerText = currentStats.secondary; }
         
-        // --- 1. Copy Text with Total Count & Safe Replace ---
         function generateShareText(details) {
             if (!currentEvent) return '';
             let text = `【${currentEvent.name}】\n主辦：${currentEvent.organizer}\n時間：${formatDate(currentEvent.time)}\n地點：${currentEvent.location}\n地址：${currentEvent.address}\n`;
@@ -844,8 +828,6 @@
                      let total = 1 + (item.family || 0) + (item.guestCount || 0);
                      text += `${pad(index + 1)}. ${item.name}`;
                      if (total > 1) text += ` *${total}`; 
-                     
-                     // Nested Guest Display
                      if (item.guestName && item.guestName !== '無') {
                         let displayGuest = String(item.guestName).replace(/\(1\)/g, '');
                         text += `\n      來賓：${displayGuest}`;
