@@ -1306,6 +1306,8 @@
                 switchView('view-event-list');
                 document.getElementById('header-title').innerText = getCategoryTitle(appState.currentCategory);
                 appState.currentEvent = null;
+                // ★ 修正：從詳情頁返回時重新渲染 Grid，確保已報名狀態即時更新
+                renderEventGrid(appState.currentCategory);
             }
         }
 
@@ -1408,7 +1410,7 @@
                                  if(parts[2] && parts[2]!=='無') extras.push(parts[2]);
                                  
                                  let str = name;
-                                 if(extras.length) str += `[${extras.join('/')}]`;
+                                 if(extras.length) str += ` [${extras.join('/')}]`;
                                  gInfos.push(str);
                              });
                              if(gInfos.length) bots.push(`[賓] ${gInfos.join('、')}`);
