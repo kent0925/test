@@ -610,13 +610,22 @@
                     });
                 }
 
-                // Populate Guest Room
+                // Populate Guest Room with Stats
                 guestRoom.innerHTML = '<option value="">房型</option>';
                 if(currentEvent.roomOpts) {
                      currentEvent.roomOpts.forEach(opt => {
                         let name = opt;
-                        if(opt.includes(':')) name = opt.split(':')[0];
-                        guestRoom.add(new Option(name, name));
+                        let limit = null;
+                        if(opt.includes(':')) {
+                             const parts = opt.split(':');
+                             name = parts[0];
+                             limit = parts[1];
+                        }
+                        const count = currentStats.roomCounts[name] || 0;
+                        let label = name;
+                        if (limit) label += ` (已選: ${count}/${limit})`;
+                        else label += ` (已選: ${count})`;
+                        guestRoom.add(new Option(label, name));
                     });
                 }
 
@@ -872,6 +881,18 @@
                 yesBtn.onclick = () => close(true);
                 noBtn.onclick = () => close(false);
             });
+        }
+        
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            document.getElementById('toast-msg').innerText = message;
+            toast.classList.remove('opacity-0', 'top-4');
+            toast.classList.add('top-10');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'top-4');
+                toast.classList.remove('top-10');
+            }, 3000);
         }
 
         async function checkMyRegistration() { 
