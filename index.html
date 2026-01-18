@@ -84,7 +84,7 @@
                     <div class="bg-green-50 p-3 rounded-2xl text-green-600 group-hover:scale-110 transition-transform"><i data-lucide="users" class="w-7 h-7"></i></div>
                     <div class="flex-1">
                         <h3 class="text-lg font-bold text-gray-800">一般活動</h3>
-                        <p class="text-xs text-gray-500 mt-0.5">月例會、運動會、生日會</p>
+                        <p class="text-xs text-gray-500 mt-0.5">例會、運動會、講座</p>
                     </div>
                     <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400"><i data-lucide="chevron-right" class="w-5 h-5"></i></div>
                 </div>
@@ -104,7 +104,7 @@
                     <div class="bg-blue-50 p-3 rounded-2xl text-blue-600 group-hover:scale-110 transition-transform"><i data-lucide="bus" class="w-7 h-7"></i></div>
                     <div class="flex-1">
                         <h3 class="text-lg font-bold text-gray-800">旅遊活動</h3>
-                        <p class="text-xs text-gray-500 mt-0.5">過夜旅遊、家庭日</p>
+                        <p class="text-xs text-gray-500 mt-0.5">國內外旅遊、家庭日</p>
                     </div>
                     <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400"><i data-lucide="chevron-right" class="w-5 h-5"></i></div>
                 </div>
@@ -237,7 +237,7 @@
 
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">眷屬 (人數)</label>
+                            <label class="block text-sm font-medium text-gray-700 mb-1.5">攜帶眷屬 (人數)</label>
                             <div class="relative">
                                 <i data-lucide="users" class="absolute left-3 top-2.5 w-4 h-4 text-gray-400"></i>
                                 <select id="family-count" class="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2 bg-white text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none appearance-none">
@@ -248,36 +248,8 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- Guest Section -->
-                <div class="bg-orange-50/50 p-4 rounded-xl border border-orange-100">
-                    <div class="flex justify-between items-center mb-3">
-                        <label class="text-sm font-bold text-orange-800 flex items-center gap-1.5"><i data-lucide="user-plus" class="w-4 h-4"></i> 新增來賓 (填寫完畢請按加入名單)</label>
-                        <span class="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">選填</span>
-                    </div>
-                    
-                    <div id="guest-list-container" class="space-y-2 mb-3 empty:hidden"></div>
-                    
-                    <div class="bg-white p-3 rounded-lg border border-orange-200 shadow-sm space-y-2">
-                        <div class="flex gap-2">
-                            <input type="text" id="add-guest-name" placeholder="來賓姓名" class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-orange-500 outline-none">
-                            <select id="add-guest-count" class="w-24 border border-gray-300 rounded-lg px-2 py-2 text-sm bg-gray-50 text-center"></select>
-                        </div>
-                        <div id="guest-travel-options" class="hidden grid grid-cols-2 gap-2">
-                             <select id="add-guest-pickup" class="w-full border border-gray-300 rounded-lg px-2 py-2 text-sm bg-gray-50 text-gray-700">
-                                <option value="">上車地點</option>
-                             </select>
-                             <select id="add-guest-room" class="w-full border border-gray-300 rounded-lg px-2 py-2 text-sm bg-gray-50 text-gray-700">
-                                <option value="">房型</option>
-                             </select>
-                        </div>
-                        <button type="button" onclick="addGuest()" class="w-full bg-orange-500 text-white py-2 rounded-lg text-sm font-medium hover:bg-orange-600 transition flex justify-center items-center gap-1 active:scale-95">
-                            <i data-lucide="plus" class="w-4 h-4"></i> 加入名單
-                        </button>
-                    </div>
-                </div>
 
-                <!-- Dynamic Fields -->
+                <!-- Dynamic Fields (Moved here: User selects their options first) -->
                 <div id="dynamic-fields" class="space-y-4">
                     <!-- Travel Options -->
                     <div id="field-travel" class="hidden space-y-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
@@ -327,10 +299,40 @@
                         </div>
                     </div>
                 </div>
+                
+                <!-- Guest Section (Moved below dynamic fields) -->
+                <div class="bg-orange-50/50 p-4 rounded-xl border border-orange-100">
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="text-sm font-bold text-orange-800 flex items-center gap-1.5"><i data-lucide="user-plus" class="w-4 h-4"></i> 新增來賓</label>
+                        <span class="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">選填</span>
+                    </div>
+                    
+                    <div id="guest-list-container" class="space-y-2 mb-3 empty:hidden"></div>
+                    
+                    <div class="bg-white p-3 rounded-lg border border-orange-200 shadow-sm space-y-2">
+                        <div class="flex gap-2">
+                            <input type="text" id="add-guest-name" placeholder="來賓姓名" class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-orange-500 outline-none">
+                            <select id="add-guest-count" class="w-24 border border-gray-300 rounded-lg px-2 py-2 text-sm bg-gray-50 text-center"></select>
+                        </div>
+                        <div id="guest-travel-options" class="hidden grid grid-cols-2 gap-2">
+                             <select id="add-guest-pickup" class="w-full border border-gray-300 rounded-lg px-2 py-2 text-sm bg-gray-50 text-gray-700">
+                                <option value="">上車地點</option>
+                             </select>
+                             <select id="add-guest-room" class="w-full border border-gray-300 rounded-lg px-2 py-2 text-sm bg-gray-50 text-gray-700">
+                                <option value="">房型</option>
+                             </select>
+                        </div>
+                        <button type="button" onclick="addGuest()" class="w-full bg-orange-500 text-white py-2 rounded-lg text-sm font-medium hover:bg-orange-600 transition flex justify-center items-center gap-1 active:scale-95">
+                            <i data-lucide="plus" class="w-4 h-4"></i> 加入名單
+                        </button>
+                        <!-- Added Warning -->
+                        <p class="text-[10px] text-red-500 mt-1 font-medium text-center">※ 請務必點擊「加入名單」按鈕，資料才會儲存。</p>
+                    </div>
+                </div>
 
                 <!-- Sponsor Section -->
                 <div class="p-4 border border-gray-200 rounded-xl bg-gray-50/30">
-                    <label class="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-1.5"><i data-lucide="gift" class="w-4 h-4 text-purple-500"></i> 贊助項目 (填寫完畢請按新增贊助)</label>
+                    <label class="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-1.5"><i data-lucide="gift" class="w-4 h-4 text-purple-500"></i> 贊助項目</label>
                     <div id="sponsor-list-container" class="space-y-2 mb-3 empty:hidden"></div>
                     
                     <div class="space-y-3 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
@@ -341,8 +343,10 @@
                         </div>
                         <div id="sponsor-input-area" class="flex flex-wrap gap-2 items-center min-h-[36px]"></div>
                         <button type="button" onclick="addSponsor()" class="w-full bg-gray-800 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition flex justify-center items-center gap-1.5 active:scale-95">
-                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> 新增贊助 
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> 新增贊助
                         </button>
+                        <!-- Added Warning -->
+                        <p class="text-[10px] text-red-500 mt-1 font-medium text-center">※ 請務必點擊「新增贊助」按鈕，資料才會儲存。</p>
                     </div>
                 </div>
 
@@ -906,6 +910,7 @@
             const timeDiv = document.getElementById('display-time-container');
             if (e.type === 'travel' && e.time.includes('~')) {
                 const [start, end] = e.time.split('~');
+                // Use formatDateOnly instead of formatDate for travel
                 timeDiv.innerHTML = `<div class="flex flex-col text-sm"><span class="text-green-700 font-bold">起：${formatDateOnly(start)}</span><span class="text-red-700 font-bold">止：${formatDateOnly(end)}</span></div>`;
             } else {
                 timeDiv.innerText = formatDate(e.time);
@@ -1152,11 +1157,23 @@
                 const total = 1 + (parseInt(row.family)||0) + (parseInt(row.guestCount)||0);
                 if(total > 1) badge = `<span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs font-bold">+${total-1}</span>`;
                 
-                // Display guests info
+                // Parse guests with details if available
                 let subHtml = '';
                 if (row.guestName && row.guestName !== '無') {
-                    const guests = row.guestName.split(',').map(s => s.trim().split('|')[0].replace(/\(\d+\)/, '')).join('、');
-                    subHtml = `<div class="text-xs text-gray-400 mt-0.5 pl-6">賓: ${guests}</div>`;
+                    const guestEntries = row.guestName.split(', ');
+                    let guestTexts = [];
+                    guestEntries.forEach(g => {
+                         let parts = g.split('|');
+                         let main = parts[0]; 
+                         let extras = [];
+                         if(parts[1]) extras.push(parts[1]);
+                         if(parts[2]) extras.push(parts[2]);
+                         
+                         let text = main;
+                         if(extras.length) text += ` [${extras.join('/')}]`;
+                         guestTexts.push(text);
+                    });
+                    subHtml = `<div class="text-xs text-gray-500 mt-0.5 pl-6">賓: ${guestTexts.join('、')}</div>`;
                 }
 
                 listP.innerHTML += `
@@ -1315,45 +1332,61 @@
                 let text = `【${appState.currentEvent.name}】報名名單\n------------------\n`;
                 
                 data.forEach((p, i) => {
-                    // Line 1: Name and count
-                    let line = `${i+1}. ${p.name}`;
+                    // 1. Top: Name & Count
+                    let block = `${i+1}. ${p.name}`;
                     const total = 1 + (parseInt(p.family)||0) + (parseInt(p.guestCount)||0);
-                    if(total > 1) line += ` *${total}`;
+                    if(total > 1) block += ` *${total}`;
+                    block += '\n';
                     
-                    // Specific Logic for Travel vs Others
-                    if (appState.currentEvent.type === 'travel') {
-                        // Travel: Name + Pickup + Room + Sponsor
-                        let extras = [];
-                        if (p.pickup && p.pickup !== '無') extras.push(p.pickup);
-                        if (p.room && p.room !== '無') extras.push(p.room);
-                        
-                        if (extras.length > 0) line += ` [${extras.join(' | ')}]`;
-                        
-                        // Add Sponsor if exists
-                        if (p.sponsor && p.sponsor !== '無') line += ` / ${p.sponsor}`;
-                        
-                        text += line + '\n';
-                        
-                        // Travel specific: Separator after each entry?
-                        // Or separator between list and summary? 
-                        // The request said "separated by dotted lines in the middle". 
-                        // I'll add a separator between each person for clarity in complex travel lists.
-                        text += '------------------\n';
-                        
-                    } else {
-                        // Other: Name + Sponsor
-                        if (p.sponsor && p.sponsor !== '無') line += ` / ${p.sponsor}`;
-                        text += line + '\n';
+                    // 2. Middle: Sponsor / Table
+                    let mids = [];
+                    if (p.tableCount > 0) mids.push(`認桌: ${p.tableCount}`);
+                    if (p.sponsor && p.sponsor !== '無') mids.push(`贊: ${p.sponsor}`);
+                    
+                    if (mids.length > 0) {
+                        block += `   └ ${mids.join(' / ')}\n`;
                     }
+                    
+                    // 3. Bottom: Travel
+                    if (appState.currentEvent.type === 'travel') {
+                        let bots = [];
+                        
+                        // Main User Travel
+                        let mainTravel = [];
+                        if (p.pickup && p.pickup !== '無') mainTravel.push(p.pickup);
+                        if (p.room && p.room !== '無') mainTravel.push(p.room);
+                        if (mainTravel.length > 0) bots.push(`[主] ${mainTravel.join('|')}`);
+                        
+                        // Guest Travel
+                        if (p.guestName && p.guestName !== '無') {
+                             // Expected format: "Name(Count)|Pickup|Room, ..."
+                             // Need to be careful about parsing
+                             const guests = p.guestName.split(', ');
+                             let gInfos = [];
+                             guests.forEach(g => {
+                                 let parts = g.split('|');
+                                 let name = parts[0].replace(/\(\d+\)/, ''); // clean count
+                                 let extras = [];
+                                 if(parts[1] && parts[1]!=='無') extras.push(parts[1]);
+                                 if(parts[2] && parts[2]!=='無') extras.push(parts[2]);
+                                 
+                                 let str = name;
+                                 if(extras.length) str += `[${extras.join('/')}]`;
+                                 gInfos.push(str);
+                             });
+                             if(gInfos.length) bots.push(`[賓] ${gInfos.join('、')}`);
+                        }
+                        
+                        if (bots.length > 0) {
+                            block += `   └ ${bots.join('\n     ')}\n`;
+                        }
+                    }
+                    
+                    text += block + '------------------\n';
                 });
                 
-                // Remove last separator if travel
-                if (appState.currentEvent.type === 'travel' && text.endsWith('------------------\n')) {
-                    text = text.substring(0, text.length - 19);
-                }
-                
-                // Add Summary at bottom
-                text += `\n------------------\n總計: ${appState.currentStats.totalPeople} 人`;
+                // Summary
+                text += `\n總計: ${appState.currentStats.totalPeople} 人`;
                 
                 navigator.clipboard.writeText(text).then(() => {
                     const btn = document.getElementById('btn-copy-list');
