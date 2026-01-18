@@ -23,8 +23,8 @@
         .card-hover { transition: all 0.2s; }
         .card-hover:active { transform: scale(0.95); }
         .tag-remove { cursor: pointer; color: #ef4444; }
-        .dashed-separator { border-top: 2px dashed #e5e7eb; margin: 1rem 0; position: relative; }
-        .dashed-separator::after { content: '贊助與認桌'; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #fff; padding: 0 10px; color: #9ca3af; font-size: 0.75rem; }
+        .dashed-separator { border-top: 2px dashed #e5e7eb; margin: 1.5rem 0 1rem 0; position: relative; }
+        .dashed-separator span { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #fff; padding: 0 10px; color: #9ca3af; font-size: 0.75rem; font-weight: bold; }
         
         /* Filter Tab Active State */
         .filter-tab.active { background-color: #06c755; color: white; border-color: #06c755; }
@@ -33,6 +33,15 @@
         /* Skeleton Animation */
         .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite; }
         @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        /* Fade In Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen pb-10">
@@ -260,7 +269,13 @@
                 <div id="modal-loading" class="flex flex-col items-center py-6"><i data-lucide="loader-2" class="w-6 h-6 animate-spin text-green-500 mb-2"></i><span class="text-xs text-gray-500">載入名單中...</span></div>
                 <div id="details-lists-container" class="hidden">
                     <ul id="details-list-people" class="space-y-2 text-sm text-gray-700 font-mono mb-2"></ul>
-                    <div id="details-separator" class="hidden dashed-separator"></div>
+                    
+                    <!-- Travel Details Separator -->
+                    <div id="travel-separator" class="hidden dashed-separator"><span>房型與上車</span></div>
+                    <ul id="details-list-travel" class="space-y-2 text-sm text-gray-700 font-mono hidden mb-2"></ul>
+                    
+                    <!-- Sponsor Separator -->
+                    <div id="details-separator" class="hidden dashed-separator"><span>贊助與認桌</span></div>
                     <ul id="details-list-items" class="space-y-2 text-sm text-gray-700 font-mono"></ul>
                 </div>
                 <div id="modal-empty" class="hidden text-center py-6 text-gray-400 text-sm">目前尚未有人報名</div>
@@ -328,14 +343,12 @@
             if (LIFF_ID && LIFF_ID !== "YOUR_LIFF_ID") {
                 try {
                     await liff.init({ liffId: LIFF_ID });
-                    if (!liff.isLoggedIn()) {
-                        liff.login(); 
-                        return; 
-                    }
                     if (liff.isLoggedIn()) {
                         const profile = await liff.getProfile();
                         userProfile = { userId: profile.userId, displayName: profile.displayName, pictureUrl: profile.pictureUrl };
                         updateUserProfileUI();
+                    } else {
+                         document.getElementById('header-user').innerHTML = '<button onclick="liff.login()" class="bg-white/20 px-2 py-1 rounded text-xs hover:bg-white/30">登入</button>';
                     }
                 } catch (e) { console.error(e); }
             }
@@ -800,16 +813,16 @@
         }
 
         function populateRoomSelectWithStats(el, options) { el.innerHTML = ''; el.add(new Option('請選擇', '')); if(options) { options.forEach(opt => { let name = opt; let limit = null; if(opt.includes(':')) { const parts = opt.split(':'); name = parts[0]; limit = parts[1]; } const count = currentStats.roomCounts[name] || 0; let label = name; if (limit) label += ` (已選: ${count}/${limit})`; else label += ` (已選: ${count})`; el.add(new Option(label, name)); }); } }
-        async function handleSubmit(e) { e.preventDefault(); const btn = document.getElementById('submit-btn'); btn.disabled=true; const action = document.getElementById('formAction').value; btn.innerText = action === 'update' ? "更新中..." : "報名中..."; let finalGuestName = '無'; let totalGuestCount = 0; if (guestList.length > 0) { finalGuestName = guestList.map(g => g.count > 1 ? `${g.name}(${g.count})` : g.name).join(', '); totalGuestCount = guestList.reduce((sum, g) => sum + g.count, 0); } let finalSponsor = '無'; if (sponsorList.length > 0) finalSponsor = sponsorList.join(', '); const formData = { action: action, eventId: document.getElementById('eventId').value, eventType: document.getElementById('eventType').value, eventName: document.getElementById('eventName').value, userId: document.getElementById('user-id').value, userName: document.getElementById('user-name').value, familyCount: document.getElementById('family-count').value, guestName: finalGuestName, guestCount: totalGuestCount, sponsorship: finalSponsor, pickupLoc: document.getElementById('pickup-loc').value, roomType: document.getElementById('room-type').value, tableCount: document.getElementById('table-count').value }; if (GAS_URL) { try { await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(formData), mode: 'no-cors' }); } catch (e) {} } showToast(action === 'update' ? "更新成功" : "報名成功"); setTimeout(() => { goHome(); btn.disabled=false; }, 1000); }
+        async function handleSubmit(e) { e.preventDefault(); const btn = document.getElementById('submit-btn'); btn.disabled=true; const action = document.getElementById('formAction').value; btn.innerText = action === 'update' ? "更新中..." : "報名中..."; let finalGuestName = '無'; let totalGuestCount = 0; if (guestList.length > 0) { finalGuestName = guestList.map(g => g.count > 1 ? `${g.name}(${g.count})` : g.name).join(', '); totalGuestCount = guestList.reduce((sum, g) => sum + g.count, 0); } let finalSponsor = '無'; if (sponsorList.length > 0) finalSponsor = sponsorList.join(', '); const formData = { action: action, eventId: document.getElementById('eventId').value, eventType: document.getElementById('eventType').value, eventName: document.getElementById('eventName').value, userId: document.getElementById('user-id').value, userName: document.getElementById('user-name').value, familyCount: document.getElementById('family-count').value, guestName: finalGuestName, guestCount: totalGuestCount, sponsorship: finalSponsor, pickupLoc: document.getElementById('pickup-loc').value, roomType: document.getElementById('room-type').value, tableCount: document.getElementById('table-count').value }; if(GAS_URL) await fetch(GAS_URL, {method:'POST', body:JSON.stringify(payload), mode:'no-cors'}); else MOCK_EVENTS.push({...payload, id:'new_'+Date.now(), isActive: "開放", pickupOpts:[], roomOpts:[]}); showToast("建立成功"); await fetchEvents(); goHome(); btn.disabled=false; }
         async function handleCancel() { if (!await showConfirm("確定要取消此活動的報名嗎？")) return; const btn = document.getElementById('cancel-reg-btn'); btn.disabled=true; btn.innerText="取消中..."; const payload = { action: 'cancelRegistration', eventId: currentEvent.id, userId: userProfile.userId }; if (GAS_URL) { try { await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' }); } catch(e) {} } showToast("已取消報名"); setTimeout(() => { goHome(); btn.disabled=false; }, 1000); }
         async function fetchStats() { if (!currentEvent) return; if (GAS_URL) { try { const res = await fetch(`${GAS_URL}?action=stats&eventId=${currentEvent.id}`); currentStats = await res.json(); } catch (e) { } } else { currentStats = { totalPeople: 5, secondary: 1, roomCounts: {'雙人房': 2}, pickupCounts: {'台北車站':3}, sponsorSummary: {}, tableCount: 1 }; } document.getElementById('stat-total').innerText = currentStats.totalPeople; document.getElementById('stat-sec-val').innerText = currentStats.secondary; }
         
-        // --- 1. Generate Share Text with Extra Stats ---
+        // --- 1. Updated Share Text Generation ---
         function generateShareText(details) {
             if (!currentEvent) return '';
             let text = `【${currentEvent.name}】\n主辦：${currentEvent.organizer}\n時間：${formatDate(currentEvent.time)}\n地點：${currentEvent.location}\n地址：${currentEvent.address}\n`;
             
-            // --- New Summary Section ---
+            // --- Summary Section ---
             let summaryText = "";
             if (currentEvent.type === 'travel') {
                 const pickups = Object.entries(currentStats.pickupCounts).map(([k,v])=>`${k}(${v})`).join(', ');
@@ -820,7 +833,6 @@
                 summaryText += `[總認桌數] ${currentStats.tableCount} 桌\n`;
             }
             if (summaryText) text += `\n${summaryText}`;
-            // ---------------------------
 
             let grandTotal = 0;
             if (details && details.length > 0) {
@@ -830,32 +842,57 @@
             }
             text += `\n目前報名人數：${grandTotal} 人\n\n`;
 
+            // --- Block 1: Participants ---
+            text += `--- 參加名單 ---\n`;
             if (details && details.length > 0) {
-                 text += `--- 參加名單 ---\n`;
                  details.forEach((item, index) => {
                      let total = 1 + (item.family || 0) + (item.guestCount || 0);
                      text += `${pad(index + 1)}. ${item.name}`;
                      if (total > 1) text += ` *${total}`; 
                      
-                     // --- Append Details inline ---
-                     let extras = [];
-                     if (item.pickup && item.pickup !== '無') extras.push(`上車:${item.pickup}`);
-                     if (item.room && item.room !== '無') extras.push(`房型:${item.room}`);
-                     if (item.tableCount > 0) extras.push(`認桌:${item.tableCount}`);
-                     if (item.sponsor && item.sponsor !== '無') extras.push(`贊助:${item.sponsor}`);
-                     
-                     if (extras.length > 0) text += ` [${extras.join(', ')}]`;
-                     // -----------------------------
-
                      if (item.guestName && item.guestName !== '無') {
                         let displayGuest = String(item.guestName).replace(/\(1\)/g, '');
-                        text += `\n      來賓：${displayGuest}`;
+                        text += ` (含來賓: ${displayGuest})`;
                      }
                      text += `\n`;
                  });
             } else {
                 text += `(暫無報名資料)\n`;
             }
+            
+            // --- Block 2: Travel Details (Travel Only) ---
+            if (currentEvent.type === 'travel' && details && details.length > 0) {
+                let hasTravelInfo = false;
+                let travelText = `\n--- 房型與上車 ---\n`;
+                details.forEach((item) => {
+                     if ((item.room && item.room !== '無') || (item.pickup && item.pickup !== '無')) {
+                         hasTravelInfo = true;
+                         travelText += `${item.name}: `;
+                         let parts = [];
+                         if (item.room && item.room !== '無') parts.push(item.room);
+                         if (item.pickup && item.pickup !== '無') parts.push(item.pickup);
+                         travelText += parts.join(' | ') + `\n`;
+                     }
+                });
+                if (hasTravelInfo) text += travelText;
+            }
+
+            // --- Block 3: Sponsorship & Tables ---
+            let hasSponsorInfo = false;
+            let sponsorText = `\n--- 贊助與認桌 ---\n`;
+            if (details && details.length > 0) {
+                details.forEach((item) => {
+                     let parts = [];
+                     if (item.tableCount > 0) parts.push(`認桌 ${item.tableCount} 桌`);
+                     if (item.sponsor && item.sponsor !== '無') parts.push(item.sponsor);
+                     
+                     if (parts.length > 0) {
+                         hasSponsorInfo = true;
+                         sponsorText += `${item.name}: ${parts.join(' / ')}\n`;
+                     }
+                });
+            }
+            if (hasSponsorInfo) text += sponsorText;
 
             const url = `https://liff.line.me/${LIFF_ID}?eventId=${currentEvent.id}`;
             text += `\n報名網址：\n${url}`;
@@ -929,7 +966,7 @@
              showToast("已複製活動名單");
         }
         
-        // --- 2. Update Modal Render Logic with Extra Stats ---
+        // --- 2. Update Modal Render Logic with Split Sections ---
         async function openDetailsModal(){ 
             if(!currentEvent)return; 
             document.getElementById('details-modal').classList.remove('hidden'); 
@@ -947,8 +984,26 @@
             setTimeout(() => { const content = document.getElementById('modal-content'); content.classList.remove('scale-95', 'opacity-0'); content.classList.add('scale-100', 'opacity-100'); }, 50); 
             
             lastFetchedDetails = []; 
-            const container = document.getElementById('details-lists-container'); const listPeople = document.getElementById('details-list-people'); const listItems = document.getElementById('details-list-items'); const sep = document.getElementById('details-separator'); const emptyMsg = document.getElementById('modal-empty'); 
-            container.classList.add('hidden'); emptyMsg.classList.remove('hidden'); document.getElementById('modal-loading').classList.remove('hidden'); listPeople.innerHTML = ''; listItems.innerHTML = ''; sep.classList.add('hidden'); 
+            const container = document.getElementById('details-lists-container');
+            const listPeople = document.getElementById('details-list-people');
+            const listTravel = document.getElementById('details-list-travel');
+            const listItems = document.getElementById('details-list-items');
+            
+            const sepTravel = document.getElementById('travel-separator');
+            const sepItems = document.getElementById('details-separator');
+            const emptyMsg = document.getElementById('modal-empty'); 
+            
+            container.classList.add('hidden'); 
+            emptyMsg.classList.remove('hidden'); 
+            document.getElementById('modal-loading').classList.remove('hidden'); 
+            
+            // Clear lists
+            listPeople.innerHTML = ''; 
+            listTravel.innerHTML = '';
+            listItems.innerHTML = ''; 
+            sepTravel.classList.add('hidden');
+            listTravel.classList.add('hidden');
+            sepItems.classList.add('hidden');
             
             await ensureDetailsLoaded(); 
             
@@ -956,36 +1011,53 @@
             document.getElementById('modal-loading').classList.add('hidden'); 
             
             if (rawData && rawData.length > 0) { 
-                emptyMsg.classList.add('hidden'); container.classList.remove('hidden'); 
+                emptyMsg.classList.add('hidden'); 
+                container.classList.remove('hidden'); 
                 
+                // 1. Populate People List
                 rawData.forEach((item, i) => { 
                     let label = `${item.name}`; 
                     let total = 1 + (item.family||0) + (item.guestCount||0); 
                     if(total > 1) label += ` *${total}`; 
                     
-                    // --- Construct sub-info line ---
-                    let infoParts = [];
-                    if(item.pickup && item.pickup !== '無') infoParts.push(`🚌 ${item.pickup}`);
-                    if(item.room && item.room !== '無') infoParts.push(`🛏 ${item.room}`);
-                    if(item.tableCount > 0) infoParts.push(`🍽 認桌:${item.tableCount}`);
-                    if(item.sponsor && item.sponsor !== '無') infoParts.push(`🎁 ${item.sponsor}`);
-                    
-                    let subInfo = infoParts.length > 0 ? `<div class="text-xs text-gray-500 mt-0.5">${infoParts.join(' | ')}</div>` : '';
-                    // -------------------------------
-
                     if(item.guestName && item.guestName !== '無') {
                         let displayGuest = String(item.guestName).replace(/\(1\)/g, '');
-                        subInfo += `<div class="text-xs text-gray-400 pl-2 border-l-2 border-gray-200 mt-1">來賓: ${displayGuest}</div>`; 
+                        label += `\n   └ 來賓: ${displayGuest}`; 
                     }
-                    
-                    listPeople.innerHTML+=`<li class="border-b py-2"><div class="flex gap-2"><span class="text-xs text-gray-400 w-6 shrink-0 pt-1">${pad(i+1)}.</span><div class="flex-1"><div class="font-medium text-gray-800">${label}</div>${subInfo}</div></div></li>`; 
+                    listPeople.innerHTML+=`<li class="border-b py-2 flex gap-2"><span class="text-xs text-gray-400 w-6 shrink-0 pt-1">${pad(i+1)}.</span><span class="whitespace-pre-wrap flex-1">${label}</span></li>`; 
                 }); 
                 
-                // Hide old separate list if everything is integrated
-                // let hasItems = false; 
-                // rawData.forEach((item) => { ... }); 
-                // if (hasItems) { sep.classList.remove('hidden'); } 
-                sep.classList.add('hidden'); // Hide separator since we integrated items into the main list
+                // 2. Populate Travel List (if applicable)
+                if (currentEvent.type === 'travel') {
+                    let hasTravel = false;
+                    rawData.forEach((item) => {
+                         if ((item.room && item.room !== '無') || (item.pickup && item.pickup !== '無')) {
+                             hasTravel = true;
+                             let parts = [];
+                             if (item.room && item.room !== '無') parts.push(item.room);
+                             if (item.pickup && item.pickup !== '無') parts.push(item.pickup);
+                             listTravel.innerHTML += `<li class="border-b py-2 flex justify-between items-center"><span class="font-bold text-gray-700 w-20 truncate">${item.name}</span><span class="text-sm text-gray-600 text-right flex-1">${parts.join(' | ')}</span></li>`;
+                         }
+                    });
+                    if (hasTravel) {
+                        sepTravel.classList.remove('hidden');
+                        listTravel.classList.remove('hidden');
+                    }
+                }
+
+                // 3. Populate Sponsor/Table List
+                let hasItems = false; 
+                rawData.forEach((item) => { 
+                    let itemsArr = []; 
+                    if (item.tableCount > 0) itemsArr.push(`認桌 ${item.tableCount}`); 
+                    if (item.sponsor && item.sponsor !== '無') itemsArr.push(item.sponsor); 
+                    
+                    if (itemsArr.length > 0) { 
+                        hasItems = true; 
+                        listItems.innerHTML+=`<li class="border-b py-2 flex gap-2"><span class="font-bold text-gray-700 w-20 shrink-0 truncate">${item.name}</span><span class="text-gray-600 flex-1 text-right">${itemsArr.join(' / ')}</span></li>`; 
+                    } 
+                }); 
+                if (hasItems) { sepItems.classList.remove('hidden'); } 
             } 
         }
         
