@@ -544,6 +544,9 @@
         // ==========================================
         // 2. INITIALIZATION
         // ==========================================
+// ==========================================
+        // 2. INITIALIZATION (初始化)
+        // ==========================================
         window.onload = async function() {
             lucide.createIcons();
             populateCountOptions();
@@ -553,16 +556,36 @@
             document.getElementById('header-title').innerText = "活動與報名";
             switchView('view-home');
             
-            // Check LIFF
+            // ★ 修改處：LIFF 初始化與強制登入邏輯
             if (LIFF_ID && LIFF_ID !== "YOUR_LIFF_ID") {
                 try {
                     await liff.init({ liffId: LIFF_ID });
-                    if (liff.isLoggedIn()) {
+                    
+                    // 1. 檢查是否已登入
+                    if (!liff.isLoggedIn()) {
+                        // 若未登入，強制跳轉至 LINE 登入頁面
+                        // redirectUri 是登入後要回來的網址，通常不填會自動回到當前頁面
+                        liff.login(); 
+                        return; // 登入會跳轉，中斷後續執行
+                    } else {
+                        // 2. 若已登入，取得使用者資料
                         const profile = await liff.getProfile();
-                        appState.user = { userId: profile.userId, displayName: profile.displayName, pictureUrl: profile.pictureUrl };
+                        appState.user = { 
+                            userId: profile.userId, 
+                            displayName: profile.displayName, 
+                            pictureUrl: profile.pictureUrl 
+                        };
+                        // 取得使用者 Email (選填，需在 Console 開權限)
+                        // const userEmail = liff.getDecodedIDToken().email; 
                     }
-                } catch (e) { console.warn("LIFF Init failed", e); }
+                } catch (e) { 
+                    console.error("LIFF Init failed", e);
+                    // 只有在 LIFF 初始化失敗(例如 ID 錯誤或環境不對)時才會維持訪客
+                    showToast("LINE 登入失敗，目前為訪客模式");
+                }
             }
+
+            // 更新介面顯示使用者頭像與名稱
             updateUserProfileUI();
 
             // Fetch Data
