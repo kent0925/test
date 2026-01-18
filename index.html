@@ -709,15 +709,17 @@
                             // Main
                             if(d.room && d.room !== '無') rCounts[d.room] = (rCounts[d.room] || 0) + 1;
                             
-                            // Guest rooms parsing logic
+                            // Guest rooms parsing logic (UPDATED for better parsing)
                             if(d.guestName && d.guestName !== '無') {
-                                const guests = d.guestName.split(/,\s*/); // Split by comma with optional space
+                                const guests = d.guestName.split(/,\s*/);
                                 guests.forEach(gStr => {
-                                    // Extract content inside ...(...)
-                                    const match = gStr.match(/^(.*)\(\d+\)$/); // Match Name... (Count)
+                                    // Try to match "Name|Pickup|Room(Count)" or similar
+                                    // Remove count first to get content
+                                    const match = gStr.match(/^(.*)\(\d+\)$/);
                                     if(match) {
-                                        const content = match[1]; // "Name|Pickup|Room" or just "Name"
+                                        const content = match[1]; 
                                         const parts = content.split('|');
+                                        // Standard format: Name|Pickup|Room
                                         if(parts.length >= 3) {
                                             const gRoom = parts[2].trim();
                                             if(gRoom && gRoom !== '無') {
@@ -767,6 +769,38 @@
             } else {
                 await new Promise(r => setTimeout(r, 1000));
                 console.log("Mock Submit:", data);
+                
+                // Simulate Backend Logic: Update MOCK.details
+                const guestArr = JSON.parse(data.guestList || '[]');
+                
+                // Build Guest String: Name|Pickup|Room(Count)
+                const guestStrParts = guestArr.map(g => {
+                    const p = g.pickup || '無';
+                    const r = g.room || '無';
+                    let info = g.name;
+                    if (appState.currentEvent.type === 'travel') {
+                         info += `|${p}|${r}`;
+                    }
+                    return `${info}(${g.count})`;
+                });
+                const guestStr = guestStrParts.length > 0 ? guestStrParts.join(', ') : '無';
+                
+                const newEntry = {
+                    userId: data.userId,
+                    name: data.displayName,
+                    family: parseInt(data.familyCount),
+                    guestCount: guestArr.reduce((acc, c) => acc + parseInt(c.count), 0),
+                    guestName: guestStr,
+                    sponsor: JSON.parse(data.sponsorList || '[]').join(', ') || '無',
+                    room: data.roomType || '無',
+                    pickup: data.pickupLoc || '無',
+                    tableCount: parseInt(data.tableCount) || 0
+                };
+
+                // Update or Push
+                const idx = MOCK.details.findIndex(d => d.name === data.displayName); 
+                if (idx >= 0) MOCK.details[idx] = newEntry;
+                else MOCK.details.push(newEntry);
             }
         }
 
@@ -800,8 +834,7 @@
                 checkMyRegistration()
             ]);
             
-            // 5. Re-render static info to update dropdowns with fetched stats
-            // Preserving values handled in populate functions
+            // 5. Re-render to update dropdown stats
             renderEventStaticInfo();
         }
 
@@ -892,6 +925,8 @@
                 }
                 await fetchStats();
                 await checkMyRegistration(); 
+                // Re-render dropdown stats
+                renderEventStaticInfo();
             } catch (err) {
                 showToast("發生錯誤，請重試");
             } finally {
@@ -923,6 +958,7 @@
                 // Reset to clean state
                 resetFormState();
                 await fetchStats();
+                renderEventStaticInfo(); // Update dropdowns
                 
             } catch (err) {
                 showToast("取消失敗");
@@ -1228,7 +1264,7 @@
                     let guestTexts = [];
                     guestEntries.forEach(g => {
                          let parts = g.split('|');
-                         let main = parts[0]; 
+                         let main = parts[0].replace(/\(\d+\)/, ''); // clean count
                          let extras = [];
                          if(parts[1] && parts[1]!=='無') extras.push(parts[1]);
                          if(parts[2] && parts[2]!=='無') extras.push(parts[2]);
@@ -1423,8 +1459,6 @@
                         
                         // Guest Travel
                         if (p.guestName && p.guestName !== '無') {
-                             // Expected format: "Name(Count)|Pickup|Room, ..."
-                             // Need to be careful about parsing
                              const guests = p.guestName.split(', ');
                              let gInfos = [];
                              guests.forEach(g => {
