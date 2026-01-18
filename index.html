@@ -1368,79 +1368,101 @@
         }
 
         function copyDetailsToClipboard() {
-            fetchDetails().then(data => {
-                if (!data.length) return showToast("無資料可複製");
-                let text = `【${appState.currentEvent.name}】報名名單\n------------------\n`;
-                
-                data.forEach((p, i) => {
-                    // 1. Top: Name & Count
-                    let block = `${i+1}. ${p.name}`;
-                    const total = 1 + (parseInt(p.family)||0) + (parseInt(p.guestCount)||0);
-                    if(total > 1) block += ` *${total}`;
-                    block += '\n';
+    fetchDetails().then(data => {
+        if (!data.length) return showToast("無資料可複製");
+
+        // 建立標題
+        let text = `【${appState.currentEvent.name}】報名名單\n`;
+        text += `統計時間: ${new Date().toLocaleString('zh-TW', {hour12: false, month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'})}\n`;
+        text += `========================\n`;
+
+        data.forEach((p, i) => {
+            // --- 1. 最上層：人數 ---
+            // 計算該報名者的總人數 (本人1 + 眷屬 + 來賓總數)
+            let guestTotal = 0;
+            if(p.guestList && p.guestList.length > 0) {
+                 guestTotal = p.guestList.reduce((acc, g) => acc + (parseInt(g.count)||1), 0);
+            } else {
+                 guestTotal = parseInt(p.guestCount) || 0;
+            }
+            const total = 1 + (parseInt(p.family)||0) + guestTotal;
+            
+            // 輸出：1. 王小明 (共3人)
+            text += `${i+1}. ${p.name}`;
+            if(total > 1) text += ` (共${total}人)`;
+            text += `\n`;
+
+            // 準備資料以判斷是否顯示層級
+            let midLines = []; // 中間層 (贊助/認桌)
+            let botLines = []; // 下層 (住宿/交通)
+
+            // --- 收集中間層資料 ---
+            if (p.tableCount > 0) midLines.push(`認桌: ${p.tableCount}桌`);
+            if (p.sponsorList && p.sponsorList.length > 0) {
+                p.sponsorList.forEach(s => midLines.push(`贊助: ${s}`));
+            }
+
+            // --- 收集下層資料 (含本人與來賓) ---
+            // 本人
+            if (p.pickup && p.pickup !== '無') botLines.push(`[主]車: ${p.pickup}`);
+            if (p.room && p.room !== '無') botLines.push(`[主]房: ${p.room}`);
+            
+            // 來賓
+            if (p.guestList && p.guestList.length > 0) {
+                let gInfos = [];
+                p.guestList.forEach(g => {
+                    let infoParts = [];
+                    if(g.pickup) infoParts.push(g.pickup);
+                    if(g.room) infoParts.push(g.room);
                     
-                    // 2. Middle: Sponsor / Table
-                    let mids = [];
-                    if (p.tableCount > 0) mids.push(`認桌: ${p.tableCount}`);
-                    if (p.sponsor && p.sponsor !== '無') mids.push(`贊: ${p.sponsor}`);
-                    
-                    if (mids.length > 0) {
-                        block += `   └ ${mids.join(' / ')}\n`;
+                    if(infoParts.length > 0) {
+                        gInfos.push(`${g.name}(${infoParts.join('/')})`);
                     }
-                    
-                    // 3. Bottom: Travel
-                    if (appState.currentEvent.type === 'travel') {
-                        let bots = [];
-                        
-                        // Main User Travel
-                        let mainTravel = [];
-                        if (p.pickup && p.pickup !== '無') mainTravel.push(p.pickup);
-                        if (p.room && p.room !== '無') mainTravel.push(p.room);
-                        if (mainTravel.length > 0) bots.push(`[主] ${mainTravel.join('|')}`);
-                        
-                        // Guest Travel
-                        if (p.guestName && p.guestName !== '無') {
-                             const guests = p.guestName.split(', ');
-                             let gInfos = [];
-                             guests.forEach(g => {
-                                 let parts = g.split('|');
-                                 let name = parts[0].replace(/\(\d+\)/, ''); // clean count
-                                 let extras = [];
-                                 if(parts[1] && parts[1]!=='無') extras.push(parts[1]);
-                                 if(parts[2] && parts[2]!=='無') extras.push(parts[2]);
-                                 
-                                 let str = name;
-                                 if(extras.length) str += ` [${extras.join('/')}]`;
-                                 gInfos.push(str);
-                             });
-                             if(gInfos.length) bots.push(`[賓] ${gInfos.join('、')}`);
-                        }
-                        
-                        if (bots.length > 0) {
-                            block += `   └ ${bots.join('\n     ')}\n`;
-                        }
-                    }
-                    
-                    text += block + '------------------\n';
                 });
-                
-                // Summary
-                text += `\n總計: ${appState.currentStats.totalPeople} 人`;
-                
-                navigator.clipboard.writeText(text).then(() => {
-                    const btn = document.getElementById('btn-copy-list');
-                    const originalHTML = btn.innerHTML;
-                    btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> 已複製！';
-                    btn.classList.add('bg-green-600');
-                    setTimeout(() => {
-                        btn.innerHTML = originalHTML;
-                        btn.classList.remove('bg-green-600');
-                        lucide.createIcons();
-                    }, 2000);
-                    showToast("已複製到剪貼簿");
-                });
-            });
+                if(gInfos.length > 0) botLines.push(`[賓]: ${gInfos.join('、')}`);
+            }
+
+            // --- 輸出中間層 (虛線分隔) ---
+            if (midLines.length > 0) {
+                text += `   ------------------\n`;
+                midLines.forEach(line => text += `   ${line}\n`);
+            }
+
+            // --- 輸出下層 (虛線分隔) ---
+            if (botLines.length > 0) {
+                // 如果上面已經有中間層，再加一條虛線；如果沒有中間層，這裡也要加虛線與上層隔開
+                text += `   ------------------\n`; 
+                botLines.forEach(line => text += `   ${line}\n`);
+            }
+            
+            // 每個人之間加個空行，視覺較舒適
+            text += `\n`;
+        });
+
+        // 底部總統計
+        text += `========================\n`;
+        text += `總計人數: ${appState.currentStats.totalPeople || 0} 人\n`;
+        if(appState.currentStats.tableCount > 0) {
+            text += `總計認桌: ${appState.currentStats.tableCount} 桌\n`;
         }
+
+        // 執行複製
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.getElementById('btn-copy-list');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> 已複製！';
+            btn.classList.add('bg-green-600');
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('bg-green-600');
+                if(typeof lucide !== 'undefined') lucide.createIcons();
+            }, 2000);
+            showToast("已複製名單到剪貼簿");
+        });
+    });
+}
 
         function formatDate(isoStr) {
             if (!isoStr) return '';
