@@ -676,8 +676,50 @@
                     throw new Error("No GAS URL");
                 } 
             } catch (e) { 
-                // Mock Stats Calculation
-                appState.currentStats = { totalPeople: 5, secondary: 2, roomCounts: {'雙人房': 2}, pickupCounts: {'台北車站':3}, tableCount: 2 }; 
+                // Mock Stats Calculation based on MOCK.details
+                // Dynamic calculation logic
+                let total = 0;
+                let sec = 0;
+                let rCounts = {};
+                
+                if (MOCK.details && MOCK.details.length > 0) {
+                    MOCK.details.forEach(d => {
+                        // Count people: 1 (self) + family + guests
+                        // Parse guests from string "Name(1), Name(2)"
+                        let gCount = 0;
+                        if(d.guestName && d.guestName !== '無') {
+                             d.guestName.split(',').forEach(g => {
+                                 const m = g.match(/\((\d+)\)/);
+                                 if(m) gCount += parseInt(m[1]);
+                                 else gCount++;
+                             });
+                        } else {
+                            gCount = d.guestCount || 0;
+                        }
+                        
+                        total += 1 + (d.family || 0) + gCount;
+                        
+                        // Secondary stats
+                        if(appState.currentEvent.type === 'banquet') sec += (d.tableCount || 0);
+                        else if(d.sponsor && d.sponsor !== '無') sec++;
+                        
+                        // Room Counts
+                        if(appState.currentEvent.type === 'travel') {
+                            if(d.room && d.room !== '無') {
+                                rCounts[d.room] = (rCounts[d.room] || 0) + 1;
+                            }
+                            // Also count guest rooms if parsed from string (simplified here)
+                        }
+                    });
+                }
+                
+                appState.currentStats = { 
+                    totalPeople: total, 
+                    secondary: sec, 
+                    roomCounts: rCounts, 
+                    pickupCounts: {'台北車站':3}, 
+                    tableCount: sec 
+                }; 
             } 
             
             // Animation for numbers
@@ -730,7 +772,7 @@
             switchView('view-activity-detail');
             document.getElementById('header-title').innerText = event.name;
             
-            // 3. Render Static Info
+            // 3. Render Static Info (Initial)
             renderEventStaticInfo();
             
             // 4. Parallel Fetch for Speed
@@ -739,6 +781,10 @@
                 fetchStats(),
                 checkMyRegistration()
             ]);
+            
+            // 5. Re-render static info to update dropdowns with fetched stats
+            // Preserving values handled in populate functions
+            renderEventStaticInfo();
         }
 
         async function checkMyRegistration() {
@@ -1531,17 +1577,20 @@
         function populateSelect(id, items) {
             const el = document.getElementById(id);
             if (!el) return;
+            const val = el.value; // Preserve value
             el.innerHTML = '<option value="">請選擇...</option>';
             if(items) items.forEach(i => {
-                const val = i.includes('|') ? i.split('|')[0] : i; // Handle "Label|Url" format
+                const v = i.includes('|') ? i.split('|')[0] : i; // Handle "Label|Url" format
                 // Ensure text does not contain URL if it is Name|Url
-                const text = i.includes('|') ? i.split('|')[0] : val; 
-                el.add(new Option(text, val));
+                const text = i.includes('|') ? i.split('|')[0] : v; 
+                el.add(new Option(text, v));
             });
+            el.value = val;
         }
         
         function populateRoomOptions(id, opts) {
             const el = document.getElementById(id);
+            const currentVal = el.value; // Preserve value
             el.innerHTML = '<option value="">請選擇...</option>';
             if (!opts) return;
             
@@ -1566,6 +1615,7 @@
                 }
                 el.add(new Option(label, name));
             });
+            el.value = currentVal;
         }
 
         function populateCountOptions() {
