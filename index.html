@@ -1033,39 +1033,72 @@
         }
                       
         async function enterEventDetail(eventId) { 
+            // 取得活動資料
+            const targetEvent = allEvents.find(e => e.id === eventId); 
+            if (!targetEvent) return; 
+            currentEvent = targetEvent;
+
+            // ==========================================
+            // ★ 強力重置區塊 (修復資料重複問題的核心)
+            // ==========================================
+            
+            // 1. 清空全域變數 (這步最重要，否則陣列會一直疊加)
+            guestList = []; 
+            sponsorList = []; 
+            myRegistrationData = null; 
+
+            // 2. 重置 HTML 表單
             document.getElementById('regForm').reset(); 
+
+            // 3. 強制清空 UI 列表容器
+            document.getElementById('guest-list-container').innerHTML = ''; 
+            document.getElementById('sponsor-list-container').innerHTML = '';
+            
+            // 4. 重置按鈕與標題狀態 (從「更新模式」變回「報名模式」)
+            document.getElementById('formAction').value = 'register'; 
+            
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = false; 
+            submitBtn.innerHTML = '<span>確認報名</span><i data-lucide="send" class="w-4 h-4"></i>'; 
+            // 移除藍色/灰色樣式，加回綠色樣式
+            submitBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600', 'bg-gray-400', 'cursor-not-allowed');
+            submitBtn.classList.add('bg-[#06c755]', 'hover:bg-green-600');
+            
+            document.getElementById('form-title').innerHTML = '<i data-lucide="edit-3" class="w-5 h-5 text-[#06c755]"></i> 填寫報名資料'; 
+            document.getElementById('cancel-reg-btn').classList.add('hidden'); // 隱藏取消按鈕
+            document.getElementById('pickup-map-btn').classList.add('hidden'); // 隱藏地圖按鈕
+
+            // 5. 重新帶入使用者基本資料 (因為 reset() 會把它清空)
+            document.getElementById('user-name').value = userProfile.displayName; 
+            
+            // ==========================================
+            // ★ 重置結束，開始載入新資料
+            // ==========================================
+
+            // UI 切換效果
             document.getElementById('event-info-card').classList.add('opacity-50'); 
             document.getElementById('display-name').innerText = "載入中..."; 
-            document.getElementById('submit-btn').disabled = true; 
-            document.getElementById('pickup-map-btn').classList.add('hidden'); 
-            guestList = []; renderGuestList(); 
-            sponsorList = []; renderSponsorList(); 
-            
-            currentEvent = allEvents.find(e => e.id === eventId); 
-            if (!currentEvent) return; 
             
             viewHistoryStack.push('detail'); 
             switchView('view-activity-detail');
             document.getElementById('header-title').innerText = currentEvent.name; 
             
-            document.getElementById('user-name').value = userProfile.displayName; 
-            document.getElementById('formAction').value = 'register'; 
-            document.getElementById('submit-btn').innerHTML = '<span>確認報名</span><i data-lucide="send" class="w-4 h-4"></i>'; 
-            document.getElementById('form-title').innerHTML = '<i data-lucide="edit-3" class="w-5 h-5 text-[#06c755]"></i> 填寫報名資料'; 
-            document.getElementById('cancel-reg-btn').classList.add('hidden'); 
+            // 填入隱藏欄位
+            document.getElementById('eventId').value = currentEvent.id;
+            document.getElementById('eventType').value = currentEvent.type;
+            document.getElementById('eventName').value = currentEvent.name;
             
-            // 1. Initial render (basic info)
+            // 1. 渲染活動基本資訊 (時間、地點、下拉選單)
             renderEventDetails(); 
             
-            // 2. Fetch stats (wait for it)
-            // Prevent caching by adding timestamp
+            // 2. 抓取最新統計 (這會花一點時間)
             await fetchStats();
             
-            // 3. Re-render (to populate dropdowns with updated stats)
+            // 3. 再次渲染 (為了更新下拉選單的剩餘名額)
             renderEventDetails();
             
-            // 4. Check registration (fill user data)
-            await checkMyRegistration();
+            // 4. 檢查我是否報名過 (如果有，會自動把資料填回去)
+            await checkMyRegistration(); 
             
             document.getElementById('event-info-card').classList.remove('opacity-50'); 
         }
