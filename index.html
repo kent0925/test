@@ -10,10 +10,15 @@
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
+        /* 通用 Details 樣式 */
         details > summary { list-style: none; cursor: pointer; }
         details > summary::-webkit-details-marker { display: none; }
-        details[open] > summary .arrow { transform: rotate(180deg); }
-        .arrow { transition: transform 0.2s; }
+        /* 主行程區塊箭頭 */
+        details.main-itinerary[open] > summary .arrow-main { transform: rotate(180deg); }
+        /* 每日行程區塊箭頭 */
+        details.day-itinerary[open] > summary .arrow-day { transform: rotate(180deg); }
+        
+        .arrow-main, .arrow-day { transition: transform 0.2s; }
         .card-hover { transition: all 0.2s; }
         .card-hover:active { transform: scale(0.95); }
         .tag-remove { cursor: pointer; color: #ef4444; }
@@ -106,9 +111,9 @@
                     <div class="flex gap-2 items-start"><i data-lucide="map-pin" class="w-4 h-4 mt-0.5 text-green-600 shrink-0"></i><div class="flex-1"><div id="display-location" class="font-bold text-gray-700">地點</div><div class="flex items-center gap-2 mt-1"><span id="display-address" class="text-xs text-gray-500">地址</span><a id="map-link" href="#" target="_blank" class="text-blue-500 bg-blue-50 hover:bg-blue-100 p-1 rounded transition"><i data-lucide="navigation" class="w-3 h-3"></i></a></div></div></div>
                 </div>
                 <div id="travel-itinerary-section" class="hidden mt-4 pt-3 border-t border-dashed border-gray-200">
-                    <details class="group bg-green-50 rounded-lg p-2 open:bg-green-50 transition-all">
-                        <summary class="flex justify-between items-center font-bold text-gray-700 text-sm cursor-pointer select-none"><span class="flex items-center gap-2"><i data-lucide="map" class="w-4 h-4 text-green-600"></i> 查看旅遊行程</span><i data-lucide="chevron-down" class="w-4 h-4 arrow text-gray-500"></i></summary>
-                        <div id="itinerary-accordion-content" class="mt-3 space-y-2 pl-2 border-l-2 border-green-200 ml-1"></div>
+                    <details class="group main-itinerary bg-green-50 rounded-lg p-2 open:bg-green-50 transition-all">
+                        <summary class="flex justify-between items-center font-bold text-gray-700 text-sm cursor-pointer select-none"><span class="flex items-center gap-2"><i data-lucide="map" class="w-4 h-4 text-green-600"></i> 查看旅遊行程</span><i data-lucide="chevron-down" class="w-4 h-4 arrow-main text-gray-500"></i></summary>
+                        <div id="itinerary-accordion-content" class="mt-3 space-y-3 ml-1"></div>
                     </details>
                 </div>
             </div>
@@ -292,10 +297,9 @@
                 try {
                     await liff.init({ liffId: LIFF_ID });
                     
-                    // --- 修改點：加入外部瀏覽器登入檢查 ---
                     if (!liff.isLoggedIn()) {
-                        liff.login(); // 強制跳轉至 LINE 登入頁面
-                        return; // 中斷後續執行，等待跳轉回來
+                        liff.login(); 
+                        return; 
                     }
 
                     if (liff.isLoggedIn()) {
@@ -319,11 +323,9 @@
             if (userProfile.pictureUrl) document.getElementById('user-picture').src = userProfile.pictureUrl;
         }
 
-        // --- UPDATED: Robust Logic Helper for Chinese Input ---
         function normalizeType(t) {
             if (!t) return '';
             const s = String(t).toLowerCase().trim();
-            // Chinese mapping
             if (s === '一般' || s === '一般活動') return 'general';
             if (s === '餐會' || s === '大型餐會') return 'banquet';
             if (s === '旅遊' || s === '旅遊活動') return 'travel';
@@ -332,9 +334,7 @@
 
         function isEventOpen(e) {
             if (e.isActive === undefined || e.isActive === null) return false;
-            // Handle boolean true
             if (e.isActive === true) return true;
-            // Handle string "開放", "是", "啟用", "TRUE", "Open" (case insensitive, trimmed)
             const val = String(e.isActive).trim().toLowerCase();
             return val === '開放' || val === 'true' || val === '是' || val === '啟用' || val === 'open';
         }
@@ -427,7 +427,6 @@
             loading.classList.add('hidden');
             container.innerHTML = '';
             
-            // Robust Filter Logic
             const targetType = normalizeType(type);
             const filteredEvents = allEvents.filter(e => {
                 const eType = normalizeType(e.type);
@@ -454,11 +453,7 @@
                     if(e.type === 'travel') { icon='bus'; color='text-blue-600'; bg='bg-blue-100'; }
                     
                     let timeDisplay = formatDate(e.time);
-                    if(e.deadline) {
-                        // 如果有截止日，在卡片上也簡單提示一下
-                        // (選擇性功能，這裡先不顯示在卡片，保持卡片簡潔)
-                    }
-
+                    
                     card.innerHTML = `<div class="flex items-start gap-3"><div class="${bg} p-2 rounded-full ${color} shrink-0"><i data-lucide="${icon}" class="w-6 h-6"></i></div><div class="flex-1 min-w-0"><h3 class="font-bold text-gray-800 text-lg truncate">${e.name}</h3><div class="text-xs text-gray-500 mt-1 flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> ${timeDisplay}</div><div class="text-xs text-gray-500 mt-0.5 flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i> ${e.location}</div></div><i data-lucide="chevron-right" class="w-5 h-5 text-gray-300 self-center"></i></div>`;
                     container.appendChild(card);
                 });
@@ -469,7 +464,6 @@
         function renderEventDetails() {
             const submitBtn = document.getElementById('submit-btn');
             
-            // 判斷是否過期
             let isExpired = false;
             if (currentEvent.deadline) {
                 const deadlineDate = new Date(currentEvent.deadline);
@@ -479,13 +473,11 @@
                 }
             }
 
-            // 按鈕狀態控制
             if (!isEventOpen(currentEvent)) {
                 submitBtn.disabled = true; 
                 submitBtn.innerText = "活動已關閉";
                 submitBtn.className = "w-full bg-gray-400 text-white font-bold py-3.5 rounded-xl cursor-not-allowed flex justify-center items-center gap-2";
             } else if (isExpired) {
-                // 新增過期邏輯
                 submitBtn.disabled = true;
                 submitBtn.innerText = "已過報名截止時間";
                 submitBtn.className = "w-full bg-gray-500 text-white font-bold py-3.5 rounded-xl cursor-not-allowed flex justify-center items-center gap-2";
@@ -498,17 +490,14 @@
             document.getElementById('display-organizer').innerText = currentEvent.organizer;
             
             const timeContainer = document.getElementById('display-time-container');
-            // 清空內容重新渲染
             timeContainer.innerHTML = '';
             
-            // 顯示活動時間
             if (currentEvent.type === 'travel') {
                 timeContainer.innerHTML = `<div class="flex flex-col text-sm"><span class="text-green-700 font-bold">起：${formatDate(currentEvent.time.split('~')[0])}</span><span class="text-red-700 font-bold">止：${formatDate(currentEvent.time.split('~')[1])}</span></div>`;
             } else {
                 timeContainer.innerText = formatDate(currentEvent.time);
             }
 
-            // 顯示截止時間
             if (currentEvent.deadline) {
                 const deadlineStr = formatDate(currentEvent.deadline);
                 const deadlineColor = isExpired ? "text-red-500 font-bold" : "text-gray-500";
@@ -583,9 +572,70 @@
         function removeGuest(index) { guestList.splice(index, 1); renderGuestList(); }
         function renderGuestList() { const container = document.getElementById('guest-list-container'); container.innerHTML = ''; guestList.forEach((g, i) => { const label = g.count > 1 ? `${g.name} (${g.count}人)` : g.name; container.innerHTML += `<div class="flex justify-between items-center bg-white border border-gray-200 px-3 py-1 rounded text-sm"><span>${label}</span> <i data-lucide="x" class="w-4 h-4 tag-remove" onclick="removeGuest(${i})"></i></div>`; }); lucide.createIcons(); }
         function showCreateView() { viewHistoryStack.push('create'); document.getElementById('view-home').classList.add('hidden'); document.getElementById('view-create').classList.remove('hidden'); document.getElementById('btn-back').classList.remove('hidden'); document.getElementById('header-title').innerText = "建立新活動"; }
-        function renderItinerary(str) { const container = document.getElementById('itinerary-accordion-content'); container.innerHTML = ''; if (!str) return; const parts = str.split(';'); parts.forEach(part => { if (part.includes('|')) { const [title, desc] = part.split('|'); container.innerHTML += `<div class="mb-2 last:mb-0"><span class="font-bold text-green-700 text-xs bg-green-100 px-2 py-0.5 rounded mr-2">${title}</span><span class="text-sm text-gray-700">${desc}</span></div>`; } }); }
         
-        // --- 2. Fix split error in checkMyRegistration ---
+        // --- UPDATED: Grouped Itinerary Render Logic ---
+        function renderItinerary(str) {
+            const container = document.getElementById('itinerary-accordion-content');
+            container.innerHTML = '';
+            if (!str) return;
+
+            const daysMap = {};
+            // Parse logic
+            str.split(';').forEach(item => {
+                if (!item.trim()) return;
+                let day = "行程";
+                let content = item;
+                if (item.includes(':')) {
+                    const parts = item.split(':');
+                    day = parts[0].trim();
+                    content = parts.slice(1).join(':').trim(); 
+                }
+                
+                let title = content;
+                let desc = "";
+                if (content.includes('|')) {
+                    const parts = content.split('|');
+                    title = parts[0].trim();
+                    desc = parts.slice(1).join('|').trim();
+                }
+
+                if (!daysMap[day]) daysMap[day] = [];
+                daysMap[day].push({ title, desc });
+            });
+
+            // Render Groups
+            Object.keys(daysMap).forEach((day, index) => {
+                const dayEvents = daysMap[day];
+                
+                const dayBlock = document.createElement('details');
+                dayBlock.className = "day-itinerary group/day border-l-2 border-green-300 ml-1 mb-3 open:bg-white transition-all";
+                // Default open the first day? or all? Let's default open all for visibility
+                dayBlock.open = true;
+
+                const summary = document.createElement('summary');
+                summary.className = "flex items-center gap-2 cursor-pointer py-1 px-2 hover:bg-green-50 rounded select-none text-green-800 font-bold text-sm";
+                summary.innerHTML = `<span>${day}</span> <i data-lucide="chevron-down" class="w-4 h-4 arrow-day text-green-600"></i>`;
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = "mt-2 pl-3 space-y-3 pb-2";
+
+                dayEvents.forEach(evt => {
+                    contentDiv.innerHTML += `
+                        <div class="relative pl-4 border-l border-gray-200 last:border-0">
+                            <div class="absolute -left-[5px] top-1.5 w-2.5 h-2.5 bg-green-200 rounded-full border border-white"></div>
+                            <div class="text-sm font-bold text-gray-800">${evt.title}</div>
+                            ${evt.desc ? `<div class="text-xs text-gray-500 mt-0.5">${evt.desc}</div>` : ''}
+                        </div>
+                    `;
+                });
+
+                dayBlock.appendChild(summary);
+                dayBlock.appendChild(contentDiv);
+                container.appendChild(dayBlock);
+            });
+            lucide.createIcons();
+        }
+        
         async function checkMyRegistration() { 
             if (!GAS_URL || !currentEvent) return; 
             try { 
@@ -598,7 +648,6 @@
                     document.getElementById('room-type').value = r.roomType; 
                     document.getElementById('table-count').value = r.tableCount; 
                     updatePickupMap(); 
-                    // FIXED: Safe guestName handling with String()
                     if (r.guestName && r.guestName !== '無') { 
                         const rawGuests = String(r.guestName).split(', '); 
                         rawGuests.forEach(g => { 
@@ -631,7 +680,6 @@
             if (!currentEvent) return '';
             let text = `【${currentEvent.name}】\n主辦：${currentEvent.organizer}\n時間：${formatDate(currentEvent.time)}\n地點：${currentEvent.location}\n地址：${currentEvent.address}\n`;
             
-            // Calculate total from details array
             let grandTotal = 0;
             if (details && details.length > 0) {
                 details.forEach(item => {
@@ -644,16 +692,15 @@
                  text += `--- 參加名單 ---\n`;
                  details.forEach((item, index) => {
                      let total = 1 + (item.family || 0) + (item.guestCount || 0);
-                     if (total > 0) {
-                        text += `${pad(index + 1)}. ${item.name}`;
-                        if (total > 1) text += ` *${total}`; 
-                        if (item.guestName && item.guestName !== '無') {
-                            // FIXED: Force string conversion to prevent replace error
-                            let displayGuest = String(item.guestName).replace(/\(1\)/g, '');
-                            text += `\n      來賓：${displayGuest}`;
-                        }
-                        text += `\n`;
+                     text += `${pad(index + 1)}. ${item.name}`;
+                     if (total > 1) text += ` *${total}`; 
+                     
+                     // Nested Guest Display
+                     if (item.guestName && item.guestName !== '無') {
+                        let displayGuest = String(item.guestName).replace(/\(1\)/g, '');
+                        text += `\n      來賓：${displayGuest}`;
                      }
+                     text += `\n`;
                  });
             } else {
                 text += `(暫無報名資料)\n`;
@@ -750,18 +797,19 @@
             
             if (rawData && rawData.length > 0) { 
                 emptyMsg.classList.add('hidden'); container.classList.remove('hidden'); 
+                
                 rawData.forEach((item, i) => { 
                     let label = `${item.name}`; 
                     let total = 1 + (item.family||0) + (item.guestCount||0); 
                     if(total > 1) label += ` *${total}`; 
                     if(item.guestName && item.guestName !== '無') {
-                        // FIXED: Safe guestName replace
                         let displayGuest = String(item.guestName).replace(/\(1\)/g, '');
                         label += `\n   └ 來賓: ${displayGuest}`; 
                     }
                     if(item.room && item.room !== '無') label += ` | ${item.room}`; 
                     listPeople.innerHTML+=`<li class="border-b py-2 flex gap-2"><span class="text-xs text-gray-400 w-6 shrink-0">${pad(i+1)}.</span><span class="whitespace-pre-wrap">${label}</span></li>`; 
                 }); 
+                
                 let hasItems = false; 
                 rawData.forEach((item) => { 
                     let itemsArr = []; 
@@ -778,47 +826,7 @@
         function populateCreateDropdowns() { const orgSelect = document.getElementById('new-organizer-select'); const locSelect = document.getElementById('new-location-select'); orgSelect.innerHTML = '<option value="">請選擇主辦人</option>'; systemSettings.organizers.forEach(org => orgSelect.add(new Option(org, org))); locSelect.innerHTML = '<option value="">請選擇地點</option>'; systemSettings.locations.forEach(loc => locSelect.add(new Option(loc.name, loc.name))); }
         function onLocationChange() { const locName = document.getElementById('new-location-select').value; const loc = systemSettings.locations.find(l => l.name === locName); document.getElementById('new-address').value = loc ? loc.address : ''; }
         function toggleCreateFields() { const type = document.getElementById('new-type').value; const single = document.getElementById('new-field-time-single'); const range = document.getElementById('new-field-time-range'); const itin = document.getElementById('new-field-itinerary'); if (type === 'travel') { single.classList.add('hidden'); range.classList.remove('hidden'); itin.classList.remove('hidden'); } else { single.classList.remove('hidden'); range.classList.add('hidden'); itin.classList.add('hidden'); } }
-        
-        // --- UPDATED: Save deadline in create event ---
-        async function handleCreateEvent(e) { 
-            e.preventDefault(); 
-            const btn = document.getElementById('create-btn'); 
-            btn.disabled=true; 
-            btn.innerText="建立中..."; 
-            const type = document.getElementById('new-type').value; 
-            let timeStr = ""; 
-            if (type === 'travel') { 
-                const s = document.getElementById('new-date-start').value; 
-                const end = document.getElementById('new-date-end').value; 
-                timeStr = `${s.replace(/-/g,'/')}~${end.replace(/-/g,'/')}`; 
-            } else { 
-                const t = document.getElementById('new-time-single').value; 
-                timeStr = t; 
-            } 
-            
-            const payload = { 
-                action: 'createEvent', 
-                eventType: type, 
-                eventName: document.getElementById('new-name').value, 
-                organizer: document.getElementById('new-organizer-select').value, 
-                time: timeStr, 
-                deadline: document.getElementById('new-deadline').value, // 取得截止日期
-                location: document.getElementById('new-location-select').value, 
-                address: document.getElementById('new-address').value, 
-                itinerary: type==='travel'?document.getElementById('new-itinerary').value:'', 
-                creatorId: userProfile.userId, 
-                creatorName: userProfile.displayName 
-            }; 
-            
-            if(GAS_URL) await fetch(GAS_URL, {method:'POST', body:JSON.stringify(payload), mode:'no-cors'}); 
-            else MOCK_EVENTS.push({...payload, id:'new_'+Date.now(), isActive: "開放", pickupOpts:[], roomOpts:[]}); 
-            
-            showToast("建立成功"); 
-            await fetchEvents(); 
-            goHome(); 
-            btn.disabled=false; 
-        }
-        
+        async function handleCreateEvent(e) { e.preventDefault(); const btn = document.getElementById('create-btn'); btn.disabled=true; btn.innerText="建立中..."; const type = document.getElementById('new-type').value; let timeStr = ""; if (type === 'travel') { const s = document.getElementById('new-date-start').value; const end = document.getElementById('new-date-end').value; timeStr = `${s.replace(/-/g,'/')}~${end.replace(/-/g,'/')}`; } else { const t = document.getElementById('new-time-single').value; timeStr = t; } const payload = { action: 'createEvent', eventType: type, eventName: document.getElementById('new-name').value, organizer: document.getElementById('new-organizer-select').value, time: timeStr, location: document.getElementById('new-location-select').value, address: document.getElementById('new-address').value, itinerary: type==='travel'?document.getElementById('new-itinerary').value:'', creatorId: userProfile.userId, creatorName: userProfile.displayName }; if(GAS_URL) await fetch(GAS_URL, {method:'POST', body:JSON.stringify(payload), mode:'no-cors'}); else MOCK_EVENTS.push({...payload, id:'new_'+Date.now(), isActive: "開放", pickupOpts:[], roomOpts:[]}); showToast("建立成功"); await fetchEvents(); goHome(); btn.disabled=false; }
         function populateSelect(e,a,d){e.innerHTML='';e.add(new Option(d||'請選擇',''));if(a)a.forEach(o=>e.add(new Option(o,o)));}
         async function toggleEventStatus() { if (!currentEvent) return; const btn = document.getElementById('btn-status-toggle'); const originalText = btn.innerText; btn.innerText = "處理中..."; btn.disabled = true; const newStatus = isEventOpen(currentEvent) ? "關閉" : "開放"; const payload = { action: 'toggleStatus', eventId: currentEvent.id, status: newStatus }; try { if (GAS_URL) { await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' }); } else { currentEvent.isActive = newStatus; showToast(`活動已${newStatus}`); } await fetchEvents(); if (showingHistory) goHome(); else enterEventDetail(currentEvent.id); } catch(e) { showToast("操作失敗"); } finally { btn.innerText = originalText; btn.disabled = false; } }
         function toggleHistoryView() { showingHistory = !showingHistory; const btn = document.getElementById('btn-history-toggle'); const activeList = document.getElementById('active-categories'); const historyList = document.getElementById('history-list'); const createBtn = document.getElementById('btn-create-event'); if (showingHistory) { btn.innerHTML = '<i data-lucide="arrow-left" class="w-3 h-3"></i> <span>返回進行中活動</span>'; activeList.classList.add('hidden'); createBtn.classList.add('hidden'); historyList.classList.remove('hidden'); renderHistoryList(); } else { btn.innerHTML = '<i data-lucide="history" class="w-3 h-3"></i> <span>查看歷史活動</span>'; activeList.classList.remove('hidden'); createBtn.classList.remove('hidden'); historyList.classList.add('hidden'); } lucide.createIcons(); }
