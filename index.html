@@ -655,7 +655,7 @@
             }
         }
         
-        async function fetchStats(forceRefresh = false) { 
+async function fetchStats(forceRefresh = false) { 
             if (!appState.currentEvent || !GAS_URL) return; 
             
             const totalEl = document.getElementById('stat-total');
@@ -672,7 +672,21 @@
                 
                 // Update UI numbers
                 animateValue(totalEl, 0, appState.currentStats.totalPeople || 0, 500);
-                animateValue(secEl, 0, appState.currentStats.secondary || 0, 500);
+                
+                // ★ 修改這裡：根據活動類型決定顯示哪個數字
+                let secValue = 0;
+                if (appState.currentEvent.type === 'travel') {
+                    // 如果是旅遊，顯示總房數
+                    secValue = appState.currentStats.totalRooms || 0;
+                } else if (appState.currentEvent.type === 'banquet') {
+                    // 如果是餐會，顯示桌數
+                    secValue = appState.currentStats.tableCount || 0;
+                } else {
+                    // 其他顯示預設 (贊助數)
+                    secValue = appState.currentStats.secondary || 0;
+                }
+                
+                animateValue(secEl, 0, secValue, 500);
             } catch (e) { 
                 console.warn("Fetch Stats Failed", e);
             } 
