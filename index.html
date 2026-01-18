@@ -339,7 +339,90 @@
             { id: 'm_test_exp', type: 'general', name: '測試-已截止活動', organizer: '系統測試', time: '2026-05-01T10:00', deadline: '2023-12-31T23:59', location: '虛擬空間', address: '測試地址', isActive: "開放" }
         ];
         const MOCK_SETTINGS = { organizers: ['王社長'], locations: [{name:'中心', address:'地址'}] };
+        
+        // --- 1. Global Utilities & Helpers (Moved to Top) ---
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            document.getElementById('toast-msg').innerText = message;
+            toast.classList.remove('opacity-0', 'top-4');
+            toast.classList.add('top-10');
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'top-4');
+                toast.classList.remove('top-10');
+            }, 3000);
+        }
+        
+        function showConfirm(message) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('confirm-modal');
+                const msgEl = document.getElementById('confirm-msg');
+                const yesBtn = document.getElementById('confirm-yes');
+                const noBtn = document.getElementById('confirm-no');
+                msgEl.innerText = message;
+                modal.classList.remove('hidden');
+                const close = (val) => {
+                    modal.classList.add('hidden');
+                    resolve(val);
+                };
+                yesBtn.onclick = () => close(true);
+                noBtn.onclick = () => close(false);
+            });
+        }
+        
+        function refreshIcons() {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
+        
+        function pad(num) { return num.toString().padStart(2, '0'); }
+        
+        function closeDetailsModal(){ 
+            const content = document.getElementById('modal-content'); 
+            content.classList.remove('scale-100', 'opacity-100'); 
+            content.classList.add('scale-95', 'opacity-0'); 
+            setTimeout(() => document.getElementById('details-modal').classList.add('hidden'), 300); 
+        }
 
+        // --- 2. Data Fetching Functions (Moved to Top) ---
+        async function fetchStats() { 
+            if (!currentEvent) return; 
+            if (GAS_URL) { 
+                try { 
+                    const res = await fetch(`${GAS_URL}?action=stats&eventId=${currentEvent.id}&_=${new Date().getTime()}`); 
+                    currentStats = await res.json(); 
+                } catch (e) { console.warn("Fetch Stats Error:", e); } 
+            } else { 
+                currentStats = { totalPeople: 5, secondary: 1, roomCounts: {'雙人房': 2}, pickupCounts: {'台北車站':3}, sponsorSummary: {}, tableCount: 1 }; 
+            } 
+            const elTotal = document.getElementById('stat-total');
+            const elSec = document.getElementById('stat-sec-val');
+            if(elTotal) elTotal.innerText = currentStats.totalPeople; 
+            if(elSec) elSec.innerText = currentStats.secondary; 
+        }
+
+        async function ensureDetailsLoaded() {
+            if (lastFetchedDetails && lastFetchedDetails.length > 0) return true;
+            if (GAS_URL) {
+                try {
+                    showToast("載入名單中..."); 
+                    const r = await fetch(`${GAS_URL}?action=getDetails&eventId=${currentEvent.id}`);
+                    lastFetchedDetails = await r.json();
+                    return true;
+                } catch (e) { console.error(e); return false; }
+            } else {
+                await new Promise(r => setTimeout(r, 600));
+                lastFetchedDetails = [
+                    {name:'王小明', family:1, guestCount:0, guestName:'無', sponsor:'無', room:'雙人房', pickup:'台北車站', tableCount:0},
+                    {name:'陳池文', family:1, guestCount:0, guestName:'無', sponsor:'紅包: 1000元', room:'無', pickup:'無', tableCount:0},
+                    {name:'洪健庭', family:0, guestCount:1, guestName:'蔡嘟嘟(1)', sponsor:'酒類: 威士忌 1瓶', room:'無', pickup:'無', tableCount:1}
+                ];
+                return true;
+            }
+        }
+        
+        // --- 3. App Initialization ---
         window.onload = function() {
             lucide.createIcons();
             populateCountOptions();
@@ -347,12 +430,6 @@
             goHome(); 
             initApp(); 
         };
-        
-        function refreshIcons() {
-            if (typeof lucide !== 'undefined') {
-                lucide.createIcons();
-            }
-        }
 
         async function initApp() {
             if (LIFF_ID && LIFF_ID !== "YOUR_LIFF_ID") {
@@ -382,6 +459,7 @@
             if (userProfile.pictureUrl) document.getElementById('user-picture').src = userProfile.pictureUrl;
         }
 
+        // --- 4. Logic Helpers ---
         function normalizeType(t) {
             if (!t) return '';
             const s = String(t).toLowerCase().trim();
@@ -416,7 +494,8 @@
             
             refreshIcons();
         }
-
+        
+        // --- 5. UI Renderers ---
         function renderAddSponsorUI() {
             const type = document.querySelector('input[name="addSponsorType"]:checked').value;
             const container = document.getElementById('sponsor-input-area');
@@ -578,22 +657,6 @@
                     selectElement.add(new Option(label, name));
                 });
             }
-        }
-        
-        // Define fetchStats HERE so it's clearly available for hoisting
-        async function fetchStats() { 
-            if (!currentEvent) return; 
-            if (GAS_URL) { 
-                try { 
-                    // Add timestamp to prevent caching
-                    const res = await fetch(`${GAS_URL}?action=stats&eventId=${currentEvent.id}&_=${new Date().getTime()}`); 
-                    currentStats = await res.json(); 
-                } catch (e) { } 
-            } else { 
-                currentStats = { totalPeople: 5, secondary: 1, roomCounts: {'雙人房': 2}, pickupCounts: {'台北車站':3}, sponsorSummary: {}, tableCount: 1 }; 
-            } 
-            document.getElementById('stat-total').innerText = currentStats.totalPeople; 
-            document.getElementById('stat-sec-val').innerText = currentStats.secondary; 
         }
 
         function renderEventDetails() {
@@ -773,17 +836,16 @@
             document.getElementById('form-title').innerHTML = '<i data-lucide="edit-3" class="w-5 h-5 text-[#06c755]"></i> 填寫報名資料'; 
             document.getElementById('cancel-reg-btn').classList.add('hidden'); 
             
-            // 1. Initial render (basic info) - Dropdowns might have 0 counts initially
+            // 1. Initial render (basic info)
             renderEventDetails(); 
             
-            // 2. Fetch stats (wait for it)
-            // Prevent caching by adding timestamp
+            // 2. Fetch stats
             await fetchStats();
             
-            // 3. Re-render (to populate dropdowns with updated stats)
+            // 3. Re-render
             renderEventDetails();
             
-            // 4. Check registration (fill user data)
+            // 4. Check registration
             await checkMyRegistration();
             
             document.getElementById('event-info-card').classList.remove('opacity-50'); 
@@ -895,38 +957,289 @@
             refreshIcons();
         }
         
-        function showConfirm(message) {
-            return new Promise((resolve) => {
-                const modal = document.getElementById('confirm-modal');
-                const msgEl = document.getElementById('confirm-msg');
-                const yesBtn = document.getElementById('confirm-yes');
-                const noBtn = document.getElementById('confirm-no');
-                msgEl.innerText = message;
-                modal.classList.remove('hidden');
-                const close = (val) => {
-                    modal.classList.add('hidden');
-                    resolve(val);
-                };
-                yesBtn.onclick = () => close(true);
-                noBtn.onclick = () => close(false);
-            });
+        async function checkMyRegistration() { 
+            if (!GAS_URL || !currentEvent) return; 
+            try { 
+                const res = await fetch(`${GAS_URL}?action=checkRegistration&eventId=${currentEvent.id}&userId=${userProfile.userId}`); 
+                const data = await res.json(); 
+                if (data.exists) { 
+                    const r = data.record; 
+                    document.getElementById('family-count').value = r.familyCount; 
+                    document.getElementById('pickup-loc').value = r.pickup; 
+                    document.getElementById('room-type').value = r.roomType; 
+                    document.getElementById('table-count').value = r.tableCount; 
+                    updatePickupMap(); 
+                    if (r.guestName && r.guestName !== '無') { 
+                        const rawGuests = String(r.guestName).split(', '); 
+                        rawGuests.forEach(gStr => { 
+                            const match = gStr.match(/(.*)\((\d+)\)$/); 
+                            if (match) { 
+                                let content = match[1]; 
+                                let count = parseInt(match[2]); 
+                                let parts = content.split(' | ');
+                                let name = parts[0];
+                                let pickup = parts.length > 1 ? parts[1] : "";
+                                let room = parts.length > 2 ? parts[2] : "";
+
+                                guestList.push({ name, count, pickup, room }); 
+                            } else { 
+                                guestList.push({ name: gStr, count: 1 }); 
+                            } 
+                        }); 
+                        renderGuestList(); 
+                    } 
+                    if (r.sponsorship && r.sponsorship !== '無') { sponsorList = r.sponsorship.split(', '); renderSponsorList(); } 
+                    document.getElementById('formAction').value = 'update'; 
+                    document.getElementById('submit-btn').innerHTML = '<span>更新報名</span><i data-lucide="refresh-cw" class="w-4 h-4"></i>'; 
+                    document.getElementById('form-title').innerText = "修改報名資料"; 
+                    document.getElementById('cancel-reg-btn').classList.remove('hidden'); 
+                    showToast("載入您的報名資料"); 
+                } 
+            } catch (e) { console.error(e); } 
+        }
+
+        async function handleSubmit(e) { 
+            e.preventDefault(); 
+            const btn = document.getElementById('submit-btn'); 
+            btn.disabled=true; 
+            const action = document.getElementById('formAction').value; 
+            btn.innerText = action === 'update' ? "更新中..." : "報名中..."; 
+            
+            let finalGuestName = '無'; 
+            let totalGuestCount = 0; 
+            if (guestList.length > 0) { 
+                finalGuestName = guestList.map(g => {
+                    let parts = [g.name];
+                    if(g.pickup) parts.push(g.pickup);
+                    if(g.room) parts.push(g.room);
+                    let str = parts.join(' | ');
+                    if (g.count > 1) str += `(${g.count})`;
+                    else str += `(1)`; 
+                    return str;
+                }).join(', '); 
+                totalGuestCount = guestList.reduce((sum, g) => sum + g.count, 0); 
+            } 
+            
+            let finalSponsor = '無'; 
+            if (sponsorList.length > 0) finalSponsor = sponsorList.join(', '); 
+            
+            const formData = { 
+                action: action, 
+                eventId: document.getElementById('eventId').value, 
+                eventType: document.getElementById('eventType').value, 
+                eventName: document.getElementById('eventName').value, 
+                userId: document.getElementById('user-id').value, 
+                userName: document.getElementById('user-name').value, 
+                familyCount: document.getElementById('family-count').value, 
+                guestName: finalGuestName, 
+                guestCount: totalGuestCount, 
+                sponsorship: finalSponsor, 
+                pickupLoc: document.getElementById('pickup-loc').value, 
+                roomType: document.getElementById('room-type').value, 
+                tableCount: document.getElementById('table-count').value 
+            }; 
+
+            console.log('[Debug] 送出資料:', formData);
+
+            if(GAS_URL) { 
+                try { 
+                    const response = await fetch(GAS_URL, { 
+                        method: 'POST', 
+                        headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        redirect: "follow",
+                        body: JSON.stringify(formData) 
+                    });
+                    const result = await response.json();
+                    console.log('[Debug] GAS 回應:', result);
+
+                    if (result.status === 'success' || result.status === 'created' || result.status === 'updated') {
+                        showToast(action === 'update' ? "更新成功" : "報名成功"); 
+                        setTimeout(() => { goHome(); btn.disabled=false; }, 1000); 
+                    } else {
+                        showToast("提交失敗: " + (result.message || "未知錯誤"));
+                        btn.disabled = false;
+                        btn.innerText = "重試";
+                    }
+                } catch (e) { 
+                    console.error('[Error] 提交失敗:', e);
+                    showToast("網路錯誤，請稍後再試");
+                    btn.disabled = false;
+                } 
+            } else {
+                showToast("模擬成功 (無 GAS URL)");
+                setTimeout(() => { goHome(); btn.disabled=false; }, 1000); 
+            }
         }
         
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            if (!toast) return;
-            document.getElementById('toast-msg').innerText = message;
-            toast.classList.remove('opacity-0', 'top-4');
-            toast.classList.add('top-10');
-            setTimeout(() => {
-                toast.classList.add('opacity-0', 'top-4');
-                toast.classList.remove('top-10');
-            }, 3000);
+        async function handleCancel() { 
+            if (!await showConfirm("確定要取消此活動的報名嗎？")) return; 
+            const btn = document.getElementById('cancel-reg-btn'); 
+            btn.disabled=true; 
+            btn.innerText="取消中..."; 
+            
+            const payload = { action: 'cancelRegistration', eventId: currentEvent.id, userId: userProfile.userId }; 
+            
+            if (GAS_URL) { 
+                try { 
+                    const response = await fetch(GAS_URL, { 
+                        method: 'POST', 
+                        headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        redirect: "follow",
+                        body: JSON.stringify(payload) 
+                    }); 
+                    const result = await response.json();
+                    if(result.status === 'deleted') {
+                         showToast("已取消報名"); 
+                         setTimeout(() => { goHome(); btn.disabled=false; }, 1000); 
+                    } else {
+                         showToast("取消失敗");
+                         btn.disabled=false;
+                    }
+                } catch(e) { 
+                    console.error(e);
+                    showToast("網路錯誤");
+                    btn.disabled=false;
+                } 
+            } 
         }
-        
-        function closeDetailsModal(){ const content = document.getElementById('modal-content'); content.classList.remove('scale-100', 'opacity-100'); content.classList.add('scale-95', 'opacity-0'); setTimeout(() => document.getElementById('details-modal').classList.add('hidden'), 300); }
-        function pad(num) { return num.toString().padStart(2, '0'); }
-        
+
+        async function handleCreateEvent(e) { 
+            e.preventDefault(); 
+            const btn = document.getElementById('create-btn'); 
+            btn.disabled=true; 
+            btn.innerText="建立中..."; 
+            const type = document.getElementById('new-type').value; 
+            let timeStr = ""; 
+            if (type === 'travel') { 
+                const s = document.getElementById('new-date-start').value; 
+                const end = document.getElementById('new-date-end').value; 
+                timeStr = `${s.replace(/-/g,'/')}~${end.replace(/-/g,'/')}`; 
+            } else { 
+                const t = document.getElementById('new-time-single').value; 
+                timeStr = t; 
+            } 
+            
+            const payload = { 
+                action: 'createEvent', 
+                eventType: type, 
+                eventName: document.getElementById('new-name').value, 
+                organizer: document.getElementById('new-organizer-select').value, 
+                time: timeStr, 
+                deadline: document.getElementById('new-deadline').value,
+                location: document.getElementById('new-location-select').value, 
+                address: document.getElementById('new-address').value, 
+                itinerary: type==='travel'?document.getElementById('new-itinerary').value:'', 
+                creatorId: userProfile.userId, 
+                creatorName: userProfile.displayName 
+            }; 
+            
+            if(GAS_URL) {
+                try {
+                     await fetch(GAS_URL, { 
+                        method:'POST', 
+                        headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        redirect: "follow",
+                        body:JSON.stringify(payload)
+                    }); 
+                     showToast("建立成功"); 
+                     await fetchEvents(); 
+                     goHome(); 
+                } catch(e) {
+                     console.error(e);
+                     showToast("建立失敗");
+                }
+            } else {
+                 MOCK_EVENTS.push({...payload, id:'new_'+Date.now(), isActive: "開放", pickupOpts:[], roomOpts:[]}); 
+                 showToast("建立成功 (模擬)"); 
+                 await fetchEvents(); 
+                 goHome(); 
+            }
+            btn.disabled=false; 
+        }
+
+        // --- 1. Updated Share Text Generation ---
+        function generateShareText(details) {
+            if (!currentEvent) return '';
+            let text = `【${currentEvent.name}】\n主辦：${currentEvent.organizer}\n時間：${formatDate(currentEvent.time)}\n地點：${currentEvent.location}\n地址：${currentEvent.address}\n`;
+            
+            // --- Summary Section ---
+            let summaryText = "";
+            if (currentEvent.type === 'travel') {
+                const pickups = Object.entries(currentStats.pickupCounts).map(([k,v])=>`${k}(${v})`).join(', ');
+                const rooms = Object.entries(currentStats.roomCounts).map(([k,v])=>`${k}(${v})`).join(', ');
+                if (pickups) summaryText += `[上車統計] ${pickups}\n`;
+                if (rooms) summaryText += `[房型統計] ${rooms}\n`;
+            } else if (currentEvent.type === 'banquet') {
+                summaryText += `[總認桌數] ${currentStats.tableCount} 桌\n`;
+            }
+            if (summaryText) text += `\n${summaryText}`;
+
+            let grandTotal = 0;
+            if (details && details.length > 0) {
+                details.forEach(item => {
+                    grandTotal += (1 + (item.family || 0) + (item.guestCount || 0));
+                });
+            }
+            text += `\n目前報名人數：${grandTotal} 人\n\n`;
+
+            // --- Block 1: Participants ---
+            text += `--- 參加名單 ---\n`;
+            if (details && details.length > 0) {
+                 details.forEach((item, index) => {
+                     let total = 1 + (item.family || 0) + (item.guestCount || 0);
+                     text += `${pad(index + 1)}. ${item.name}`;
+                     if (total > 1) text += ` *${total}`; 
+                     
+                     if (item.guestName && item.guestName !== '無') {
+                        let displayGuest = String(item.guestName).replace(/\(1\)/g, '');
+                        text += ` (含來賓: ${displayGuest})`;
+                     }
+                     text += `\n`;
+                 });
+            } else {
+                text += `(暫無報名資料)\n`;
+            }
+            
+            // --- Block 2: Travel Details (Travel Only) ---
+            if (currentEvent.type === 'travel' && details && details.length > 0) {
+                let hasTravelInfo = false;
+                let travelText = `\n--- 房型與上車 ---\n`;
+                details.forEach((item) => {
+                     if ((item.room && item.room !== '無') || (item.pickup && item.pickup !== '無')) {
+                         hasTravelInfo = true;
+                         travelText += `${item.name}: `;
+                         let parts = [];
+                         if (item.room && item.room !== '無') parts.push(item.room);
+                         if (item.pickup && item.pickup !== '無') parts.push(item.pickup);
+                         travelText += parts.join(' | ') + `\n`;
+                     }
+                });
+                if (hasTravelInfo) text += travelText;
+            }
+
+            // --- Block 3: Sponsorship & Tables ---
+            let hasSponsorInfo = false;
+            let sponsorText = `\n--- 贊助與認桌 ---\n`;
+            if (details && details.length > 0) {
+                details.forEach((item) => {
+                     let parts = [];
+                     if (item.tableCount > 0) parts.push(`認桌 ${item.tableCount} 桌`);
+                     if (item.sponsor && item.sponsor !== '無') parts.push(item.sponsor);
+                     
+                     if (parts.length > 0) {
+                         hasSponsorInfo = true;
+                         sponsorText += `${item.name}: ${parts.join(' / ')}\n`;
+                     }
+                });
+            }
+            if (hasSponsorInfo) text += sponsorText;
+
+            const url = `https://liff.line.me/${LIFF_ID}?eventId=${currentEvent.id}`;
+            text += `\n報名網址：\n${url}`;
+            
+            return text;
+        }
+
         async function copyDetailsToClipboard(){ 
              if (!currentEvent) return;
              if (!lastFetchedDetails || lastFetchedDetails.length === 0) {
@@ -937,6 +1250,7 @@
              showToast("已複製活動名單");
         }
         
+        // --- 2. Update Modal Render Logic with Split Sections ---
         async function openDetailsModal(){ 
             if(!currentEvent)return; 
             document.getElementById('details-modal').classList.remove('hidden'); 
@@ -1055,16 +1369,6 @@
                 if (hasItems) { sepItems.classList.remove('hidden'); } 
             } 
         }
-        
-        async function fetchEvents() { if (GAS_URL) { try { const res = await fetch(`${GAS_URL}?action=getEvents`); allEvents = await res.json(); } catch (e) { allEvents = MOCK_EVENTS; } } else { allEvents = MOCK_EVENTS; } }
-        async function fetchSettings() { if (GAS_URL) { try { const res = await fetch(`${GAS_URL}?action=getSettings`); systemSettings = await res.json(); } catch (e) { systemSettings = MOCK_SETTINGS; } } else { systemSettings = MOCK_SETTINGS; } populateCreateDropdowns(); }
-        function populateCreateDropdowns() { const orgSelect = document.getElementById('new-organizer-select'); const locSelect = document.getElementById('new-location-select'); orgSelect.innerHTML = '<option value="">請選擇主辦人</option>'; systemSettings.organizers.forEach(org => orgSelect.add(new Option(org, org))); locSelect.innerHTML = '<option value="">請選擇地點</option>'; systemSettings.locations.forEach(loc => locSelect.add(new Option(loc.name, loc.name))); }
-        function onLocationChange() { const locName = document.getElementById('new-location-select').value; const loc = systemSettings.locations.find(l => l.name === locName); document.getElementById('new-address').value = loc ? loc.address : ''; }
-        function toggleCreateFields() { const type = document.getElementById('new-type').value; const single = document.getElementById('new-field-time-single'); const range = document.getElementById('new-field-time-range'); const itin = document.getElementById('new-field-itinerary'); if (type === 'travel') { single.classList.add('hidden'); range.classList.remove('hidden'); itin.classList.remove('hidden'); } else { single.classList.remove('hidden'); range.classList.add('hidden'); itin.classList.add('hidden'); } }
-        async function handleCreateEvent(e) { e.preventDefault(); const btn = document.getElementById('create-btn'); btn.disabled=true; const action = document.getElementById('formAction').value; btn.innerText = action === 'update' ? "更新中..." : "報名中..."; let finalGuestName = '無'; let totalGuestCount = 0; if (guestList.length > 0) { finalGuestName = guestList.map(g => { let parts = [g.name]; if(g.pickup) parts.push(g.pickup); if(g.room) parts.push(g.room); let str = parts.join(' | '); if (g.count > 1) str += `(${g.count})`; else str += `(1)`; return str; }).join(', '); totalGuestCount = guestList.reduce((sum, g) => sum + g.count, 0); } let finalSponsor = '無'; if (sponsorList.length > 0) finalSponsor = sponsorList.join(', '); const formData = { action: action, eventId: document.getElementById('eventId').value, eventType: document.getElementById('eventType').value, eventName: document.getElementById('eventName').value, userId: document.getElementById('user-id').value, userName: document.getElementById('user-name').value, familyCount: document.getElementById('family-count').value, guestName: finalGuestName, guestCount: totalGuestCount, sponsorship: finalSponsor, pickupLoc: document.getElementById('pickup-loc').value, roomType: document.getElementById('room-type').value, tableCount: document.getElementById('table-count').value }; if(GAS_URL) { try { await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(formData), mode: 'no-cors' }); } catch (e) {} } showToast(action === 'update' ? "更新成功" : "報名成功"); setTimeout(() => { goHome(); btn.disabled=false; }, 1000); }
-        function populateSelect(e,a,d){e.innerHTML='';e.add(new Option(d||'請選擇',''));if(a)a.forEach(o=>e.add(new Option(o,o)));}
-        async function toggleEventStatus() { if (!currentEvent) return; const btn = document.getElementById('btn-status-toggle'); const originalText = btn.innerText; btn.innerText = "處理中..."; btn.disabled = true; const newStatus = isEventOpen(currentEvent) ? "關閉" : "開放"; const payload = { action: 'toggleStatus', eventId: currentEvent.id, status: newStatus }; try { if (GAS_URL) { await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' }); } else { currentEvent.isActive = newStatus; showToast(`活動已${newStatus}`); } await fetchEvents(); if (showingHistory) goHome(); else enterEventDetail(currentEvent.id); } catch(e) { showToast("操作失敗"); } finally { btn.innerText = originalText; btn.disabled = false; } }
-        function toggleHistoryView() { showingHistory = !showingHistory; const btn = document.getElementById('btn-history-toggle'); const activeList = document.getElementById('active-categories'); const historyList = document.getElementById('history-list'); const createBtn = document.getElementById('btn-create-event'); if (showingHistory) { btn.innerHTML = '<i data-lucide="arrow-left" class="w-3 h-3"></i> <span>返回進行中活動</span>'; activeList.classList.add('hidden'); createBtn.classList.add('hidden'); historyList.classList.remove('hidden'); renderHistoryList(); } else { btn.innerHTML = '<i data-lucide="history" class="w-3 h-3"></i> <span>查看歷史活動</span>'; activeList.classList.remove('hidden'); createBtn.classList.remove('hidden'); historyList.classList.add('hidden'); } lucide.createIcons(); }
     </script>
 </body>
 </html>
