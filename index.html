@@ -690,8 +690,19 @@
             document.getElementById('form-title').innerHTML = '<i data-lucide="edit-3" class="w-5 h-5 text-[#06c755]"></i> 填寫報名資料'; 
             document.getElementById('cancel-reg-btn').classList.add('hidden'); 
             
+            // 1. Initial render (basic info)
             renderEventDetails(); 
-            await Promise.all([fetchStats(), checkMyRegistration()]); 
+            
+            // 2. Fetch stats (wait for it)
+            // Prevent caching by adding timestamp
+            await fetchStats();
+            
+            // 3. Re-render (to populate dropdowns with stats)
+            renderEventDetails();
+            
+            // 4. Check registration (fill user data)
+            await checkMyRegistration();
+            
             document.getElementById('event-info-card').classList.remove('opacity-50'); 
         }
         
@@ -815,9 +826,22 @@
         function populateRoomSelectWithStats(el, options) { el.innerHTML = ''; el.add(new Option('請選擇', '')); if(options) { options.forEach(opt => { let name = opt; let limit = null; if(opt.includes(':')) { const parts = opt.split(':'); name = parts[0]; limit = parts[1]; } const count = currentStats.roomCounts[name] || 0; let label = name; if (limit) label += ` (已選: ${count}/${limit})`; else label += ` (已選: ${count})`; el.add(new Option(label, name)); }); } }
         async function handleSubmit(e) { e.preventDefault(); const btn = document.getElementById('submit-btn'); btn.disabled=true; const action = document.getElementById('formAction').value; btn.innerText = action === 'update' ? "更新中..." : "報名中..."; let finalGuestName = '無'; let totalGuestCount = 0; if (guestList.length > 0) { finalGuestName = guestList.map(g => g.count > 1 ? `${g.name}(${g.count})` : g.name).join(', '); totalGuestCount = guestList.reduce((sum, g) => sum + g.count, 0); } let finalSponsor = '無'; if (sponsorList.length > 0) finalSponsor = sponsorList.join(', '); const formData = { action: action, eventId: document.getElementById('eventId').value, eventType: document.getElementById('eventType').value, eventName: document.getElementById('eventName').value, userId: document.getElementById('user-id').value, userName: document.getElementById('user-name').value, familyCount: document.getElementById('family-count').value, guestName: finalGuestName, guestCount: totalGuestCount, sponsorship: finalSponsor, pickupLoc: document.getElementById('pickup-loc').value, roomType: document.getElementById('room-type').value, tableCount: document.getElementById('table-count').value }; if(GAS_URL) await fetch(GAS_URL, {method:'POST', body:JSON.stringify(formData), mode:'no-cors'}); else MOCK_EVENTS.push({...payload, id:'new_'+Date.now(), isActive: "開放", pickupOpts:[], roomOpts:[]}); showToast("建立成功"); await fetchEvents(); goHome(); btn.disabled=false; }
         async function handleCancel() { if (!await showConfirm("確定要取消此活動的報名嗎？")) return; const btn = document.getElementById('cancel-reg-btn'); btn.disabled=true; btn.innerText="取消中..."; const payload = { action: 'cancelRegistration', eventId: currentEvent.id, userId: userProfile.userId }; if (GAS_URL) { try { await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' }); } catch(e) {} } showToast("已取消報名"); setTimeout(() => { goHome(); btn.disabled=false; }, 1000); }
-        async function fetchStats() { if (!currentEvent) return; if (GAS_URL) { try { const res = await fetch(`${GAS_URL}?action=stats&eventId=${currentEvent.id}`); currentStats = await res.json(); } catch (e) { } } else { currentStats = { totalPeople: 5, secondary: 1, roomCounts: {'雙人房': 2}, pickupCounts: {'台北車站':3}, sponsorSummary: {}, tableCount: 1 }; } document.getElementById('stat-total').innerText = currentStats.totalPeople; document.getElementById('stat-sec-val').innerText = currentStats.secondary; }
+        async function fetchStats() { 
+            if (!currentEvent) return; 
+            if (GAS_URL) { 
+                try { 
+                    // Add timestamp to prevent caching
+                    const res = await fetch(`${GAS_URL}?action=stats&eventId=${currentEvent.id}&_=${new Date().getTime()}`); 
+                    currentStats = await res.json(); 
+                } catch (e) { } 
+            } else { 
+                currentStats = { totalPeople: 5, secondary: 1, roomCounts: {'雙人房': 2}, pickupCounts: {'台北車站':3}, sponsorSummary: {}, tableCount: 1 }; 
+            } 
+            document.getElementById('stat-total').innerText = currentStats.totalPeople; 
+            document.getElementById('stat-sec-val').innerText = currentStats.secondary; 
+        }
         
-        // --- 1. Updated Share Text Generation ---
+        // --- 1. Generate Share Text with Extra Stats ---
         function generateShareText(details) {
             if (!currentEvent) return '';
             let text = `【${currentEvent.name}】\n主辦：${currentEvent.organizer}\n時間：${formatDate(currentEvent.time)}\n地點：${currentEvent.location}\n地址：${currentEvent.address}\n`;
