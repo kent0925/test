@@ -541,22 +541,6 @@
             myRegistrations: [] // Store IDs of registered events
         };
 
-        // Mock Data for Fallback
-        const MOCK = {
-            events: [
-                { id: 'm1', type: 'general', name: '五月例會', organizer: '王社長', time: '2026-04-01T10:30:00', deadline: '2026-03-31T23:59', location: '市民中心', address: '台北市公園路', isActive: "開放", creatorId: 'mock_u1' },
-                { id: 'm2', type: 'general', name: '四月例會', organizer: '王社長', time: '2026-03-01T10:30:00', location: '市民中心', address: '台北市公園路', isActive: "關閉", creatorId: 'mock_u1' },
-                { id: 'm3', type: 'travel', name: '花蓮三日遊', organizer: '康樂組', time: '2026/07/15~2026/07/18', deadline: '2026-06-30T12:00', location: '花蓮', address: '台北車站集合', itinerary: 'D1: 出發|0800 北車東三門;D2: 太魯閣|1000 砂卡礑步道', isActive: "開放", pickupOpts: ['台北車站|https://goo.gl/maps/123', '板橋車站'], roomOpts: ['雙人房:10', '四人房:5'] },
-                { id: 'm4', type: 'banquet', name: '年度尾牙', organizer: '籌備會', time: '2026-01-20T18:30:00', location: '大飯店', address: '中山北路', isActive: "開放" }
-            ],
-            settings: { organizers: ['王社長', '康樂組', '秘書處'], locations: [{name:'市民中心', address:'台北市公園路'}, {name:'大飯店', address:'中山北路'}] },
-            details: [
-                {name:'王小明', family:1, guestCount:0, guestName:'無', sponsor:'無', room:'雙人房', pickup:'台北車站', tableCount:0},
-                {name:'陳池文', family:0, guestCount:0, guestName:'無', sponsor:'紅包: 1000元', room:'無', pickup:'無', tableCount:0}
-            ],
-            myRegs: ['m1', 'm3'] // Mock my registrations
-        };
-
         // ==========================================
         // 2. INITIALIZATION
         // ==========================================
@@ -610,54 +594,40 @@
         // 3. API HANDLING
         // ==========================================
         async function fetchEvents() { 
+            if (!GAS_URL) return;
             try { 
-                if (GAS_URL) {
-                     const res = await fetch(`${GAS_URL}?action=getEvents`); 
-                     appState.events = await res.json();
-                } else {
-                    throw new Error("No GAS URL");
-                }
+                 const res = await fetch(`${GAS_URL}?action=getEvents`); 
+                 appState.events = await res.json();
             } catch (e) { 
-                console.warn("Using Mock Events");
-                appState.events = MOCK.events; 
+                console.warn("API Error (getEvents)", e);
             } 
         }
 
         async function fetchSettings() { 
+            if (!GAS_URL) return;
             try { 
-                if (GAS_URL) {
-                    const res = await fetch(`${GAS_URL}?action=getSettings`); 
-                    appState.settings = await res.json(); 
-                } else {
-                    throw new Error("No GAS URL");
-                }
+                const res = await fetch(`${GAS_URL}?action=getSettings`); 
+                appState.settings = await res.json(); 
+                populateCreateDropdowns(); 
             } catch (e) { 
-                appState.settings = MOCK.settings; 
+                console.warn("API Error (getSettings)", e);
             } 
-            populateCreateDropdowns(); 
         }
         
         async function fetchMyRegistrations() {
-            if (!appState.user.userId) return;
+            if (!appState.user.userId || !GAS_URL) return;
             try {
-                if (GAS_URL) {
-                    // Assuming GAS has an action 'getMyRegistrations' returning list of eventIds
-                    // For now, we simulate via getEvents or if backend supports it.
-                    // Or we assume a lightweight check. Here we mock it or fetch a specific endpoint.
-                    // Note: If backend doesn't support this, we might skip or rely on entering event.
-                    // For this demo, we assume MOCK behavior or empty if API fails.
-                    // const res = await fetch(`${GAS_URL}?action=getMyRegistrations&userId=${appState.user.userId}`);
-                    // appState.myRegistrations = await res.json();
-                } else {
-                    appState.myRegistrations = MOCK.myRegs;
-                }
+                // Try to fetch registrations.
+                const res = await fetch(`${GAS_URL}?action=getMyRegistrations&userId=${appState.user.userId}`);
+                const data = await res.json();
+                appState.myRegistrations = Array.isArray(data) ? data : [];
             } catch (e) {
-                console.warn("Fetch Registrations Failed");
+                console.warn("Fetch Registrations Failed", e);
             }
         }
         
         async function fetchStats(forceRefresh = false) { 
-            if (!appState.currentEvent) return; 
+            if (!appState.currentEvent || !GAS_URL) return; 
             
             const totalEl = document.getElementById('stat-total');
             const secEl = document.getElementById('stat-sec-val');
@@ -668,93 +638,22 @@
             }
 
             try { 
-                if (GAS_URL) { 
-                    const res = await fetch(`${GAS_URL}?action=stats&eventId=${appState.currentEvent.id}&_=${Date.now()}`); 
-                    appState.currentStats = await res.json(); 
-                } else { 
-                    throw new Error("No GAS URL");
-                } 
-            } catch (e) { 
-                // Mock Stats Calculation based on MOCK.details
-                // Dynamic calculation logic
-                let total = 0;
-                let sec = 0;
-                let rCounts = {};
-                let pCounts = {}; // Added for pickup
-
-                if (MOCK.details && MOCK.details.length > 0) {
-                    MOCK.details.forEach(d => {
-                        // Count people: 1 (self) + family + guests
-                        // Parse guests from string "Name(1), Name(2)"
-                        let gCount = 0;
-                        if(d.guestName && d.guestName !== '無') {
-                             d.guestName.split(',').forEach(g => {
-                                 const m = g.match(/\((\d+)\)/);
-                                 if(m) gCount += parseInt(m[1]);
-                                 else gCount++;
-                             });
-                        } else {
-                            gCount = d.guestCount || 0;
-                        }
-                        
-                        total += 1 + (d.family || 0) + gCount;
-                        
-                        // Secondary stats
-                        if(appState.currentEvent.type === 'banquet') sec += (d.tableCount || 0);
-                        else if(d.sponsor && d.sponsor !== '無') sec++;
-                        
-                        // Room & Pickup Counts
-                        if(appState.currentEvent.type === 'travel') {
-                            // Main
-                            if(d.room && d.room !== '無') rCounts[d.room] = (rCounts[d.room] || 0) + 1;
-                            
-                            // Guest rooms parsing logic (UPDATED for better parsing)
-                            if(d.guestName && d.guestName !== '無') {
-                                const guests = d.guestName.split(/,\s*/);
-                                guests.forEach(gStr => {
-                                    // Try to match "Name|Pickup|Room(Count)" or similar
-                                    // Remove count first to get content
-                                    const match = gStr.match(/^(.*)\(\d+\)$/);
-                                    if(match) {
-                                        const content = match[1]; 
-                                        const parts = content.split('|');
-                                        // Standard format: Name|Pickup|Room
-                                        if(parts.length >= 3) {
-                                            const gRoom = parts[2].trim();
-                                            if(gRoom && gRoom !== '無') {
-                                                rCounts[gRoom] = (rCounts[gRoom] || 0) + 1;
-                                            }
-                                        }
-                                    }
-                                });
-                            }
-                        }
-                    });
-                }
+                const res = await fetch(`${GAS_URL}?action=stats&eventId=${appState.currentEvent.id}&_=${Date.now()}`); 
+                appState.currentStats = await res.json(); 
                 
-                appState.currentStats = { 
-                    totalPeople: total, 
-                    secondary: sec, 
-                    roomCounts: rCounts, 
-                    pickupCounts: {'台北車站':3}, 
-                    tableCount: sec 
-                }; 
+                // Update UI numbers
+                animateValue(totalEl, 0, appState.currentStats.totalPeople || 0, 500);
+                animateValue(secEl, 0, appState.currentStats.secondary || 0, 500);
+            } catch (e) { 
+                console.warn("Fetch Stats Failed", e);
             } 
-            
-            // Animation for numbers
-            animateValue(totalEl, 0, appState.currentStats.totalPeople || 0, 500);
-            animateValue(secEl, 0, appState.currentStats.secondary || 0, 500);
         }
 
         async function fetchDetails() {
+            if (!GAS_URL) return [];
             try {
-                if (GAS_URL) {
-                    const res = await fetch(`${GAS_URL}?action=getDetails&eventId=${appState.currentEvent.id}`);
-                    return await res.json();
-                } else {
-                    await new Promise(r => setTimeout(r, 800)); // Simulate delay
-                    return MOCK.details;
-                }
+                const res = await fetch(`${GAS_URL}?action=getDetails&eventId=${appState.currentEvent.id}`);
+                return await res.json();
             } catch(e) { return []; }
         }
         
@@ -765,41 +664,6 @@
                     headers: { "Content-Type": "text/plain;charset=utf-8" },
                     body: JSON.stringify(data)
                 });
-            } else {
-                await new Promise(r => setTimeout(r, 1000));
-                console.log("Mock Submit:", data);
-                
-                // Simulate Backend Logic: Update MOCK.details
-                const guestArr = JSON.parse(data.guestList || '[]');
-                
-                // Build Guest String: Name|Pickup|Room(Count)
-                const guestStrParts = guestArr.map(g => {
-                    const p = g.pickup || '無';
-                    const r = g.room || '無';
-                    let info = g.name;
-                    if (appState.currentEvent.type === 'travel') {
-                         info += `|${p}|${r}`;
-                    }
-                    return `${info}(${g.count})`;
-                });
-                const guestStr = guestStrParts.length > 0 ? guestStrParts.join(', ') : '無';
-                
-                const newEntry = {
-                    userId: data.userId,
-                    name: data.displayName,
-                    family: parseInt(data.familyCount),
-                    guestCount: guestArr.reduce((acc, c) => acc + parseInt(c.count), 0),
-                    guestName: guestStr,
-                    sponsor: JSON.parse(data.sponsorList || '[]').join(', ') || '無',
-                    room: data.roomType || '無',
-                    pickup: data.pickupLoc || '無',
-                    tableCount: parseInt(data.tableCount) || 0
-                };
-
-                // Update or Push
-                const idx = MOCK.details.findIndex(d => d.name === data.displayName); 
-                if (idx >= 0) MOCK.details[idx] = newEntry;
-                else MOCK.details.push(newEntry);
             }
         }
 
@@ -880,7 +744,21 @@
             if (record.pickup && record.pickup !== '無') document.getElementById('pickup-loc').value = record.pickup;
 
             // Restore Complex Lists (Guests & Sponsors)
-            restoreGuestList(record.guestName);
+            // Use guestJson if available for precise restoration
+            if (record.guestJson && record.guestJson !== '[]') {
+                try {
+                    const guests = JSON.parse(record.guestJson);
+                    appState.guestList = guests.map(g => ({
+                        ...g,
+                        id: g.id || ('g_' + Date.now() + Math.random().toString(36).substr(2, 5)) // ensure ID exists
+                    }));
+                    renderGuestList();
+                } catch(e) {
+                    restoreGuestList(record.guestName); // fallback
+                }
+            } else {
+                restoreGuestList(record.guestName);
+            }
             restoreSponsorList(record.sponsor);
             
             refreshIcons();
@@ -1219,12 +1097,13 @@
                         default: icon='calendar'; colorClass='text-green-600'; bgClass='bg-green-50';
                     }
 
-                    // Deadline Warning
+                    // Deadline Warning / Registered Badge Logic
                     let badge = '';
-                    if (e.deadline && new Date() > new Date(e.deadline)) {
-                        badge = '<span class="absolute top-0 right-0 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-bl-lg font-bold">已截止</span>';
-                    } else if (appState.myRegistrations.includes(e.id)) {
+                    // 優先顯示已報名，即使已截止
+                    if (appState.myRegistrations.includes(e.id)) {
                         badge = '<span class="absolute top-0 right-0 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-bl-lg font-bold">已報名</span>';
+                    } else if (e.deadline && new Date() > new Date(e.deadline)) {
+                        badge = '<span class="absolute top-0 right-0 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-bl-lg font-bold">已截止</span>';
                     }
 
                     card.innerHTML = `
@@ -1315,18 +1194,23 @@
                 // Parse guests with details if available
                 let subHtml = '';
                 if (row.guestName && row.guestName !== '無') {
+                    // Try to use guestJson if available from backend, otherwise parse string
+                    // Current mock setup simulates guestJson string in guestName for simple parsing, 
+                    // or relies on the string format.
+                    // Ideally we should use row.guestJson if available.
+                    // For display consistency, we can stick to the string format returned by GAS.
                     const guestEntries = row.guestName.split(', ');
                     let guestTexts = [];
                     guestEntries.forEach(g => {
                          let parts = g.split('|');
-                         let main = parts[0].replace(/\(\d+\)/, ''); // clean count
+                         let name = parts[0].replace(/\(\d+\)/, ''); // clean count
                          let extras = [];
                          if(parts[1] && parts[1]!=='無') extras.push(parts[1]);
                          if(parts[2] && parts[2]!=='無') extras.push(parts[2]);
                          
-                         let text = main;
-                         if(extras.length) text += ` [${extras.join('/')}]`;
-                         guestTexts.push(text);
+                         let str = name;
+                         if(extras.length) str += ` [${extras.join('/')}]`;
+                         guestTexts.push(str);
                     });
                     subHtml = `<div class="text-xs text-gray-500 mt-0.5 pl-6">賓: ${guestTexts.join('、')}</div>`;
                 }
