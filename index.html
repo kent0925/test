@@ -591,6 +591,12 @@
             // Fetch Data
             await Promise.all([fetchEvents(), fetchSettings(), fetchMyRegistrations()]);
             appState.isDataLoaded = true;
+
+            const listView = document.getElementById('view-event-list');
+            if (!listView.classList.contains('hidden')) {
+                // 使用者正在列表頁等待，立刻渲染卡片
+                renderEventGrid(appState.currentCategory);
+            }
             
             // Remove initial skeleton loaders if on home
             document.getElementById('history-loading').classList.add('hidden');
@@ -696,6 +702,10 @@
         async function enterEventDetail(eventId) {
             const event = appState.events.find(e => e.id === eventId);
             if (!event) return;
+
+            // ★【修正點 2】一點擊就顯示 Loading Toast，提升體驗
+            showToast("正在讀取活動詳情...");
+            
             appState.currentEvent = event;
             // Clear stats immediately to prevent old data showing
             appState.currentStats = {}; 
