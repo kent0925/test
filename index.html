@@ -248,7 +248,7 @@
         </div>
     </div>
 
-    <!-- Modal -->
+    <!-- Details Modal -->
     <div id="details-modal" class="hidden fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm max-h-[80vh] flex flex-col relative transform scale-95 opacity-0 transition-all" id="modal-content">
             <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50 rounded-t-xl">
@@ -266,6 +266,18 @@
                 <div id="modal-empty" class="hidden text-center py-6 text-gray-400 text-sm">目前尚未有人報名</div>
             </div>
             <div class="p-3 border-t border-gray-100 bg-gray-50 rounded-b-xl"><button onclick="copyDetailsToClipboard()" class="w-full bg-blue-50 text-blue-600 py-2 rounded-lg text-sm font-medium hover:bg-blue-100 transition flex justify-center items-center gap-2"><i data-lucide="copy" class="w-4 h-4"></i> 複製名單 (含連結)</button></div>
+        </div>
+    </div>
+
+    <!-- Custom Confirm Modal -->
+    <div id="confirm-modal" class="hidden fixed inset-0 z-[80] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-sm p-5 transform transition-all scale-100">
+            <h3 class="text-lg font-bold text-gray-800 mb-2">系統提示</h3>
+            <p id="confirm-msg" class="text-gray-600 mb-6">確認要執行此動作嗎？</p>
+            <div class="flex gap-3 justify-end">
+                <button id="confirm-no" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">取消</button>
+                <button id="confirm-yes" class="px-4 py-2 rounded-lg bg-red-500 text-white font-medium hover:bg-red-600 transition shadow-md">確定</button>
+            </div>
         </div>
     </div>
     
@@ -753,6 +765,27 @@
             refreshIcons();
         }
         
+        // Confirm Helper
+        function showConfirm(message) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('confirm-modal');
+                const msgEl = document.getElementById('confirm-msg');
+                const yesBtn = document.getElementById('confirm-yes');
+                const noBtn = document.getElementById('confirm-no');
+
+                msgEl.innerText = message;
+                modal.classList.remove('hidden');
+
+                const close = (val) => {
+                    modal.classList.add('hidden');
+                    resolve(val);
+                };
+
+                yesBtn.onclick = () => close(true);
+                noBtn.onclick = () => close(false);
+            });
+        }
+
         async function checkMyRegistration() { 
             if (!GAS_URL || !currentEvent) return; 
             try { 
@@ -789,7 +822,7 @@
 
         function populateRoomSelectWithStats(el, options) { el.innerHTML = ''; el.add(new Option('請選擇', '')); if(options) { options.forEach(opt => { let name = opt; let limit = null; if(opt.includes(':')) { const parts = opt.split(':'); name = parts[0]; limit = parts[1]; } const count = currentStats.roomCounts[name] || 0; let label = name; if (limit) label += ` (已選: ${count}/${limit})`; else label += ` (已選: ${count})`; el.add(new Option(label, name)); }); } }
         async function handleSubmit(e) { e.preventDefault(); const btn = document.getElementById('submit-btn'); btn.disabled=true; const action = document.getElementById('formAction').value; btn.innerText = action === 'update' ? "更新中..." : "報名中..."; let finalGuestName = '無'; let totalGuestCount = 0; if (guestList.length > 0) { finalGuestName = guestList.map(g => g.count > 1 ? `${g.name}(${g.count})` : g.name).join(', '); totalGuestCount = guestList.reduce((sum, g) => sum + g.count, 0); } let finalSponsor = '無'; if (sponsorList.length > 0) finalSponsor = sponsorList.join(', '); const formData = { action: action, eventId: document.getElementById('eventId').value, eventType: document.getElementById('eventType').value, eventName: document.getElementById('eventName').value, userId: document.getElementById('user-id').value, userName: document.getElementById('user-name').value, familyCount: document.getElementById('family-count').value, guestName: finalGuestName, guestCount: totalGuestCount, sponsorship: finalSponsor, pickupLoc: document.getElementById('pickup-loc').value, roomType: document.getElementById('room-type').value, tableCount: document.getElementById('table-count').value }; if (GAS_URL) { try { await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(formData), mode: 'no-cors' }); } catch (e) {} } showToast(action === 'update' ? "更新成功" : "報名成功"); setTimeout(() => { goHome(); btn.disabled=false; }, 1000); }
-        async function handleCancel() { if (!confirm("確定要取消此活動的報名嗎？")) return; const btn = document.getElementById('cancel-reg-btn'); btn.disabled=true; btn.innerText="取消中..."; const payload = { action: 'cancelRegistration', eventId: currentEvent.id, userId: userProfile.userId }; if (GAS_URL) { try { await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' }); } catch(e) {} } showToast("已取消報名"); setTimeout(() => { goHome(); btn.disabled=false; }, 1000); }
+        async function handleCancel() { if (!await showConfirm("確定要取消此活動的報名嗎？")) return; const btn = document.getElementById('cancel-reg-btn'); btn.disabled=true; btn.innerText="取消中..."; const payload = { action: 'cancelRegistration', eventId: currentEvent.id, userId: userProfile.userId }; if (GAS_URL) { try { await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' }); } catch(e) {} } showToast("已取消報名"); setTimeout(() => { goHome(); btn.disabled=false; }, 1000); }
         async function fetchStats() { if (!currentEvent) return; if (GAS_URL) { try { const res = await fetch(`${GAS_URL}?action=stats&eventId=${currentEvent.id}`); currentStats = await res.json(); } catch (e) { } } else { currentStats = { totalPeople: 5, secondary: 1, roomCounts: {'雙人房': 2}, pickupCounts: {'台北車站':3}, sponsorSummary: {}, tableCount: 1 }; } document.getElementById('stat-total').innerText = currentStats.totalPeople; document.getElementById('stat-sec-val').innerText = currentStats.secondary; }
         
         // --- 1. Copy Text with Total Count & Safe Replace ---
