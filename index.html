@@ -534,7 +534,8 @@
             historyStack: ['home'],
             guestList: [],
             sponsorList: [],
-            isDataLoaded: false
+            isDataLoaded: false,
+            myRegistrations: [] // Store IDs of registered events
         };
 
         // Mock Data for Fallback
@@ -549,7 +550,8 @@
             details: [
                 {name:'王小明', family:1, guestCount:0, guestName:'無', sponsor:'無', room:'雙人房', pickup:'台北車站', tableCount:0},
                 {name:'陳池文', family:0, guestCount:0, guestName:'無', sponsor:'紅包: 1000元', room:'無', pickup:'無', tableCount:0}
-            ]
+            ],
+            myRegs: ['m1', 'm3'] // Mock my registrations
         };
 
         // ==========================================
@@ -571,15 +573,13 @@
                     if (liff.isLoggedIn()) {
                         const profile = await liff.getProfile();
                         appState.user = { userId: profile.userId, displayName: profile.displayName, pictureUrl: profile.pictureUrl };
-                    } else {
-                        // Auto login prompt or keep as Guest
                     }
                 } catch (e) { console.warn("LIFF Init failed", e); }
             }
             updateUserProfileUI();
 
             // Fetch Data
-            await Promise.all([fetchEvents(), fetchSettings()]);
+            await Promise.all([fetchEvents(), fetchSettings(), fetchMyRegistrations()]);
             appState.isDataLoaded = true;
             
             // Remove initial skeleton loaders if on home
@@ -632,6 +632,25 @@
                 appState.settings = MOCK.settings; 
             } 
             populateCreateDropdowns(); 
+        }
+        
+        async function fetchMyRegistrations() {
+            if (!appState.user.userId) return;
+            try {
+                if (GAS_URL) {
+                    // Assuming GAS has an action 'getMyRegistrations' returning list of eventIds
+                    // For now, we simulate via getEvents or if backend supports it.
+                    // Or we assume a lightweight check. Here we mock it or fetch a specific endpoint.
+                    // Note: If backend doesn't support this, we might skip or rely on entering event.
+                    // For this demo, we assume MOCK behavior or empty if API fails.
+                    // const res = await fetch(`${GAS_URL}?action=getMyRegistrations&userId=${appState.user.userId}`);
+                    // appState.myRegistrations = await res.json();
+                } else {
+                    appState.myRegistrations = MOCK.myRegs;
+                }
+            } catch (e) {
+                console.warn("Fetch Registrations Failed");
+            }
         }
         
         async function fetchStats(forceRefresh = false) { 
@@ -694,6 +713,10 @@
             const event = appState.events.find(e => e.id === eventId);
             if (!event) return;
             appState.currentEvent = event;
+            // Clear stats immediately to prevent old data showing
+            appState.currentStats = {}; 
+            document.getElementById('stat-total').innerText = "-";
+            document.getElementById('stat-sec-val').innerText = "-";
 
             // 1. Reset Form & UI
             resetFormState();
@@ -706,16 +729,17 @@
             // 3. Render Static Info
             renderEventStaticInfo();
             
-            // 4. Fetch Dynamic Data (Stats & My Reg)
-            await fetchStats();
-            await checkMyRegistration(); // Auto check if I already registered
+            // 4. Parallel Fetch for Speed
+            // Use Promise.all to fetch stats and registration check concurrently
+            await Promise.all([
+                fetchStats(),
+                checkMyRegistration()
+            ]);
         }
 
         async function checkMyRegistration() {
             if (!appState.user.userId) return;
             
-            // We need to fetch details to know if user is in list
-            // For optimization, we could have an API action=checkUser, but here we reuse getDetails or logic
             try {
                 const details = await fetchDetails();
                 const myRecord = details.find(r => r.userId === appState.user.userId || r.name === appState.user.displayName);
@@ -730,11 +754,21 @@
             // Change UI to Update Mode
             document.getElementById('formAction').value = 'update';
             const btn = document.getElementById('submit-btn');
-            btn.innerHTML = '<span>更新資料</span><i data-lucide="refresh-cw" class="w-4 h-4"></i>';
-            btn.classList.replace('bg-[#06c755]', 'bg-blue-600');
-            btn.classList.replace('hover:bg-green-600', 'hover:bg-blue-700');
             
-            document.getElementById('cancel-reg-btn').classList.remove('hidden');
+            // Check if event is open to decide button state
+            if (isEventOpen(appState.currentEvent)) {
+                btn.innerHTML = '<span>更新資料</span><i data-lucide="refresh-cw" class="w-4 h-4"></i>';
+                btn.classList.replace('bg-[#06c755]', 'bg-blue-600');
+                btn.classList.replace('hover:bg-green-600', 'hover:bg-blue-700');
+                btn.disabled = false;
+                document.getElementById('cancel-reg-btn').classList.remove('hidden');
+            } else {
+                btn.innerText = "已報名 (活動已結束)";
+                btn.className = "flex-1 bg-gray-400 text-white font-bold py-3.5 rounded-xl cursor-not-allowed flex justify-center items-center gap-2";
+                btn.disabled = true;
+                document.getElementById('cancel-reg-btn').classList.add('hidden');
+            }
+            
             document.getElementById('form-title').innerText = "編輯您的報名";
             
             // Fill Fields
@@ -784,8 +818,11 @@
             try {
                 await apiSubmit(formData);
                 showToast(formData.action === 'update' ? "更新成功！" : "報名成功！");
+                // Update local registration state
+                if (!appState.myRegistrations.includes(appState.currentEvent.id)) {
+                    appState.myRegistrations.push(appState.currentEvent.id);
+                }
                 await fetchStats();
-                // Stay on page but refresh status
                 await checkMyRegistration(); 
             } catch (err) {
                 showToast("發生錯誤，請重試");
@@ -812,6 +849,9 @@
                 });
                 showToast("已取消報名");
                 
+                // Remove from local registrations
+                appState.myRegistrations = appState.myRegistrations.filter(id => id !== appState.currentEvent.id);
+                
                 // Reset to clean state
                 resetFormState();
                 await fetchStats();
@@ -833,6 +873,10 @@
             document.getElementById('regForm').reset();
             document.getElementById('guest-list-container').innerHTML = '';
             document.getElementById('sponsor-list-container').innerHTML = '';
+            
+            // Re-enable form fields
+            const formInputs = document.querySelectorAll('#regForm input, #regForm select, #regForm button');
+            formInputs.forEach(el => el.disabled = false);
             
             // Reset Button to Register Mode
             document.getElementById('formAction').value = 'register';
@@ -862,19 +906,31 @@
             const timeDiv = document.getElementById('display-time-container');
             if (e.type === 'travel' && e.time.includes('~')) {
                 const [start, end] = e.time.split('~');
-                // Use formatDateOnly instead of formatDate for travel
                 timeDiv.innerHTML = `<div class="flex flex-col text-sm"><span class="text-green-700 font-bold">起：${formatDateOnly(start)}</span><span class="text-red-700 font-bold">止：${formatDateOnly(end)}</span></div>`;
             } else {
                 timeDiv.innerText = formatDate(e.time);
             }
             
+            // Check if Closed -> Disable Form
+            const isOpen = isEventOpen(e);
+            if (!isOpen) {
+                // Disable all inputs in form
+                const formInputs = document.querySelectorAll('#regForm input, #regForm select, #regForm button');
+                formInputs.forEach(el => el.disabled = true);
+                
+                const btn = document.getElementById('submit-btn');
+                btn.innerText = "活動已結束";
+                btn.className = "flex-1 bg-gray-400 text-white font-bold py-3.5 rounded-xl cursor-not-allowed flex justify-center items-center gap-2";
+                btn.disabled = true;
+            }
+
             // Deadline
             if (e.deadline) {
                 const isExpired = new Date() > new Date(e.deadline);
                 const color = isExpired ? "text-red-500 font-bold" : "text-gray-400";
                 timeDiv.innerHTML += `<div class="mt-1 pt-1 border-t border-gray-100 text-xs ${color} flex items-center gap-1"><i data-lucide="hourglass" class="w-3 h-3"></i> 截止：${formatDate(e.deadline)}</div>`;
                 
-                if (isExpired && !isEventOpen(e)) {
+                if (isExpired && isOpen) { // Only show expired if event is technically still "open" but past deadline
                     const btn = document.getElementById('submit-btn');
                     btn.disabled = true;
                     btn.innerText = "報名已截止";
@@ -885,8 +941,6 @@
 
             // Status Toggle Button - Permission Check
             const managerControls = document.getElementById('manager-controls');
-            // Check if current user is creator (or admin if you had an admin flag)
-            // Note: MOCK events need a creatorId that matches the test user for verification
             if (appState.user.userId && e.creatorId && appState.user.userId === e.creatorId) {
                 managerControls.classList.remove('hidden');
             } else {
@@ -894,7 +948,6 @@
             }
 
             const statusBtn = document.getElementById('btn-status-toggle');
-            const isOpen = isEventOpen(e);
             statusBtn.className = `text-xs px-3 py-1.5 rounded-full font-bold border transition flex items-center gap-1 ${isOpen ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' : 'bg-green-50 text-green-600 border-green-200 hover:bg-green-100'}`;
             statusBtn.innerHTML = isOpen ? '<i data-lucide="stop-circle" class="w-3 h-3"></i> 關閉活動' : '<i data-lucide="play-circle" class="w-3 h-3"></i> 開啟活動';
 
@@ -922,7 +975,6 @@
                 // Populate Options
                 populateSelect('pickup-loc', e.pickupOpts);
                 populateSelect('add-guest-pickup', e.pickupOpts);
-                // Use specialized populateRoomOptions for main room select
                 populateRoomOptions('room-type', e.roomOpts);
                 populateRoomOptions('add-guest-room', e.roomOpts);
                 
@@ -1011,6 +1063,8 @@
                     let badge = '';
                     if (e.deadline && new Date() > new Date(e.deadline)) {
                         badge = '<span class="absolute top-0 right-0 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-bl-lg font-bold">已截止</span>';
+                    } else if (appState.myRegistrations.includes(e.id)) {
+                        badge = '<span class="absolute top-0 right-0 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-bl-lg font-bold">已報名</span>';
                     }
 
                     card.innerHTML = `
@@ -1040,7 +1094,6 @@
             const content = document.getElementById('modal-content');
             
             modal.classList.remove('hidden');
-            // Small delay to allow display:block to apply before opacity transition
             setTimeout(() => {
                 content.classList.remove('translate-y-full', 'opacity-0');
                 content.classList.add('translate-y-10', 'sm:translate-y-0', 'opacity-100');
@@ -1050,7 +1103,6 @@
             const sumDiv = document.getElementById('modal-summary');
             sumDiv.innerHTML = '';
             if (appState.currentEvent.type === 'travel') {
-                 // Summarize Pickups & Rooms
                  const pMap = appState.currentStats.pickupCounts || {};
                  const rMap = appState.currentStats.roomCounts || {};
                  let html = '';
@@ -1061,7 +1113,6 @@
                 sumDiv.innerHTML = `<div class="col-span-2 bg-white rounded p-2 text-center font-bold text-red-500">總計預訂: ${appState.currentStats.tableCount} 桌</div>`;
             }
 
-            // Load List
             const listContainer = document.getElementById('details-lists-container');
             const loading = document.getElementById('modal-loading');
             const empty = document.getElementById('modal-empty');
@@ -1097,14 +1148,13 @@
             let hasItems = false;
 
             data.forEach((row, idx) => {
-                // 1. People
-                let subHtml = '';
                 let badge = '';
                 const total = 1 + (parseInt(row.family)||0) + (parseInt(row.guestCount)||0);
                 if(total > 1) badge = `<span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs font-bold">+${total-1}</span>`;
                 
+                // Display guests info
+                let subHtml = '';
                 if (row.guestName && row.guestName !== '無') {
-                    // Clean up guest string for display
                     const guests = row.guestName.split(',').map(s => s.trim().split('|')[0].replace(/\(\d+\)/, '')).join('、');
                     subHtml = `<div class="text-xs text-gray-400 mt-0.5 pl-6">賓: ${guests}</div>`;
                 }
@@ -1121,7 +1171,6 @@
                         ${subHtml}
                     </li>`;
 
-                // 2. Travel
                 if (appState.currentEvent.type === 'travel') {
                     const rowHasTravel = (row.pickup && row.pickup !== '無') || (row.room && row.room !== '無');
                     if (rowHasTravel) {
@@ -1137,7 +1186,6 @@
                     }
                 }
 
-                // 3. Items (Sponsor/Table)
                 const items = [];
                 if (row.tableCount > 0) items.push(`認桌 ${row.tableCount} 桌`);
                 if (row.sponsor && row.sponsor !== '無') items.push(row.sponsor);
@@ -1190,8 +1238,8 @@
         }
 
         function handleBackNav() {
-            const current = appState.historyStack.pop(); // Pop current
-            const prev = appState.historyStack[appState.historyStack.length - 1]; // Peek prev
+            const current = appState.historyStack.pop(); 
+            const prev = appState.historyStack[appState.historyStack.length - 1]; 
             
             if (!prev || prev === 'home') {
                 document.getElementById('header-title').innerText = "活動與報名";
@@ -1262,17 +1310,50 @@
         }
 
         function copyDetailsToClipboard() {
-            // Reconstruct text from details
             fetchDetails().then(data => {
                 if (!data.length) return showToast("無資料可複製");
-                let text = `【${appState.currentEvent.name}】報名名單\n----------------\n`;
+                let text = `【${appState.currentEvent.name}】報名名單\n------------------\n`;
+                
                 data.forEach((p, i) => {
-                    text += `${i+1}.${p.name}`;
-                    if(p.family>0 || p.guestCount>0) text += ` (+${(parseInt(p.family)||0)+(parseInt(p.guestCount)||0)})`;
-                    if(p.room && p.room!=='無') text += ` [${p.room}]`;
-                    text += '\n';
+                    // Line 1: Name and count
+                    let line = `${i+1}. ${p.name}`;
+                    const total = 1 + (parseInt(p.family)||0) + (parseInt(p.guestCount)||0);
+                    if(total > 1) line += ` *${total}`;
+                    
+                    // Specific Logic for Travel vs Others
+                    if (appState.currentEvent.type === 'travel') {
+                        // Travel: Name + Pickup + Room + Sponsor
+                        let extras = [];
+                        if (p.pickup && p.pickup !== '無') extras.push(p.pickup);
+                        if (p.room && p.room !== '無') extras.push(p.room);
+                        
+                        if (extras.length > 0) line += ` [${extras.join(' | ')}]`;
+                        
+                        // Add Sponsor if exists
+                        if (p.sponsor && p.sponsor !== '無') line += ` / ${p.sponsor}`;
+                        
+                        text += line + '\n';
+                        
+                        // Travel specific: Separator after each entry?
+                        // Or separator between list and summary? 
+                        // The request said "separated by dotted lines in the middle". 
+                        // I'll add a separator between each person for clarity in complex travel lists.
+                        text += '------------------\n';
+                        
+                    } else {
+                        // Other: Name + Sponsor
+                        if (p.sponsor && p.sponsor !== '無') line += ` / ${p.sponsor}`;
+                        text += line + '\n';
+                    }
                 });
-                text += `\n總計: ${appState.currentStats.totalPeople} 人`;
+                
+                // Remove last separator if travel
+                if (appState.currentEvent.type === 'travel' && text.endsWith('------------------\n')) {
+                    text = text.substring(0, text.length - 19);
+                }
+                
+                // Add Summary at bottom
+                text += `\n------------------\n總計: ${appState.currentStats.totalPeople} 人`;
                 
                 navigator.clipboard.writeText(text).then(() => {
                     const btn = document.getElementById('btn-copy-list');
@@ -1303,7 +1384,6 @@
              return isNaN(d) ? isoStr : `${d.getMonth()+1}/${d.getDate()} (${['日','一','二','三','四','五','六'][d.getDay()]})`;
         }
         
-        // ★ New Helper: Format Date Only (No Time)
         function formatDateOnly(isoStr) {
             if (!isoStr) return '';
             const d = new Date(isoStr);
@@ -1369,7 +1449,6 @@
             const type = document.querySelector('input[name="addSponsorType"]:checked').value;
             const area = document.getElementById('sponsor-input-area');
             if (type === 'alcohol') {
-                // Modified: Removed Item Select, Added Unit Select
                 area.innerHTML = `
                     <input id="sp-qty" type="number" class="w-20 border border-gray-300 rounded px-2 py-1 text-sm" placeholder="數量" min="1">
                     <select id="sp-unit" class="border border-gray-300 rounded px-2 py-1 text-sm bg-white">
@@ -1377,7 +1456,6 @@
                         <option value="箱">箱</option>
                     </select>`;
             } else if (type === 'money') {
-                // Modified: min="100", step="100"
                 area.innerHTML = `<input id="sp-money" type="number" class="w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="金額 (100為單位)" min="100" step="100">`;
             } else {
                 area.innerHTML = `<input id="sp-other" type="text" class="w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="贊助內容">`;
@@ -1423,12 +1501,12 @@
             el.innerHTML = '<option value="">請選擇...</option>';
             if(items) items.forEach(i => {
                 const val = i.includes('|') ? i.split('|')[0] : i; // Handle "Label|Url" format
-                const text = i.includes(':') ? i.split(':')[0] : val; // Handle "Room:Count" format
+                // Ensure text does not contain URL if it is Name|Url
+                const text = i.includes('|') ? i.split('|')[0] : val; 
                 el.add(new Option(text, val));
             });
         }
         
-        // ★ New Helper: Populate Room Options with Stats
         function populateRoomOptions(id, opts) {
             const el = document.getElementById(id);
             el.innerHTML = '<option value="">請選擇...</option>';
