@@ -24,8 +24,9 @@
         .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
         .card-hover:active { transform: scale(0.98); }
         
-        .tag-remove { cursor: pointer; color: #ef4444; transition: color 0.2s; }
+        .tag-action { cursor: pointer; transition: color 0.2s; padding: 2px; }
         .tag-remove:hover { color: #dc2626; }
+        .tag-edit:hover { color: #2563eb; }
         
         .dashed-separator { border-top: 2px dashed #e5e7eb; margin: 1.5rem 0 1rem 0; position: relative; }
         .dashed-separator span { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #fff; padding: 0 10px; color: #9ca3af; font-size: 0.75rem; font-weight: bold; }
@@ -249,7 +250,7 @@
                     </div>
                 </div>
 
-                <!-- Dynamic Fields (Moved here: User selects their options first) -->
+                <!-- Dynamic Fields -->
                 <div id="dynamic-fields" class="space-y-4">
                     <!-- Travel Options -->
                     <div id="field-travel" class="hidden space-y-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
@@ -300,7 +301,7 @@
                     </div>
                 </div>
                 
-                <!-- Guest Section (Moved below dynamic fields) -->
+                <!-- Guest Section -->
                 <div class="bg-orange-50/50 p-4 rounded-xl border border-orange-100">
                     <div class="flex justify-between items-center mb-3">
                         <label class="text-sm font-bold text-orange-800 flex items-center gap-1.5"><i data-lucide="user-plus" class="w-4 h-4"></i> 新增來賓</label>
@@ -325,7 +326,6 @@
                         <button type="button" onclick="addGuest()" class="w-full bg-orange-500 text-white py-2 rounded-lg text-sm font-medium hover:bg-orange-600 transition flex justify-center items-center gap-1 active:scale-95">
                             <i data-lucide="plus" class="w-4 h-4"></i> 加入名單
                         </button>
-                        <!-- Added Warning -->
                         <p class="text-[10px] text-red-500 mt-1 font-medium text-center">※ 請務必點擊「加入名單」按鈕，資料才會儲存。</p>
                     </div>
                 </div>
@@ -345,7 +345,6 @@
                         <button type="button" onclick="addSponsor()" class="w-full bg-gray-800 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition flex justify-center items-center gap-1.5 active:scale-95">
                             <i data-lucide="plus" class="w-3.5 h-3.5"></i> 新增贊助
                         </button>
-                        <!-- Added Warning -->
                         <p class="text-[10px] text-red-500 mt-1 font-medium text-center">※ 請務必點擊「新增贊助」按鈕，資料才會儲存。</p>
                     </div>
                 </div>
@@ -1109,7 +1108,10 @@
                             <div class="w-1.5 h-1.5 rounded-full bg-orange-400"></div>
                             <span class="font-medium text-gray-700">${g.name} ${subtext}</span>
                         </div>
-                        <i data-lucide="x" class="w-4 h-4 tag-remove p-0.5" onclick="removeGuest('${g.id}')"></i>
+                        <div class="flex gap-2 items-center">
+                            <i data-lucide="edit-2" class="w-4 h-4 tag-action tag-edit" onclick="editGuest(${i})"></i>
+                            <i data-lucide="x" class="w-4 h-4 tag-action tag-remove" onclick="removeGuest('${g.id}')"></i>
+                        </div>
                     </div>`;
             });
             refreshIcons();
@@ -1125,10 +1127,62 @@
                             <i data-lucide="gift" class="w-3.5 h-3.5 text-purple-500"></i>
                             <span class="font-medium text-gray-700">${s}</span>
                         </div>
-                        <i data-lucide="x" class="w-4 h-4 tag-remove p-0.5" onclick="removeSponsor(${i})"></i>
+                        <div class="flex gap-2 items-center">
+                            <i data-lucide="edit-2" class="w-4 h-4 tag-action tag-edit" onclick="editSponsor(${i})"></i>
+                            <i data-lucide="x" class="w-4 h-4 tag-action tag-remove" onclick="removeSponsor(${i})"></i>
+                        </div>
                     </div>`;
             });
             refreshIcons();
+        }
+
+        function editGuest(i) {
+            const g = appState.guestList[i];
+            document.getElementById('add-guest-name').value = g.name;
+            document.getElementById('add-guest-count').value = g.count;
+            if(g.pickup) document.getElementById('add-guest-pickup').value = g.pickup;
+            if(g.room) document.getElementById('add-guest-room').value = g.room;
+            
+            // Remove current item so it can be re-added
+            appState.guestList.splice(i, 1);
+            renderGuestList();
+            showToast("已載入資料至輸入框，修改後請點選「加入名單」");
+        }
+
+        function editSponsor(i) {
+            const s = appState.sponsorList[i];
+            // Logic to parse s string back to UI
+            // Format 1: 酒類: 5瓶
+            // Format 2: 紅包: 1000元
+            // Format 3: 其他: ...
+            
+            if (s.startsWith("酒類:")) {
+                document.querySelector('input[name="addSponsorType"][value="alcohol"]').checked = true;
+                renderAddSponsorUI();
+                const content = s.substring(4); // "5瓶"
+                const unit = content.includes('箱') ? '箱' : '瓶';
+                const qty = parseInt(content);
+                document.getElementById('sp-qty').value = qty;
+                document.getElementById('sp-unit').value = unit;
+
+            } else if (s.startsWith("紅包:")) {
+                document.querySelector('input[name="addSponsorType"][value="money"]').checked = true;
+                renderAddSponsorUI();
+                // "紅包: 1000元"
+                const money = parseInt(s.match(/\d+/)[0]);
+                document.getElementById('sp-money').value = money;
+
+            } else {
+                // "其他: ..."
+                document.querySelector('input[name="addSponsorType"][value="other"]').checked = true;
+                renderAddSponsorUI();
+                const content = s.substring(4); 
+                document.getElementById('sp-other').value = content;
+            }
+
+            appState.sponsorList.splice(i, 1);
+            renderSponsorList();
+            showToast("已載入資料至輸入框，修改後請點選「新增贊助」");
         }
 
         function renderEventGrid(type) {
