@@ -976,7 +976,8 @@
             
             // Reset
             Object.values(fields).forEach(el => el.classList.add('hidden'));
-            document.getElementById('stat-sec-label').innerText = "贊助筆數";
+           // ★ 修改這裡：預設標籤
+            document.getElementById('stat-sec-label').innerText = "贊助筆數";;
 
             if (e.type === 'travel') {
                 fields.travel.classList.remove('hidden');
@@ -985,7 +986,8 @@
                     fields.itinerary.classList.remove('hidden');
                     renderItinerary(e.itinerary);
                 }
-                document.getElementById('stat-sec-label').innerText = "房位統計";
+               // ★ 修改這裡：如果是旅遊，標籤顯示「已訂房數」
+                document.getElementById('stat-sec-label').innerText = "已訂房數";
                 
                 // Populate Options
                 populateSelect('pickup-loc', e.pickupOpts);
