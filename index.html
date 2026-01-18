@@ -578,6 +578,21 @@
                 });
             }
         }
+        
+        async function fetchStats() { 
+            if (!currentEvent) return; 
+            if (GAS_URL) { 
+                try { 
+                    // Add timestamp to prevent caching
+                    const res = await fetch(`${GAS_URL}?action=stats&eventId=${currentEvent.id}&_=${new Date().getTime()}`); 
+                    currentStats = await res.json(); 
+                } catch (e) { } 
+            } else { 
+                currentStats = { totalPeople: 5, secondary: 1, roomCounts: {'雙人房': 2}, pickupCounts: {'台北車站':3}, sponsorSummary: {}, tableCount: 1 }; 
+            } 
+            document.getElementById('stat-total').innerText = currentStats.totalPeople; 
+            document.getElementById('stat-sec-val').innerText = currentStats.secondary; 
+        }
 
         function renderEventDetails() {
             const submitBtn = document.getElementById('submit-btn');
@@ -920,7 +935,6 @@
              showToast("已複製活動名單");
         }
         
-        // --- 2. Update Modal Render Logic with Split Sections ---
         async function openDetailsModal(){ 
             if(!currentEvent)return; 
             document.getElementById('details-modal').classList.remove('hidden'); 
@@ -975,9 +989,9 @@
                     if(total > 1) label += ` *${total}`; 
                     
                     if(item.guestName && item.guestName !== '無') {
-                        // Parse multiline guests
-                        const gNames = String(item.guestName).split(', ').map(g => g.replace(/\(\d+\)$/, '').split(' | ')[0]).join(', ');
-                        label += `\n   └ 來賓: ${gNames}`; 
+                        let displayGuest = String(item.guestName).replace(/\(1\)/g, '');
+                        // Simplify display in main list since details are below
+                        label += `\n   └ 來賓: ${displayGuest.split('|')[0]}`; 
                     }
                     listPeople.innerHTML+=`<li class="border-b py-2 flex gap-2"><span class="text-xs text-gray-400 w-6 shrink-0 pt-1">${pad(i+1)}.</span><span class="whitespace-pre-wrap flex-1">${label}</span></li>`; 
                 }); 
