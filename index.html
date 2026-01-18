@@ -1102,13 +1102,14 @@
                 if(g.room) details.push(g.room);
                 const subtext = details.length > 0 ? `<span class="text-xs text-gray-400 ml-1">(${details.join(', ')})</span>` : '';
                 
+                // Use g.id for removal
                 container.innerHTML += `
                     <div class="flex justify-between items-center bg-white border border-gray-200 pl-3 pr-2 py-2 rounded-lg text-sm shadow-sm animate-fade-in">
                         <div class="flex items-center gap-2">
                             <div class="w-1.5 h-1.5 rounded-full bg-orange-400"></div>
                             <span class="font-medium text-gray-700">${g.name} ${subtext}</span>
                         </div>
-                        <i data-lucide="x" class="w-4 h-4 tag-remove p-0.5" onclick="removeGuest(${i})"></i>
+                        <i data-lucide="x" class="w-4 h-4 tag-remove p-0.5" onclick="removeGuest('${g.id}')"></i>
                     </div>`;
             });
             refreshIcons();
@@ -1549,11 +1550,17 @@
             const pickup = document.getElementById('add-guest-pickup').value;
             const room = document.getElementById('add-guest-room').value;
             
-            appState.guestList.push({ name, count, pickup, room });
+            // Generate simple temp ID
+            const id = 'g_' + Date.now() + Math.random().toString(36).substr(2, 5);
+            
+            appState.guestList.push({ id, name, count, pickup, room });
             document.getElementById('add-guest-name').value = '';
             renderGuestList();
         }
-        function removeGuest(i) { appState.guestList.splice(i, 1); renderGuestList(); }
+        function removeGuest(id) { 
+            appState.guestList = appState.guestList.filter(g => g.id !== id);
+            renderGuestList(); 
+        }
         
         function restoreGuestList(str) {
             appState.guestList = [];
@@ -1570,7 +1577,8 @@
                          pickup = parts[1] || '';
                          room = parts[2] || '';
                     }
-                    appState.guestList.push({ name: full.trim(), count: parseInt(match[2]), pickup, room });
+                    const id = 'g_' + Date.now() + Math.random().toString(36).substr(2, 5);
+                    appState.guestList.push({ id, name: full.trim(), count: parseInt(match[2]), pickup, room });
                 }
             });
             renderGuestList();
