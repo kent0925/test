@@ -681,7 +681,8 @@
                 let total = 0;
                 let sec = 0;
                 let rCounts = {};
-                
+                let pCounts = {}; // Added for pickup
+
                 if (MOCK.details && MOCK.details.length > 0) {
                     MOCK.details.forEach(d => {
                         // Count people: 1 (self) + family + guests
@@ -703,12 +704,29 @@
                         if(appState.currentEvent.type === 'banquet') sec += (d.tableCount || 0);
                         else if(d.sponsor && d.sponsor !== '無') sec++;
                         
-                        // Room Counts
+                        // Room & Pickup Counts
                         if(appState.currentEvent.type === 'travel') {
-                            if(d.room && d.room !== '無') {
-                                rCounts[d.room] = (rCounts[d.room] || 0) + 1;
+                            // Main
+                            if(d.room && d.room !== '無') rCounts[d.room] = (rCounts[d.room] || 0) + 1;
+                            
+                            // Guest rooms parsing logic
+                            if(d.guestName && d.guestName !== '無') {
+                                const guests = d.guestName.split(/,\s*/); // Split by comma with optional space
+                                guests.forEach(gStr => {
+                                    // Extract content inside ...(...)
+                                    const match = gStr.match(/^(.*)\(\d+\)$/); // Match Name... (Count)
+                                    if(match) {
+                                        const content = match[1]; // "Name|Pickup|Room" or just "Name"
+                                        const parts = content.split('|');
+                                        if(parts.length >= 3) {
+                                            const gRoom = parts[2].trim();
+                                            if(gRoom && gRoom !== '無') {
+                                                rCounts[gRoom] = (rCounts[gRoom] || 0) + 1;
+                                            }
+                                        }
+                                    }
+                                });
                             }
-                            // Also count guest rooms if parsed from string (simplified here)
                         }
                     });
                 }
@@ -1212,8 +1230,8 @@
                          let parts = g.split('|');
                          let main = parts[0]; 
                          let extras = [];
-                         if(parts[1]) extras.push(parts[1]);
-                         if(parts[2]) extras.push(parts[2]);
+                         if(parts[1] && parts[1]!=='無') extras.push(parts[1]);
+                         if(parts[2] && parts[2]!=='無') extras.push(parts[2]);
                          
                          let text = main;
                          if(extras.length) text += ` [${extras.join('/')}]`;
