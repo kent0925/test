@@ -556,6 +556,29 @@
             return `${dateStr} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`; 
         }
 
+        // Shared function to populate room select options
+        function populateRoomOptions(selectElement, roomOptions) {
+            selectElement.innerHTML = '';
+            selectElement.add(new Option('請選擇', ''));
+            if(roomOptions) {
+                 roomOptions.forEach(opt => {
+                    let name = opt;
+                    let limit = null;
+                    if(opt.includes(':')) {
+                         const parts = opt.split(':');
+                         name = parts[0];
+                         limit = parts[1];
+                    }
+                    // Handle case where currentStats.roomCounts might not be ready
+                    const count = (currentStats && currentStats.roomCounts) ? (currentStats.roomCounts[name] || 0) : 0;
+                    let label = name;
+                    if (limit) label += ` (已選: ${count}/${limit})`;
+                    else label += ` (已選: ${count})`;
+                    selectElement.add(new Option(label, name));
+                });
+            }
+        }
+
         function renderEventDetails() {
             const submitBtn = document.getElementById('submit-btn');
             
@@ -590,45 +613,60 @@
             const guestPickup = document.getElementById('add-guest-pickup');
             const guestRoom = document.getElementById('add-guest-room');
             
+            // Elements for Main User
+            const travelField = document.getElementById('field-travel');
+            const banquetField = document.getElementById('field-banquet');
+            const itinerarySection = document.getElementById('travel-itinerary-section');
+            const secLabel = document.getElementById('stat-sec-label');
+            const puSelect = document.getElementById('pickup-loc');
+            const roomSelect = document.getElementById('room-type');
+            
+            // Default hidden
+            travelField.classList.add('hidden'); 
+            banquetField.classList.add('hidden'); 
+            itinerarySection.classList.add('hidden'); 
+            
             if (currentEvent.type === 'travel') {
+                // Show Travel Fields
+                travelField.classList.remove('hidden');
                 guestTravelOpts.classList.remove('hidden');
+                if (currentEvent.itinerary) { itinerarySection.classList.remove('hidden'); renderItinerary(currentEvent.itinerary); }
+                secLabel.innerText = "房/位需求";
                 
+                // Format Time Display
                 const parts = currentEvent.time.split('~');
                 const startStr = parts[0] ? formatDate(parts[0]) : '';
                 const endStr = parts[1] ? formatDate(parts[1]) : '';
                 timeContainer.innerHTML = `<div class="flex flex-col text-sm"><span class="text-green-700 font-bold">起：${startStr}</span><span class="text-red-700 font-bold">止：${endStr}</span></div>`;
 
-                // Populate Guest Pickup
-                guestPickup.innerHTML = '<option value="">上車地點</option>';
-                if(currentEvent.pickupOpts) {
-                     currentEvent.pickupOpts.forEach(opt => {
-                        const name = opt.includes('|') ? opt.split('|')[0] : opt;
-                        guestPickup.add(new Option(name, name));
-                    });
-                }
+                // --- Populate Pickups (Main & Guest) ---
+                const populatePickup = (el) => {
+                    el.innerHTML = '<option value="">請選擇地點</option>'; // Reset
+                    if(currentEvent.pickupOpts) {
+                         currentEvent.pickupOpts.forEach(opt => {
+                            const name = opt.includes('|') ? opt.split('|')[0] : opt;
+                            el.add(new Option(name, name));
+                        });
+                    }
+                };
+                populatePickup(puSelect);
+                populatePickup(guestPickup);
 
-                // Populate Guest Room with Stats
-                guestRoom.innerHTML = '<option value="">房型</option>';
-                if(currentEvent.roomOpts) {
-                     currentEvent.roomOpts.forEach(opt => {
-                        let name = opt;
-                        let limit = null;
-                        if(opt.includes(':')) {
-                             const parts = opt.split(':');
-                             name = parts[0];
-                             limit = parts[1];
-                        }
-                        const count = currentStats.roomCounts[name] || 0;
-                        let label = name;
-                        if (limit) label += ` (已選: ${count}/${limit})`;
-                        else label += ` (已選: ${count})`;
-                        guestRoom.add(new Option(label, name));
-                    });
-                }
+                // --- Populate Rooms (Main & Guest) with Stats ---
+                populateRoomOptions(roomSelect, currentEvent.roomOpts);
+                populateRoomOptions(guestRoom, currentEvent.roomOpts);
 
             } else {
+                // Not Travel
                 guestTravelOpts.classList.add('hidden');
                 timeContainer.innerText = formatDate(currentEvent.time);
+                
+                if (currentEvent.type === 'banquet') {
+                    banquetField.classList.remove('hidden'); 
+                    secLabel.innerText = "預訂桌數";
+                } else { 
+                    secLabel.innerText = "贊助筆數"; 
+                }
             }
 
             if (currentEvent.deadline) {
@@ -645,29 +683,6 @@
             document.getElementById('eventType').value = currentEvent.type;
             document.getElementById('eventName').value = currentEvent.name;
 
-            const travelField = document.getElementById('field-travel');
-            const banquetField = document.getElementById('field-banquet');
-            const itinerarySection = document.getElementById('travel-itinerary-section');
-            const secLabel = document.getElementById('stat-sec-label');
-            travelField.classList.add('hidden'); banquetField.classList.add('hidden'); itinerarySection.classList.add('hidden'); secLabel.innerText = "特殊項目";
-
-            if (currentEvent.type === 'travel') {
-                travelField.classList.remove('hidden');
-                if (currentEvent.itinerary) { itinerarySection.classList.remove('hidden'); renderItinerary(currentEvent.itinerary); }
-                secLabel.innerText = "房/位需求";
-                const puSelect = document.getElementById('pickup-loc');
-                puSelect.innerHTML = '';
-                puSelect.add(new Option('請選擇地點', ''));
-                if(currentEvent.pickupOpts) {
-                    currentEvent.pickupOpts.forEach(opt => {
-                        const name = opt.includes('|') ? opt.split('|')[0] : opt;
-                        puSelect.add(new Option(name, name));
-                    });
-                }
-                populateRoomSelectWithStats(document.getElementById('room-type'), currentEvent.roomOpts);
-            } else if (currentEvent.type === 'banquet') {
-                banquetField.classList.remove('hidden'); secLabel.innerText = "預訂桌數";
-            } else { secLabel.innerText = "贊助筆數"; }
             document.getElementById('stat-title').innerText = `${currentEvent.name} 統計`;
             refreshIcons();
         }
@@ -741,14 +756,14 @@
             document.getElementById('form-title').innerHTML = '<i data-lucide="edit-3" class="w-5 h-5 text-[#06c755]"></i> 填寫報名資料'; 
             document.getElementById('cancel-reg-btn').classList.add('hidden'); 
             
-            // 1. Initial render (basic info)
+            // 1. Initial render (basic info) - Dropdowns might have 0 counts initially
             renderEventDetails(); 
             
             // 2. Fetch stats (wait for it)
             // Prevent caching by adding timestamp
             await fetchStats();
             
-            // 3. Re-render (to populate dropdowns with stats)
+            // 3. Re-render (to populate dropdowns with updated stats)
             renderEventDetails();
             
             // 4. Check registration (fill user data)
