@@ -6,7 +6,7 @@
     <title>活動報名系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <!-- 修改 Lucide CDN 為明確的 UMD 版本 -->
+    <!-- 使用 UMD 版本確保 Lucide 載入 -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }
@@ -25,6 +25,11 @@
         .tag-remove { cursor: pointer; color: #ef4444; }
         .dashed-separator { border-top: 2px dashed #e5e7eb; margin: 1rem 0; position: relative; }
         .dashed-separator::after { content: '贊助與認桌'; position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: #fff; padding: 0 10px; color: #9ca3af; font-size: 0.75rem; }
+        
+        /* Filter Tab Active State */
+        .filter-tab.active { background-color: #06c755; color: white; border-color: #06c755; }
+        .filter-tab { transition: all 0.2s; }
+
         /* Skeleton Animation */
         .skeleton { background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%); background-size: 200% 100%; animation: loading 1.5s infinite; }
         @keyframes loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
@@ -84,8 +89,16 @@
             </button>
         </div>
 
-        <!-- VIEW 2: EVENT SELECTION (Card Grid) -->
+        <!-- VIEW 2: EVENT SELECTION (List with Tabs) -->
         <div id="view-event-list" class="hidden space-y-4">
+             <!-- Filter Tabs (列表上方的選擇標籤) -->
+             <div id="filter-container" class="flex gap-2 overflow-x-auto hide-scrollbar pb-1 sticky top-16 bg-gray-100 pt-2 z-40">
+                 <button onclick="switchCategory('all')" id="tab-all" class="filter-tab px-4 py-1.5 rounded-full border border-gray-300 bg-white text-gray-600 text-sm font-medium whitespace-nowrap">全部</button>
+                 <button onclick="switchCategory('general')" id="tab-general" class="filter-tab px-4 py-1.5 rounded-full border border-gray-300 bg-white text-gray-600 text-sm font-medium whitespace-nowrap">一般</button>
+                 <button onclick="switchCategory('banquet')" id="tab-banquet" class="filter-tab px-4 py-1.5 rounded-full border border-gray-300 bg-white text-gray-600 text-sm font-medium whitespace-nowrap">餐會</button>
+                 <button onclick="switchCategory('travel')" id="tab-travel" class="filter-tab px-4 py-1.5 rounded-full border border-gray-300 bg-white text-gray-600 text-sm font-medium whitespace-nowrap">旅遊</button>
+             </div>
+
              <div id="event-list-loading" class="hidden space-y-3">
                  <div class="bg-white p-4 rounded-xl shadow h-24 w-full skeleton"></div>
                  <div class="bg-white p-4 rounded-xl shadow h-24 w-full skeleton"></div>
@@ -264,7 +277,7 @@
 
         let allEvents = [];
         let systemSettings = { organizers: [], locations: [] }; 
-        let currentCategory = '';
+        let currentCategory = 'all'; // Default to 'all'
         let currentEvent = null;
         let currentStats = { totalPeople: 0, secondary: 0, roomCounts: {}, pickupCounts: {}, sponsorSummary: {}, tableCount: 0 };
         let userProfile = { userId: '', displayName: '訪客', pictureUrl: '' };
@@ -289,11 +302,11 @@
             lucide.createIcons();
             populateCountOptions();
             renderAddSponsorUI(); 
+            // goHome() is called within initApp or manually after load
             goHome(); 
             initApp(); 
         };
         
-        // Helper to safely refresh icons
         function refreshIcons() {
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
@@ -319,9 +332,8 @@
             }
             await Promise.all([fetchEvents(), fetchSettings()]);
             isDataLoaded = true;
-            if(viewHistoryStack[viewHistoryStack.length-1] === 'list') {
-                 renderEventGrid(currentCategory);
-            }
+            // Originally rendered 'all', now we wait for user to click category.
+            // renderEventGrid('all'); 
         }
 
         function updateUserProfileUI() {
@@ -421,6 +433,23 @@
         }
 
         // --- UI Nav & Render ---
+        function switchCategory(type) {
+            currentCategory = type;
+            // Update Tab Styles
+            document.querySelectorAll('.filter-tab').forEach(btn => {
+                btn.classList.remove('active', 'bg-[#06c755]', 'text-white', 'border-[#06c755]');
+                btn.classList.add('bg-white', 'text-gray-600', 'border-gray-300');
+            });
+            
+            const activeBtn = document.getElementById(`tab-${type}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('bg-white', 'text-gray-600', 'border-gray-300');
+                activeBtn.classList.add('active', 'bg-[#06c755]', 'text-white', 'border-[#06c755]');
+            }
+            
+            renderEventGrid(type);
+        }
+
         function renderEventGrid(type) {
             const container = document.getElementById('event-grid-container');
             const loading = document.getElementById('event-list-loading');
@@ -435,21 +464,18 @@
             loading.classList.add('hidden');
             container.innerHTML = '';
             
-            const targetType = normalizeType(type);
+            // Filter Logic
             const filteredEvents = allEvents.filter(e => {
+                if (type === 'all') return isEventOpen(e); // Show all open events
                 const eType = normalizeType(e.type);
+                const targetType = normalizeType(type);
                 return eType === targetType && isEventOpen(e);
             });
             
             if (filteredEvents.length === 0) {
                 const msgEl = document.getElementById('no-events-msg');
                 msgEl.classList.remove('hidden');
-                if (allEvents.length > 0) {
-                   const count = allEvents.length;
-                   document.getElementById('debug-msg').innerText = `(已讀取 ${count} 筆資料，但無符合條件。請檢查 Sheet 的 EventType/IsActive)`;
-                } else {
-                   document.getElementById('debug-msg').innerText = "";
-                }
+                document.getElementById('debug-msg').innerText = type === 'all' ? "目前沒有任何進行中的活動" : "此類別暫無活動";
             } else {
                 document.getElementById('no-events-msg').classList.add('hidden');
                 filteredEvents.forEach(e => {
@@ -472,9 +498,6 @@
         // --- UPDATED: Date Formatting Logic ---
         function formatDate(isoStr) { 
             if (!isoStr) return '';
-            // If it contains tilde, it's a date range (used in travel). Return as is or format parts?
-            // The existing logic returned it as is if it had ~.
-            // But renderEventDetails splits it and calls formatDate again.
             if (isoStr.indexOf('~') !== -1) return isoStr; 
             
             const d = new Date(isoStr); 
@@ -483,8 +506,6 @@
             const weekMap = ['日', '一', '二', '三', '四', '五', '六']; 
             const dateStr = `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}/${String(d.getDate()).padStart(2,'0')} (${weekMap[d.getDay()]})`;
             
-            // Check if input is date-only (length <= 10, e.g. "2026/07/15" or "2026-07-15")
-            // A full ISO string like "2026-04-01T10:30" is longer than 10 chars.
             if (isoStr.trim().length <= 10) {
                 return dateStr;
             }
@@ -524,7 +545,6 @@
             timeContainer.innerHTML = '';
             
             if (currentEvent.type === 'travel') {
-                // Split range and format parts. Since parts are "YYYY/MM/DD", formatDate will now return date only.
                 const parts = currentEvent.time.split('~');
                 const startStr = parts[0] ? formatDate(parts[0]) : '';
                 const endStr = parts[1] ? formatDate(parts[1]) : '';
@@ -596,11 +616,73 @@
         }
 
         // --- Helpers ---
-        function goHome() { viewHistoryStack = ['home']; document.getElementById('view-home').classList.remove('hidden'); document.getElementById('view-event-list').classList.add('hidden'); document.getElementById('view-activity-detail').classList.add('hidden'); document.getElementById('view-create').classList.add('hidden'); document.getElementById('btn-back').classList.add('hidden'); document.getElementById('header-title').innerText = "活動與報名"; currentEvent = null; currentCategory = ''; lastFetchedDetails = []; }
-        function handleBackNav() { const current = viewHistoryStack[viewHistoryStack.length - 1]; if (current === 'detail') { viewHistoryStack.pop(); document.getElementById('view-activity-detail').classList.add('hidden'); document.getElementById('view-event-list').classList.remove('hidden'); document.getElementById('header-title').innerText = getCategoryTitle(currentCategory); currentEvent = null; } else if (current === 'list' || current === 'create') { goHome(); } }
+        function goHome() { 
+            viewHistoryStack = ['home']; 
+            document.getElementById('view-home').classList.remove('hidden'); 
+            document.getElementById('view-event-list').classList.add('hidden'); 
+            document.getElementById('view-activity-detail').classList.add('hidden'); 
+            document.getElementById('view-create').classList.add('hidden'); 
+            document.getElementById('btn-back').classList.add('hidden'); 
+            document.getElementById('header-title').innerText = "活動與報名"; 
+            currentEvent = null; 
+            currentCategory = ''; 
+            lastFetchedDetails = []; 
+        }
+        
+        function handleBackNav() { 
+            const current = viewHistoryStack[viewHistoryStack.length - 1]; 
+            if (current === 'detail') { 
+                viewHistoryStack.pop(); 
+                document.getElementById('view-activity-detail').classList.add('hidden'); 
+                document.getElementById('view-event-list').classList.remove('hidden'); 
+                document.getElementById('header-title').innerText = getCategoryTitle(currentCategory); 
+                currentEvent = null; 
+            } else if (current === 'list' || current === 'create') { 
+                goHome(); 
+            } 
+        }
+        
         function getCategoryTitle(t) { const titleMap = { 'general': '一般活動', 'banquet': '大型餐會', 'travel': '旅遊活動' }; return titleMap[t] || '活動列表'; }
-        function enterCategory(type) { currentCategory = type; viewHistoryStack.push('list'); document.getElementById('view-home').classList.add('hidden'); document.getElementById('view-event-list').classList.remove('hidden'); document.getElementById('btn-back').classList.remove('hidden'); document.getElementById('header-title').innerText = getCategoryTitle(type); renderEventGrid(type); }
-        async function enterEventDetail(eventId) { document.getElementById('regForm').reset(); document.getElementById('event-info-card').classList.add('opacity-50'); document.getElementById('display-name').innerText = "載入中..."; document.getElementById('submit-btn').disabled = true; document.getElementById('pickup-map-btn').classList.add('hidden'); guestList = []; renderGuestList(); sponsorList = []; renderSponsorList(); currentEvent = allEvents.find(e => e.id === eventId); if (!currentEvent) return; viewHistoryStack.push('detail'); document.getElementById('view-event-list').classList.add('hidden'); document.getElementById('view-activity-detail').classList.remove('hidden'); document.getElementById('header-title').innerText = currentEvent.name; document.getElementById('user-name').value = userProfile.displayName; document.getElementById('formAction').value = 'register'; document.getElementById('submit-btn').innerHTML = '<span>確認報名</span><i data-lucide="send" class="w-4 h-4"></i>'; document.getElementById('form-title').innerHTML = '<i data-lucide="edit-3" class="w-5 h-5 text-[#06c755]"></i> 填寫報名資料'; document.getElementById('cancel-reg-btn').classList.add('hidden'); renderEventDetails(); await Promise.all([fetchStats(), checkMyRegistration()]); document.getElementById('event-info-card').classList.remove('opacity-50'); }
+        
+        function enterCategory(type) { 
+            currentCategory = type; 
+            viewHistoryStack.push('list'); 
+            document.getElementById('view-home').classList.add('hidden'); 
+            document.getElementById('view-event-list').classList.remove('hidden'); 
+            document.getElementById('btn-back').classList.remove('hidden'); 
+            document.getElementById('header-title').innerText = getCategoryTitle(type); 
+            
+            // Set tab active state manually to match entered category
+            switchCategory(type); 
+        }
+        
+        async function enterEventDetail(eventId) { 
+            document.getElementById('regForm').reset(); 
+            document.getElementById('event-info-card').classList.add('opacity-50'); 
+            document.getElementById('display-name').innerText = "載入中..."; 
+            document.getElementById('submit-btn').disabled = true; 
+            document.getElementById('pickup-map-btn').classList.add('hidden'); 
+            guestList = []; renderGuestList(); 
+            sponsorList = []; renderSponsorList(); 
+            
+            currentEvent = allEvents.find(e => e.id === eventId); 
+            if (!currentEvent) return; 
+            
+            viewHistoryStack.push('detail'); 
+            document.getElementById('view-event-list').classList.add('hidden'); 
+            document.getElementById('view-activity-detail').classList.remove('hidden'); 
+            document.getElementById('header-title').innerText = currentEvent.name; 
+            
+            document.getElementById('user-name').value = userProfile.displayName; 
+            document.getElementById('formAction').value = 'register'; 
+            document.getElementById('submit-btn').innerHTML = '<span>確認報名</span><i data-lucide="send" class="w-4 h-4"></i>'; 
+            document.getElementById('form-title').innerHTML = '<i data-lucide="edit-3" class="w-5 h-5 text-[#06c755]"></i> 填寫報名資料'; 
+            document.getElementById('cancel-reg-btn').classList.add('hidden'); 
+            
+            renderEventDetails(); 
+            await Promise.all([fetchStats(), checkMyRegistration()]); 
+            document.getElementById('event-info-card').classList.remove('opacity-50'); 
+        }
         
         function populateCountOptions() { const familySel = document.getElementById('family-count'); const guestSel = document.getElementById('add-guest-count'); for (let i = 1; i <= 10; i++) { familySel.add(new Option(`${i} 人`, i)); guestSel.add(new Option(`${i} 人`, i)); } }
         function addGuest() { const name = document.getElementById('add-guest-name').value.trim(); const count = parseInt(document.getElementById('add-guest-count').value); if (!name) { showToast("請輸入來賓姓名"); return; } guestList.push({ name, count }); document.getElementById('add-guest-name').value = ''; renderGuestList(); }
@@ -861,7 +943,7 @@
         function populateCreateDropdowns() { const orgSelect = document.getElementById('new-organizer-select'); const locSelect = document.getElementById('new-location-select'); orgSelect.innerHTML = '<option value="">請選擇主辦人</option>'; systemSettings.organizers.forEach(org => orgSelect.add(new Option(org, org))); locSelect.innerHTML = '<option value="">請選擇地點</option>'; systemSettings.locations.forEach(loc => locSelect.add(new Option(loc.name, loc.name))); }
         function onLocationChange() { const locName = document.getElementById('new-location-select').value; const loc = systemSettings.locations.find(l => l.name === locName); document.getElementById('new-address').value = loc ? loc.address : ''; }
         function toggleCreateFields() { const type = document.getElementById('new-type').value; const single = document.getElementById('new-field-time-single'); const range = document.getElementById('new-field-time-range'); const itin = document.getElementById('new-field-itinerary'); if (type === 'travel') { single.classList.add('hidden'); range.classList.remove('hidden'); itin.classList.remove('hidden'); } else { single.classList.remove('hidden'); range.classList.add('hidden'); itin.classList.add('hidden'); } }
-        async function handleCreateEvent(e) { e.preventDefault(); const btn = document.getElementById('create-btn'); btn.disabled=true; const action = document.getElementById('formAction').value; btn.innerText = action === 'update' ? "更新中..." : "報名中..."; let finalGuestName = '無'; let totalGuestCount = 0; if (guestList.length > 0) { finalGuestName = guestList.map(g => g.count > 1 ? `${g.name}(${g.count})` : g.name).join(', '); totalGuestCount = guestList.reduce((sum, g) => sum + g.count, 0); } let finalSponsor = '無'; if (sponsorList.length > 0) finalSponsor = sponsorList.join(', '); const formData = { action: action, eventId: document.getElementById('eventId').value, eventType: document.getElementById('eventType').value, eventName: document.getElementById('eventName').value, userId: document.getElementById('user-id').value, userName: document.getElementById('user-name').value, familyCount: document.getElementById('family-count').value, guestName: finalGuestName, guestCount: totalGuestCount, sponsorship: finalSponsor, pickupLoc: document.getElementById('pickup-loc').value, roomType: document.getElementById('room-type').value, tableCount: document.getElementById('table-count').value }; if (GAS_URL) { try { await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(formData), mode: 'no-cors' }); } catch (e) {} } showToast(action === 'update' ? "更新成功" : "報名成功"); setTimeout(() => { goHome(); btn.disabled=false; }, 1000); }
+        async function handleCreateEvent(e) { e.preventDefault(); const btn = document.getElementById('create-btn'); btn.disabled=true; const action = document.getElementById('formAction').value; btn.innerText = action === 'update' ? "更新中..." : "報名中..."; let finalGuestName = '無'; let totalGuestCount = 0; if (guestList.length > 0) { finalGuestName = guestList.map(g => g.count > 1 ? `${g.name}(${g.count})` : g.name).join(', '); totalGuestCount = guestList.reduce((sum, g) => sum + g.count, 0); } let finalSponsor = '無'; if (sponsorList.length > 0) finalSponsor = sponsorList.join(', '); const formData = { action: action, eventId: document.getElementById('eventId').value, eventType: document.getElementById('eventType').value, eventName: document.getElementById('eventName').value, userId: document.getElementById('user-id').value, userName: document.getElementById('user-name').value, familyCount: document.getElementById('family-count').value, guestName: finalGuestName, guestCount: totalGuestCount, sponsorship: finalSponsor, pickupLoc: document.getElementById('pickup-loc').value, roomType: document.getElementById('room-type').value, tableCount: document.getElementById('table-count').value }; if(GAS_URL) await fetch(GAS_URL, {method:'POST', body:JSON.stringify(payload), mode:'no-cors'}); else MOCK_EVENTS.push({...payload, id:'new_'+Date.now(), isActive: "開放", pickupOpts:[], roomOpts:[]}); showToast("建立成功"); await fetchEvents(); goHome(); btn.disabled=false; }
         function populateSelect(e,a,d){e.innerHTML='';e.add(new Option(d||'請選擇',''));if(a)a.forEach(o=>e.add(new Option(o,o)));}
         async function toggleEventStatus() { if (!currentEvent) return; const btn = document.getElementById('btn-status-toggle'); const originalText = btn.innerText; btn.innerText = "處理中..."; btn.disabled = true; const newStatus = isEventOpen(currentEvent) ? "關閉" : "開放"; const payload = { action: 'toggleStatus', eventId: currentEvent.id, status: newStatus }; try { if (GAS_URL) { await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' }); } else { currentEvent.isActive = newStatus; showToast(`活動已${newStatus}`); } await fetchEvents(); if (showingHistory) goHome(); else enterEventDetail(currentEvent.id); } catch(e) { showToast("操作失敗"); } finally { btn.innerText = originalText; btn.disabled = false; } }
         function toggleHistoryView() { showingHistory = !showingHistory; const btn = document.getElementById('btn-history-toggle'); const activeList = document.getElementById('active-categories'); const historyList = document.getElementById('history-list'); const createBtn = document.getElementById('btn-create-event'); if (showingHistory) { btn.innerHTML = '<i data-lucide="arrow-left" class="w-3 h-3"></i> <span>返回進行中活動</span>'; activeList.classList.add('hidden'); createBtn.classList.add('hidden'); historyList.classList.remove('hidden'); renderHistoryList(); } else { btn.innerHTML = '<i data-lucide="history" class="w-3 h-3"></i> <span>查看歷史活動</span>'; activeList.classList.remove('hidden'); createBtn.classList.remove('hidden'); historyList.classList.add('hidden'); } lucide.createIcons(); }
