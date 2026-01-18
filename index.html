@@ -291,6 +291,13 @@
             if (LIFF_ID && LIFF_ID !== "YOUR_LIFF_ID") {
                 try {
                     await liff.init({ liffId: LIFF_ID });
+                    
+                    // --- 修改點：加入外部瀏覽器登入檢查 ---
+                    if (!liff.isLoggedIn()) {
+                        liff.login(); // 強制跳轉至 LINE 登入頁面
+                        return; // 中斷後續執行，等待跳轉回來
+                    }
+
                     if (liff.isLoggedIn()) {
                         const profile = await liff.getProfile();
                         userProfile = { userId: profile.userId, displayName: profile.displayName, pictureUrl: profile.pictureUrl };
