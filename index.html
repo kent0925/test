@@ -841,7 +841,197 @@
             document.getElementById('header-title').innerText = getCategoryTitle(type); 
             switchCategory(type); 
         }
-        
+// --- 補上遺失的關鍵邏輯函式 ---
+
+        // 1. 檢查我是否已報名 (回填表單並切換為更新模式)
+        async function checkMyRegistration() {
+            if (!userProfile.userId || !currentEvent || !GAS_URL) return;
+            try {
+                // 先確認是否已有名單資料，沒有的話載入
+                await ensureDetailsLoaded();
+                
+                // 比對 UserID (優先) 或 顯示名稱
+                const myRecord = lastFetchedDetails.find(r => r.userId === userProfile.userId || r.name === userProfile.displayName);
+                
+                if (myRecord) {
+                    myRegistrationData = myRecord;
+                    // 切換UI為編輯模式
+                    document.getElementById('formAction').value = 'update';
+                    const submitBtn = document.getElementById('submit-btn');
+                    submitBtn.innerHTML = '<span>更新報名資料</span><i data-lucide="refresh-cw" class="w-4 h-4"></i>';
+                    submitBtn.classList.remove('bg-[#06c755]', 'hover:bg-green-600');
+                    submitBtn.classList.add('bg-blue-500', 'hover:bg-blue-600');
+                    
+                    document.getElementById('cancel-reg-btn').classList.remove('hidden');
+                    document.getElementById('form-title').innerHTML = '<i data-lucide="edit-2" class="w-5 h-5 text-blue-500"></i> 編輯報名資料';
+
+                    // 填入資料
+                    document.getElementById('family-count').value = myRecord.family || 0;
+                    if (myRecord.room && myRecord.room !== '無') document.getElementById('room-type').value = myRecord.room;
+                    if (myRecord.pickup && myRecord.pickup !== '無') document.getElementById('pickup-loc').value = myRecord.pickup;
+                    if (myRecord.tableCount) document.getElementById('table-count').value = myRecord.tableCount;
+
+                    // 還原 GuestList (來賓名單)
+                    guestList = [];
+                    if (myRecord.guestName && myRecord.guestName !== '無') {
+                        // 假設後端回傳格式類似: "GuestA(1) | Station | Room, GuestB(2)..."
+                        const guests = myRecord.guestName.split(', ');
+                        guests.forEach(gStr => {
+                             const match = gStr.match(/(.*?)\((\d+)\)/);
+                             if (match) {
+                                 let namePart = match[1];
+                                 const count = parseInt(match[2]);
+                                 let pickup = "";
+                                 let room = "";
+                                 
+                                 if (namePart.includes('|')) {
+                                     const parts = namePart.split('|');
+                                     namePart = parts[0].trim();
+                                     pickup = parts[1] ? parts[1].trim() : "";
+                                     room = parts[2] ? parts[2].trim() : "";
+                                 }
+                                 guestList.push({ name: namePart, count, pickup, room });
+                             }
+                        });
+                        renderGuestList();
+                    }
+
+                    // 還原 SponsorList (贊助)
+                    sponsorList = [];
+                    if (myRecord.sponsor && myRecord.sponsor !== '無') {
+                        // 這裡簡化處理，直接顯示整串字串
+                        sponsorList.push(myRecord.sponsor); 
+                        renderSponsorList();
+                    }
+                }
+            } catch (e) {
+                console.error("Check Reg Failed", e);
+            }
+        }
+
+        // 2. 處理取消報名
+        async function handleCancel() {
+            const confirm = await showConfirm("確定要取消此活動的報名嗎？");
+            if (!confirm) return;
+
+            const btn = document.getElementById('cancel-reg-btn');
+            btn.disabled = true;
+            btn.innerText = "...";
+
+            try {
+                if (GAS_URL) {
+                    await fetch(GAS_URL, {
+                        method: 'POST',
+                        headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        body: JSON.stringify({
+                            action: 'cancel', // 對應 GAS 的 'cancel'
+                            eventId: currentEvent.id,
+                            userId: userProfile.userId
+                        })
+                    });
+                    showToast("已取消報名");
+                } else {
+                    showToast("模擬取消成功");
+                }
+                
+                // 重整頁面狀態
+                document.getElementById('regForm').reset();
+                guestList = []; renderGuestList();
+                sponsorList = []; renderSponsorList();
+                // 恢復按鈕狀態
+                document.getElementById('formAction').value = 'register';
+                const submitBtn = document.getElementById('submit-btn');
+                submitBtn.innerHTML = '<span>確認報名</span><i data-lucide="send" class="w-4 h-4"></i>';
+                submitBtn.classList.add('bg-[#06c755]', 'hover:bg-green-600');
+                submitBtn.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                document.getElementById('cancel-reg-btn').classList.add('hidden');
+                
+                await fetchStats();
+                await enterEventDetail(currentEvent.id); // 重新進入以刷新
+
+            } catch (error) {
+                showToast("取消失敗");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i data-lucide="trash-2" class="w-5 h-5"></i>';
+                refreshIcons();
+            }
+        }
+
+        // 3. 處理表單送出 (你原本的 code 有 handleSubmit，但請確認是否正確，這裡提供完整版)
+        async function handleSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-5 h-5 animate-spin"></i> 處理中...';
+
+            const formData = {
+                action: document.getElementById('formAction').value, // 'register' or 'update'
+                eventId: document.getElementById('eventId').value,
+                eventType: document.getElementById('eventType').value,
+                eventName: document.getElementById('eventName').value,
+                userId: userProfile.userId,
+                displayName: document.getElementById('user-name').value,
+                pictureUrl: userProfile.pictureUrl,
+                familyCount: document.getElementById('family-count').value,
+                guestList: JSON.stringify(guestList), // 將物件陣列轉字串傳送
+                sponsorList: JSON.stringify(sponsorList),
+                
+                // Travel specifics
+                roomType: document.getElementById('room-type').value,
+                pickupLoc: document.getElementById('pickup-loc').value,
+                
+                // Banquet specifics
+                tableCount: document.getElementById('table-count').value
+            };
+
+            try {
+                if (GAS_URL) {
+                    await fetch(GAS_URL, {
+                        method: 'POST',
+                        headers: { "Content-Type": "text/plain;charset=utf-8" },
+                        body: JSON.stringify(formData)
+                    });
+                    showToast(formData.action === 'update' ? "更新成功" : "報名成功");
+                } else {
+                    showToast("模擬送出成功");
+                }
+                
+                await fetchStats();
+                // 成功後重新檢查報名狀態以更新 UI
+                await enterEventDetail(formData.eventId);
+
+            } catch (error) {
+                console.error(error);
+                showToast("連線錯誤，請稍後再試");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+                refreshIcons();
+            }
+        }
+
+        // 4. 產生分享文字 (修復 copyDetailsToClipboard 錯誤)
+        function generateShareText(data) {
+            if (!data || data.length === 0) return "目前無人報名";
+            let text = `【${currentEvent.name}】報名名單\n------------------\n`;
+            data.forEach((p, i) => {
+                text += `${i+1}. ${p.name}`;
+                let extra = [];
+                if (p.family > 0) extra.push(`眷${p.family}`);
+                if (p.guestCount > 0) extra.push(`賓${p.guestCount}`);
+                if (extra.length > 0) text += ` (+${extra.join(',')})`;
+                
+                if (currentEvent.type === 'travel') {
+                     if (p.pickup && p.pickup !== '無') text += ` [${p.pickup}]`;
+                }
+                text += '\n';
+            });
+            text += `\n總人數: ${currentStats.totalPeople} 人`;
+            return text;
+        }
+                      
         async function enterEventDetail(eventId) { 
             document.getElementById('regForm').reset(); 
             document.getElementById('event-info-card').classList.add('opacity-50'); 
