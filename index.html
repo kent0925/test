@@ -342,7 +342,6 @@
             await Promise.all([fetchEvents(), fetchSettings()]);
             isDataLoaded = true;
             
-            // Fix: If user is waiting on a list view (stuck on loading), render it now
             if (document.getElementById('view-event-list').classList.contains('hidden') === false) {
                 renderEventGrid(currentCategory);
             }
@@ -371,19 +370,15 @@
             return val === '開放' || val === 'true' || val === '是' || val === '啟用' || val === 'open';
         }
 
-        // --- View Switching Helper (Crucial Fix for Overlapping Views) ---
         function switchView(viewId) {
-            // Hide all views
             const views = ['view-home', 'view-event-list', 'view-activity-detail', 'view-create'];
             views.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.add('hidden');
             });
-            // Show target view
             const target = document.getElementById(viewId);
             if (target) target.classList.remove('hidden');
             
-            // Handle header button visibility
             const backBtn = document.getElementById('btn-back');
             if (viewId === 'view-home') {
                 backBtn.classList.add('hidden');
@@ -394,7 +389,6 @@
             refreshIcons();
         }
 
-        // --- Sponsor UI ---
         function renderAddSponsorUI() {
             const type = document.querySelector('input[name="addSponsorType"]:checked').value;
             const container = document.getElementById('sponsor-input-area');
@@ -810,17 +804,31 @@
         async function handleCancel() { if (!await showConfirm("確定要取消此活動的報名嗎？")) return; const btn = document.getElementById('cancel-reg-btn'); btn.disabled=true; btn.innerText="取消中..."; const payload = { action: 'cancelRegistration', eventId: currentEvent.id, userId: userProfile.userId }; if (GAS_URL) { try { await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' }); } catch(e) {} } showToast("已取消報名"); setTimeout(() => { goHome(); btn.disabled=false; }, 1000); }
         async function fetchStats() { if (!currentEvent) return; if (GAS_URL) { try { const res = await fetch(`${GAS_URL}?action=stats&eventId=${currentEvent.id}`); currentStats = await res.json(); } catch (e) { } } else { currentStats = { totalPeople: 5, secondary: 1, roomCounts: {'雙人房': 2}, pickupCounts: {'台北車站':3}, sponsorSummary: {}, tableCount: 1 }; } document.getElementById('stat-total').innerText = currentStats.totalPeople; document.getElementById('stat-sec-val').innerText = currentStats.secondary; }
         
+        // --- 1. Generate Share Text with Extra Stats ---
         function generateShareText(details) {
             if (!currentEvent) return '';
             let text = `【${currentEvent.name}】\n主辦：${currentEvent.organizer}\n時間：${formatDate(currentEvent.time)}\n地點：${currentEvent.location}\n地址：${currentEvent.address}\n`;
             
+            // --- New Summary Section ---
+            let summaryText = "";
+            if (currentEvent.type === 'travel') {
+                const pickups = Object.entries(currentStats.pickupCounts).map(([k,v])=>`${k}(${v})`).join(', ');
+                const rooms = Object.entries(currentStats.roomCounts).map(([k,v])=>`${k}(${v})`).join(', ');
+                if (pickups) summaryText += `[上車統計] ${pickups}\n`;
+                if (rooms) summaryText += `[房型統計] ${rooms}\n`;
+            } else if (currentEvent.type === 'banquet') {
+                summaryText += `[總認桌數] ${currentStats.tableCount} 桌\n`;
+            }
+            if (summaryText) text += `\n${summaryText}`;
+            // ---------------------------
+
             let grandTotal = 0;
             if (details && details.length > 0) {
                 details.forEach(item => {
                     grandTotal += (1 + (item.family || 0) + (item.guestCount || 0));
                 });
             }
-            text += `目前報名人數：${grandTotal} 人\n\n`;
+            text += `\n目前報名人數：${grandTotal} 人\n\n`;
 
             if (details && details.length > 0) {
                  text += `--- 參加名單 ---\n`;
@@ -828,6 +836,17 @@
                      let total = 1 + (item.family || 0) + (item.guestCount || 0);
                      text += `${pad(index + 1)}. ${item.name}`;
                      if (total > 1) text += ` *${total}`; 
+                     
+                     // --- Append Details inline ---
+                     let extras = [];
+                     if (item.pickup && item.pickup !== '無') extras.push(`上車:${item.pickup}`);
+                     if (item.room && item.room !== '無') extras.push(`房型:${item.room}`);
+                     if (item.tableCount > 0) extras.push(`認桌:${item.tableCount}`);
+                     if (item.sponsor && item.sponsor !== '無') extras.push(`贊助:${item.sponsor}`);
+                     
+                     if (extras.length > 0) text += ` [${extras.join(', ')}]`;
+                     // -----------------------------
+
                      if (item.guestName && item.guestName !== '無') {
                         let displayGuest = String(item.guestName).replace(/\(1\)/g, '');
                         text += `\n      來賓：${displayGuest}`;
@@ -856,9 +875,9 @@
             } else {
                 await new Promise(r => setTimeout(r, 600));
                 lastFetchedDetails = [
-                    {name:'王小明', family:1, guestCount:0, guestName:'無', sponsor:'無', room:'雙人房'},
-                    {name:'陳池文', family:1, guestCount:0, guestName:'無', sponsor:'紅包: 1000元', room:'無'},
-                    {name:'洪健庭', family:0, guestCount:1, guestName:'蔡嘟嘟(1)', sponsor:'酒類: 威士忌 1瓶', room:'無'}
+                    {name:'王小明', family:1, guestCount:0, guestName:'無', sponsor:'無', room:'雙人房', pickup:'台北車站', tableCount:0},
+                    {name:'陳池文', family:1, guestCount:0, guestName:'無', sponsor:'紅包: 1000元', room:'無', pickup:'無', tableCount:0},
+                    {name:'洪健庭', family:0, guestCount:1, guestName:'蔡嘟嘟(1)', sponsor:'酒類: 威士忌 1瓶', room:'無', pickup:'無', tableCount:1}
                 ];
                 return true;
             }
@@ -910,12 +929,21 @@
              showToast("已複製活動名單");
         }
         
+        // --- 2. Update Modal Render Logic with Extra Stats ---
         async function openDetailsModal(){ 
             if(!currentEvent)return; 
             document.getElementById('details-modal').classList.remove('hidden'); 
             const sumDiv = document.getElementById('modal-summary'); 
+            
             let summaryHTML = `<div class="font-bold mb-1">📊 統計摘要</div>`; 
-            if (currentEvent.type === 'travel') { summaryHTML += `<div>🚌 <b>上車地點:</b> ${Object.entries(currentStats.pickupCounts).map(([k,v])=>`${k}(${v})`).join(', ') || '無'}</div>`; summaryHTML += `<div>🛏 <b>房型:</b> ${Object.entries(currentStats.roomCounts).map(([k,v])=>`${k}(${v})`).join(', ') || '無'}</div>`; } else if (currentEvent.type === 'banquet') { summaryHTML += `<div>🍽 <b>總認桌:</b> ${currentStats.tableCount} 桌</div>`; } sumDiv.innerHTML = summaryHTML; 
+            if (currentEvent.type === 'travel') { 
+                summaryHTML += `<div>🚌 <b>上車地點:</b> ${Object.entries(currentStats.pickupCounts).map(([k,v])=>`${k}(${v})`).join(', ') || '無'}</div>`; 
+                summaryHTML += `<div>🛏 <b>房型:</b> ${Object.entries(currentStats.roomCounts).map(([k,v])=>`${k}(${v})`).join(', ') || '無'}</div>`; 
+            } else if (currentEvent.type === 'banquet') { 
+                summaryHTML += `<div>🍽 <b>總認桌:</b> ${currentStats.tableCount} 桌</div>`; 
+            } 
+            sumDiv.innerHTML = summaryHTML; 
+            
             setTimeout(() => { const content = document.getElementById('modal-content'); content.classList.remove('scale-95', 'opacity-0'); content.classList.add('scale-100', 'opacity-100'); }, 50); 
             
             lastFetchedDetails = []; 
@@ -934,22 +962,30 @@
                     let label = `${item.name}`; 
                     let total = 1 + (item.family||0) + (item.guestCount||0); 
                     if(total > 1) label += ` *${total}`; 
+                    
+                    // --- Construct sub-info line ---
+                    let infoParts = [];
+                    if(item.pickup && item.pickup !== '無') infoParts.push(`🚌 ${item.pickup}`);
+                    if(item.room && item.room !== '無') infoParts.push(`🛏 ${item.room}`);
+                    if(item.tableCount > 0) infoParts.push(`🍽 認桌:${item.tableCount}`);
+                    if(item.sponsor && item.sponsor !== '無') infoParts.push(`🎁 ${item.sponsor}`);
+                    
+                    let subInfo = infoParts.length > 0 ? `<div class="text-xs text-gray-500 mt-0.5">${infoParts.join(' | ')}</div>` : '';
+                    // -------------------------------
+
                     if(item.guestName && item.guestName !== '無') {
                         let displayGuest = String(item.guestName).replace(/\(1\)/g, '');
-                        label += `\n   └ 來賓: ${displayGuest}`; 
+                        subInfo += `<div class="text-xs text-gray-400 pl-2 border-l-2 border-gray-200 mt-1">來賓: ${displayGuest}</div>`; 
                     }
-                    if(item.room && item.room !== '無') label += ` | ${item.room}`; 
-                    listPeople.innerHTML+=`<li class="border-b py-2 flex gap-2"><span class="text-xs text-gray-400 w-6 shrink-0">${pad(i+1)}.</span><span class="whitespace-pre-wrap">${label}</span></li>`; 
+                    
+                    listPeople.innerHTML+=`<li class="border-b py-2"><div class="flex gap-2"><span class="text-xs text-gray-400 w-6 shrink-0 pt-1">${pad(i+1)}.</span><div class="flex-1"><div class="font-medium text-gray-800">${label}</div>${subInfo}</div></div></li>`; 
                 }); 
                 
-                let hasItems = false; 
-                rawData.forEach((item) => { 
-                    let itemsArr = []; 
-                    if (item.sponsor && item.sponsor !== '無') itemsArr.push(item.sponsor); 
-                    if (item.tableCount > 0) itemsArr.push(`認桌: ${item.tableCount}`); 
-                    if (itemsArr.length > 0) { hasItems = true; listItems.innerHTML+=`<li class="border-b py-2 flex gap-2"><span class="font-bold text-gray-700 w-16 shrink-0 truncate">${item.name}</span><span class="text-gray-600">${itemsArr.join(', ')}</span></li>`; } 
-                }); 
-                if (hasItems) { sep.classList.remove('hidden'); } 
+                // Hide old separate list if everything is integrated
+                // let hasItems = false; 
+                // rawData.forEach((item) => { ... }); 
+                // if (hasItems) { sep.classList.remove('hidden'); } 
+                sep.classList.add('hidden'); // Hide separator since we integrated items into the main list
             } 
         }
         
