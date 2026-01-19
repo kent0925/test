@@ -1817,14 +1817,74 @@
         }
         
         // --- Create Event Dummy ---
+// --- 真實版：建立活動並傳送至 GAS ---
         async function handleCreateEvent(e) {
             e.preventDefault();
             const btn = document.getElementById('create-btn');
-            btn.disabled = true; btn.innerText = "建立中...";
+            const originalBtnHTML = btn.innerHTML; // 保存原始按鈕內容
             
-            await new Promise(r => setTimeout(r, 1500));
-            showToast("活動建立成功！");
-            
+            // 1. 鎖定按鈕避免重複點擊
+            btn.disabled = true; 
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> 建立中...';
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+
+            // 2. 收集表單資料
+            const type = document.getElementById('new-type').value;
+            let timeVal = '';
+
+            // 根據類型處理時間格式
+            if (type === 'travel') {
+                const start = document.getElementById('new-date-start').value;
+                const end = document.getElementById('new-date-end').value;
+                if (!start || !end) {
+                    alert("旅遊活動請填寫出發與回程日期");
+                    btn.disabled = false; btn.innerHTML = originalBtnHTML; return;
+                }
+                timeVal = `${start}~${end}`;
+            } else {
+                timeVal = document.getElementById('new-time-single').value;
+                if (!timeVal) {
+                    alert("請填寫活動時間");
+                    btn.disabled = false; btn.innerHTML = originalBtnHTML; return;
+                }
+            }
+
+            // 3. 準備傳送的資料物件
+            const payload = {
+                action: 'createEvent', // 告訴 GAS 這是「建立活動」的請求
+                userId: appState.user.userId, // 記錄是誰建立的
+                type: type,
+                name: document.getElementById('new-name').value,
+                organizer: document.getElementById('new-organizer').value,
+                location: document.getElementById('new-location').value,
+                address: document.getElementById('new-address').value,
+                deadline: document.getElementById('new-deadline').value,
+                time: timeVal,
+                itinerary: document.getElementById('new-itinerary').value // 旅遊行程
+            };
+
+            try {
+                // 4. 發送至後端
+                await apiSubmit(payload);
+                
+                showToast("活動建立成功！");
+                
+                // 5. 重新讀取活動列表並回到首頁
+                await fetchEvents(); 
+                appState.historyStack = ['home'];
+                handleBackNav();
+                
+            } catch (err) {
+                console.error(err);
+                showToast("建立失敗，請檢查網路或稍後再試");
+            } finally {
+                // 6. 復原按鈕狀態
+                btn.disabled = false; 
+                btn.innerHTML = originalBtnHTML;
+                if(typeof lucide !== 'undefined') lucide.createIcons();
+            }
+        }
+        
             // Go Home
             appState.historyStack = ['home'];
             handleBackNav();
