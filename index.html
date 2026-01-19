@@ -11,36 +11,23 @@
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        /* 通用 Details 樣式 */
         details > summary { list-style: none; cursor: pointer; }
         details > summary::-webkit-details-marker { display: none; }
-        
-        /* 動畫過渡 */
         .arrow-main, .arrow-day { transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
         details[open] > summary .arrow-main, details[open] > summary .arrow-day { transform: rotate(180deg); }
-        
         .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
         .card-hover:active { transform: scale(0.98); }
-        
         .tag-action { cursor: pointer; transition: color 0.2s; padding: 2px; }
         .tag-remove:hover { color: #dc2626; }
         .tag-edit:hover { color: #2563eb; }
-        
         .dashed-separator { border-top: 2px dashed #e5e7eb; margin: 1.5rem 0 1rem 0; position: relative; }
         .dashed-separator span { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #fff; padding: 0 10px; color: #9ca3af; font-size: 0.75rem; font-weight: bold; }
-        
-        /* Filter Tab */
         .filter-tab { transition: all 0.2s ease; }
         .filter-tab.active { background-color: #06c755; color: white; border-color: #06c755; box-shadow: 0 2px 4px rgba(6, 199, 85, 0.2); }
-
-        /* Animations */
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        
         @keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .animate-slide-up { animation: slideUp 0.3s ease-out forwards; }
-
         .skeleton { background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%); background-size: 200% 100%; animation: skeleton-loading 1.5s infinite; }
         @keyframes skeleton-loading { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
     </style>
@@ -85,7 +72,6 @@
                     </div>
                     <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400"><i data-lucide="chevron-right" class="w-5 h-5"></i></div>
                 </div>
-
                 <div onclick="enterCategory('banquet')" class="card-hover bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4 cursor-pointer relative overflow-hidden group">
                     <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-orange-500"></div>
                     <div class="bg-orange-50 p-3 rounded-2xl text-orange-600 group-hover:scale-110 transition-transform"><i data-lucide="utensils" class="w-7 h-7"></i></div>
@@ -95,7 +81,6 @@
                     </div>
                     <div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400"><i data-lucide="chevron-right" class="w-5 h-5"></i></div>
                 </div>
-
                 <div onclick="enterCategory('travel')" class="card-hover bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex items-center gap-4 cursor-pointer relative overflow-hidden group">
                     <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-blue-500"></div>
                     <div class="bg-blue-50 p-3 rounded-2xl text-blue-600 group-hover:scale-110 transition-transform"><i data-lucide="bus" class="w-7 h-7"></i></div>
@@ -128,14 +113,11 @@
                  <button onclick="switchCategory('banquet')" id="tab-banquet" class="filter-tab px-4 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium whitespace-nowrap shadow-sm">餐會</button>
                  <button onclick="switchCategory('travel')" id="tab-travel" class="filter-tab px-4 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium whitespace-nowrap shadow-sm">旅遊</button>
              </div>
-
              <div id="event-list-loading" class="hidden space-y-3">
                  <div class="bg-white p-4 rounded-xl shadow-sm h-28 w-full skeleton"></div>
                  <div class="bg-white p-4 rounded-xl shadow-sm h-28 w-full skeleton"></div>
              </div>
-             
              <div id="event-grid-container" class="grid grid-cols-1 gap-3 pb-safe"></div>
-             
              <div id="no-events-msg" class="hidden flex flex-col items-center justify-center py-16 text-gray-400">
                  <div class="bg-gray-100 p-4 rounded-full mb-3"><i data-lucide="calendar-x" class="w-8 h-8"></i></div>
                  <p class="font-medium">目前沒有此類型的活動</p>
@@ -152,9 +134,7 @@
                         </button>
                     </div>
                 </div>
-                
                 <h2 id="display-name" class="text-xl font-bold text-gray-900 pr-20 leading-tight">活動名稱</h2>
-                
                 <div class="mt-4 space-y-3">
                     <div class="flex items-start gap-3">
                         <div class="bg-green-50 p-2 rounded-lg text-green-600 shrink-0 mt-0.5"><i data-lucide="user" class="w-4 h-4"></i></div>
@@ -163,7 +143,6 @@
                             <div id="display-organizer" class="font-medium text-gray-800">主辦人</div>
                         </div>
                     </div>
-                    
                     <div class="flex items-start gap-3">
                         <div class="bg-blue-50 p-2 rounded-lg text-blue-600 shrink-0 mt-0.5"><i data-lucide="clock" class="w-4 h-4"></i></div>
                         <div class="flex-1">
@@ -171,7 +150,6 @@
                             <div id="display-time-container" class="font-medium text-gray-800"></div>
                         </div>
                     </div>
-                    
                     <div class="flex items-start gap-3">
                         <div class="bg-red-50 p-2 rounded-lg text-red-600 shrink-0 mt-0.5"><i data-lucide="map-pin" class="w-4 h-4"></i></div>
                         <div class="flex-1">
@@ -186,7 +164,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div id="travel-itinerary-section" class="hidden mt-5 pt-4 border-t border-dashed border-gray-200">
                     <details class="group main-itinerary bg-gray-50 rounded-xl border border-gray-100 open:bg-white open:shadow-sm transition-all duration-300">
                         <summary class="flex justify-between items-center p-3 cursor-pointer select-none">
@@ -207,12 +184,10 @@
                     <div class="bg-green-100 p-1.5 rounded-lg"><i data-lucide="edit-3" class="w-5 h-5 text-green-600"></i></div>
                     <h2 class="text-lg font-bold text-gray-800" id="form-title">填寫報名資料</h2>
                 </div>
-
                 <input type="hidden" id="eventId" name="eventId">
                 <input type="hidden" id="eventType" name="eventType">
                 <input type="hidden" id="eventName" name="eventName">
                 <input type="hidden" id="formAction" value="register"> 
-
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1.5">報名者</label>
@@ -225,7 +200,6 @@
                         </div>
                         <input type="hidden" id="user-id">
                     </div>
-
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1.5">攜帶眷屬 (人數)</label>
@@ -239,11 +213,9 @@
                         </div>
                     </div>
                 </div>
-
                 <div id="dynamic-fields" class="space-y-4">
                     <div id="field-travel" class="hidden space-y-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
                         <div class="text-sm font-bold text-blue-800 flex items-center gap-1.5 mb-2"><i data-lucide="bus" class="w-4 h-4"></i> 旅遊選項</div>
-                        
                         <div>
                             <label class="text-xs font-medium text-gray-600 block mb-1.5">上車地點</label>
                             <div class="flex gap-2">
@@ -258,7 +230,6 @@
                                 </a>
                             </div>
                         </div>
-                        
                         <div>
                             <label class="text-xs font-medium text-gray-600 block mb-1.5">房型需求 (已選 / 總量)</label>
                             <div class="relative">
@@ -269,7 +240,6 @@
                             </div>
                         </div>
                     </div>
-                    
                     <div id="field-banquet" class="hidden p-4 bg-red-50/50 rounded-xl border border-red-100">
                         <div class="flex justify-between items-center">
                             <label class="text-sm font-bold text-red-800 flex items-center gap-1.5"><i data-lucide="monitor" class="w-4 h-4"></i> 認桌數量</label>
@@ -287,15 +257,12 @@
                         </div>
                     </div>
                 </div>
-                
                 <div class="bg-orange-50/50 p-4 rounded-xl border border-orange-100">
                     <div class="flex justify-between items-center mb-3">
                         <label class="text-sm font-bold text-orange-800 flex items-center gap-1.5"><i data-lucide="user-plus" class="w-4 h-4"></i> 新增來賓</label>
                         <span class="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">選填</span>
                     </div>
-                    
                     <div id="guest-list-container" class="space-y-2 mb-3 empty:hidden"></div>
-                    
                     <div class="bg-white p-3 rounded-lg border border-orange-200 shadow-sm space-y-2">
                         <div class="flex gap-2">
                             <input type="text" id="add-guest-name" placeholder="來賓姓名" class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-orange-500 outline-none">
@@ -319,7 +286,6 @@
                 <div class="p-4 border border-gray-200 rounded-xl bg-gray-50/30">
                     <label class="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-1.5"><i data-lucide="gift" class="w-4 h-4 text-purple-500"></i> 贊助項目</label>
                     <div id="sponsor-list-container" class="space-y-2 mb-3 empty:hidden"></div>
-                    
                     <div class="space-y-3 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
                         <div class="flex gap-4 text-xs font-medium text-gray-600 pb-2 border-b border-gray-100">
                             <label class="cursor-pointer flex items-center gap-1.5 hover:text-green-600 transition"><input type="radio" name="addSponsorType" value="alcohol" checked onclick="renderAddSponsorUI()" class="accent-green-500"> 酒類</label>
@@ -903,7 +869,9 @@
 
         function renderEventStaticInfo() {
             const e = appState.currentEvent;
-            
+            // ★ 安全檢查：防止資料尚未載入時報錯
+            if (!e) return; 
+
             // Text Fields
             document.getElementById('display-name').innerText = e.name;
             document.getElementById('display-organizer').innerText = e.organizer;
@@ -1396,7 +1364,7 @@
             setTimeout(() => document.getElementById('details-modal').classList.add('hidden'), 300);
         }
         
-        // --- ★ 補回遺失的 Sponsor 相關函式 (修正 ReferenceError) ---
+        // --- Sponsor Functions ---
         function renderAddSponsorUI() {
             const type = document.querySelector('input[name="addSponsorType"]:checked').value;
             const area = document.getElementById('sponsor-input-area');
@@ -1446,209 +1414,6 @@
                  appState.sponsorList.push(str); 
                  renderSponsorList();
             }
-        }
-
-        function showCreateView() {
-            // 1. 切換歷史堆疊
-            appState.historyStack.push('create');
-            
-            // 2. 切換畫面
-            switchView('view-create');
-            
-            // 3. 更新標題
-            document.getElementById('header-title').innerText = "建立新活動";
-            
-            // 4. 重置表單
-            document.getElementById('new-name').value = '';
-            document.getElementById('new-time-single').value = '';
-            document.getElementById('new-location').value = '';
-            document.getElementById('new-address').value = '';
-            
-            // 自動填入主辦人 (抓取當前 LINE 名稱)
-            document.getElementById('new-organizer').value = appState.user.displayName;
-            
-            // 預設觸發一次以更新 Travel Notice 顯示狀態
-            toggleCreateFields();
-        }
-
-        function copyDetailsToClipboard() {
-            const btn = document.getElementById('btn-copy-list');
-            const originalHTML = btn.innerHTML;
-            
-            // UI 顯示讀取中
-            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> 讀取中...';
-            if(typeof lucide !== 'undefined') lucide.createIcons();
-
-            fetchDetails().then(data => {
-                if (!data.length) {
-                    btn.innerHTML = originalHTML; 
-                    return showToast("無資料可複製");
-                }
-
-                // --- 產生文字內容 ---
-                let text = `【${appState.currentEvent.name}】報名名單\n`;
-                text += `統計時間: ${new Date().toLocaleString('zh-TW', {hour12: false, month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'})}\n`;
-                text += `========================\n`;
-
-                data.forEach((p, i) => {
-                    let guestTotal = 0;
-                    if(p.guestList && p.guestList.length > 0) {
-                        guestTotal = p.guestList.reduce((acc, g) => acc + (parseInt(g.count)||1), 0);
-                    } else {
-                        guestTotal = parseInt(p.guestCount) || 0;
-                    }
-                    const total = 1 + (parseInt(p.family)||0) + guestTotal;
-                    
-                    text += `${i+1}. ${p.name}`;
-                    if(total > 1) text += ` (共${total}人)`;
-                    text += `\n`;
-
-                    let midLines = []; 
-                    let botLines = []; 
-
-                    if (p.tableCount > 0) midLines.push(`認桌: ${p.tableCount}桌`);
-                    if (p.sponsorList && p.sponsorList.length > 0) {
-                        p.sponsorList.forEach(s => midLines.push(`贊助: ${s}`));
-                    }
-
-                    if (p.pickup && p.pickup !== '無') botLines.push(`[主]車: ${p.pickup}`);
-                    if (p.room && p.room !== '無') botLines.push(`[主]房: ${p.room}`);
-                    
-                    if (p.guestList && p.guestList.length > 0) {
-                        let gInfos = [];
-                        p.guestList.forEach(g => {
-                            let infoParts = [];
-                            if(g.pickup) infoParts.push(g.pickup);
-                            if(g.room) infoParts.push(g.room);
-                            if(infoParts.length > 0) {
-                                gInfos.push(`${g.name}(${infoParts.join('/')})`);
-                            }
-                        });
-                        if(gInfos.length > 0) botLines.push(`[賓]: ${gInfos.join('、')}`);
-                    }
-
-                    if (midLines.length > 0) {
-                        text += `   ------------------\n`;
-                        midLines.forEach(line => text += `   ${line}\n`);
-                    }
-
-                    if (botLines.length > 0) {
-                        text += `   ------------------\n`; 
-                        botLines.forEach(line => text += `   ${line}\n`);
-                    }
-                    text += `\n`;
-                });
-
-                text += `========================\n`;
-                text += `總計人數: ${appState.currentStats.totalPeople || 0} 人\n`;
-                if(appState.currentStats.tableCount > 0) {
-                    text += `總計認桌: ${appState.currentStats.tableCount} 桌\n`;
-                }
-
-                // --- ★ 關鍵修正點 ---
-                // 1. 強制取得焦點，解決 "Document is not focused" 錯誤
-                window.focus(); 
-                
-                // 2. 修正這裡：原本寫錯成 igator，正確是 navigator
-                navigator.clipboard.writeText(text).then(() => {
-                    btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> 已複製！';
-                    btn.classList.add('bg-green-600');
-                    if(typeof lucide !== 'undefined') lucide.createIcons();
-                    
-                    setTimeout(() => {
-                        btn.innerHTML = originalHTML;
-                        btn.classList.remove('bg-green-600');
-                        if(typeof lucide !== 'undefined') lucide.createIcons();
-                    }, 2000);
-                    showToast("已複製名單到剪貼簿");
-                }).catch(err => {
-                    console.error("複製失敗:", err);
-                    showToast("複製失敗，請手動複製");
-                    btn.innerHTML = originalHTML;
-                });
-            });
-        }
-
-        function formatDate(isoStr) {
-            if (!isoStr) return '';
-            const d = new Date(isoStr);
-            if (isNaN(d.getTime())) return isoStr;
-            const week = ['日','一','二','三','四','五','六'][d.getDay()];
-            return `${d.getFullYear()}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')} (${week}) ${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`;
-        }
-        
-        function formatDateShort(isoStr) {
-             if (isoStr.includes('~')) return isoStr.split('~')[0].substring(5) + '...';
-             const d = new Date(isoStr);
-             return isNaN(d) ? isoStr : `${d.getMonth()+1}/${d.getDate()} (${['日','一','二','三','四','五','六'][d.getDay()]})`;
-        }
-        
-        function formatDateOnly(isoStr) {
-            if (!isoStr) return '';
-            const d = new Date(isoStr);
-            if (isNaN(d.getTime())) return isoStr;
-            const week = ['日','一','二','三','四','五','六'][d.getDay()];
-            return `${d.getFullYear()}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')} (${week})`;
-        }
-        
-        function animateValue(obj, start, end, duration) {
-            let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                obj.innerHTML = Math.floor(progress * (end - start) + start);
-                if (progress < 1) { window.requestAnimationFrame(step); }
-            };
-            window.requestAnimationFrame(step);
-        }
-
-        function validateForm() {
-            const type = document.querySelector('input[name="addSponsorType"]:checked').value;
-            // Add basic validation logic if needed
-            return true;
-        }
-
-        // --- Helpers for Dynamic Lists (Guests/Sponsors) ---
-        function addGuest() {
-            const name = document.getElementById('add-guest-name').value.trim();
-            const count = parseInt(document.getElementById('add-guest-count').value);
-            if (!name) return showToast("請輸入來賓姓名");
-            
-            const pickup = document.getElementById('add-guest-pickup').value;
-            const room = document.getElementById('add-guest-room').value;
-            
-            // Generate simple temp ID
-            const id = 'g_' + Date.now() + Math.random().toString(36).substr(2, 5);
-            
-            appState.guestList.push({ id, name, count, pickup, room });
-            document.getElementById('add-guest-name').value = '';
-            renderGuestList();
-        }
-        function removeGuest(id) { 
-            appState.guestList = appState.guestList.filter(g => g.id !== id);
-            renderGuestList(); 
-        }
-        
-        function restoreGuestList(str) {
-            appState.guestList = [];
-            if (!str || str === '無') return;
-            // Parsing logic based on backend format "Guest(1), Guest2(2)|Loc|Room"
-            str.split(', ').forEach(s => {
-                const match = s.match(/(.*?)\((\d+)\)/);
-                if (match) {
-                    let full = match[1];
-                    let pickup='', room='';
-                    if(full.includes('|')) {
-                         const parts = full.split('|');
-                         full = parts[0];
-                         pickup = parts[1] || '';
-                         room = parts[2] || '';
-                    }
-                    const id = 'g_' + Date.now() + Math.random().toString(36).substr(2, 5);
-                    appState.guestList.push({ id, name: full.trim(), count: parseInt(match[2]), pickup, room });
-                }
-            });
-            renderGuestList();
         }
 
         // --- Helpers for Select Population ---
@@ -1766,58 +1531,7 @@
             });
         }
         
-        // Utils
-        function isEventOpen(e) { return e.isActive === true || e.isActive === '開放' || e.isActive === 'open'; }
-        function normalizeType(t) { 
-            t = t.toLowerCase();
-            if (t.includes('一般')) return 'general';
-            if (t.includes('餐會')) return 'banquet';
-            if (t.includes('旅遊')) return 'travel';
-            return t;
-        }
-        
-        // --- History Toggle ---
-        function toggleHistoryView() {
-            const container = document.getElementById('history-list');
-            const isHidden = container.classList.contains('hidden');
-            const btnText = document.getElementById('history-btn-text');
-            const activeCats = document.getElementById('active-categories');
-            const createBtn = document.getElementById('btn-create-event');
-            
-            if (isHidden) {
-                activeCats.classList.add('hidden');
-                createBtn.classList.add('hidden');
-                container.classList.remove('hidden');
-                btnText.innerText = "返回首頁";
-                
-                // Render History
-                const list = document.getElementById('history-items');
-                list.innerHTML = '';
-                const history = appState.events.filter(e => !isEventOpen(e));
-                if(history.length === 0) {
-                     list.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">無歷史紀錄</div>';
-                } else {
-                     history.forEach(e => {
-                         list.innerHTML += `
-                            <div onclick="enterEventDetail('${e.id}')" class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex justify-between items-center cursor-pointer hover:bg-gray-50">
-                                <div>
-                                    <h4 class="font-bold text-gray-700">${e.name}</h4>
-                                    <div class="text-xs text-gray-400 mt-1">${formatDateShort(e.time)}</div>
-                                </div>
-                                <span class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">已結束</span>
-                            </div>`;
-                     });
-                }
-            } else {
-                activeCats.classList.remove('hidden');
-                createBtn.classList.remove('hidden');
-                container.classList.add('hidden');
-                btnText.innerText = "查看歷史活動";
-            }
-        }
-        
-        // --- Create Event Dummy ---
-// --- 真實版：建立活動並傳送至 GAS ---
+        // --- Create Event (Real Submit) ---
         async function handleCreateEvent(e) {
             e.preventDefault();
             const btn = document.getElementById('create-btn');
@@ -1894,6 +1608,115 @@
             appState.currentEvent.isActive = isEventOpen(appState.currentEvent) ? "關閉" : "開放";
             renderEventStaticInfo();
             showToast("狀態已更新");
+        }
+        
+        // Utils
+        function isEventOpen(e) { return e.isActive === true || e.isActive === '開放' || e.isActive === 'open'; }
+        function normalizeType(t) { 
+            t = t.toLowerCase();
+            if (t.includes('一般')) return 'general';
+            if (t.includes('餐會')) return 'banquet';
+            if (t.includes('旅遊')) return 'travel';
+            return t;
+        }
+
+        // --- Copy to Clipboard ---
+        function copyDetailsToClipboard() {
+            const btn = document.getElementById('btn-copy-list');
+            const originalHTML = btn.innerHTML;
+            
+            // UI 顯示讀取中
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> 讀取中...';
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+
+            fetchDetails().then(data => {
+                if (!data.length) {
+                    btn.innerHTML = originalHTML; 
+                    return showToast("無資料可複製");
+                }
+
+                // --- 產生文字內容 ---
+                let text = `【${appState.currentEvent.name}】報名名單\n`;
+                text += `統計時間: ${new Date().toLocaleString('zh-TW', {hour12: false, month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'})}\n`;
+                text += `========================\n`;
+
+                data.forEach((p, i) => {
+                    let guestTotal = 0;
+                    if(p.guestList && p.guestList.length > 0) {
+                        guestTotal = p.guestList.reduce((acc, g) => acc + (parseInt(g.count)||1), 0);
+                    } else {
+                        guestTotal = parseInt(p.guestCount) || 0;
+                    }
+                    const total = 1 + (parseInt(p.family)||0) + guestTotal;
+                    
+                    text += `${i+1}. ${p.name}`;
+                    if(total > 1) text += ` (共${total}人)`;
+                    text += `\n`;
+
+                    let midLines = []; 
+                    let botLines = []; 
+
+                    if (p.tableCount > 0) midLines.push(`認桌: ${p.tableCount}桌`);
+                    if (p.sponsorList && p.sponsorList.length > 0) {
+                        p.sponsorList.forEach(s => midLines.push(`贊助: ${s}`));
+                    }
+
+                    if (p.pickup && p.pickup !== '無') botLines.push(`[主]車: ${p.pickup}`);
+                    if (p.room && p.room !== '無') botLines.push(`[主]房: ${p.room}`);
+                    
+                    if (p.guestList && p.guestList.length > 0) {
+                        let gInfos = [];
+                        p.guestList.forEach(g => {
+                            let infoParts = [];
+                            if(g.pickup) infoParts.push(g.pickup);
+                            if(g.room) infoParts.push(g.room);
+                            if(infoParts.length > 0) {
+                                gInfos.push(`${g.name}(${infoParts.join('/')})`);
+                            }
+                        });
+                        if(gInfos.length > 0) botLines.push(`[賓]: ${gInfos.join('、')}`);
+                    }
+
+                    if (midLines.length > 0) {
+                        text += `   ------------------\n`;
+                        midLines.forEach(line => text += `   ${line}\n`);
+                    }
+
+                    if (botLines.length > 0) {
+                        text += `   ------------------\n`; 
+                        botLines.forEach(line => text += `   ${line}\n`);
+                    }
+                    text += `\n`;
+                });
+
+                text += `========================\n`;
+                text += `總計人數: ${appState.currentStats.totalPeople || 0} 人\n`;
+                if(appState.currentStats.tableCount > 0) {
+                    text += `總計認桌: ${appState.currentStats.tableCount} 桌\n`;
+                }
+
+                // --- ★ 關鍵修正點 ---
+                // 1. 強制取得焦點，解決 "Document is not focused" 錯誤
+                window.focus(); 
+                
+                // 2. 修正這裡：原本寫錯成 igator，正確是 navigator
+                navigator.clipboard.writeText(text).then(() => {
+                    btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> 已複製！';
+                    btn.classList.add('bg-green-600');
+                    if(typeof lucide !== 'undefined') lucide.createIcons();
+                    
+                    setTimeout(() => {
+                        btn.innerHTML = originalHTML;
+                        btn.classList.remove('bg-green-600');
+                        if(typeof lucide !== 'undefined') lucide.createIcons();
+                    }, 2000);
+                    showToast("已複製名單到剪貼簿");
+                }).catch(err => {
+                    console.error("複製失敗:", err);
+                    showToast("複製失敗，請手動複製");
+                    btn.innerHTML = originalHTML;
+                });
+            });
         }
     </script>
 </body>
