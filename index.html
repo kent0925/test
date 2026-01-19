@@ -1328,6 +1328,23 @@ async function fetchStats(forceRefresh = false) {
             }
         }
 
+         // --- 補上遺失的 showCreateView 函式 ---
+function showCreateView() {
+    // 1. 切換歷史堆疊，讓「上一頁」按鈕能運作
+    appState.historyStack.push('create');
+    
+    // 2. 切換畫面到建立活動頁
+    switchView('view-create');
+    
+    // 3. 更新標題
+    document.getElementById('header-title').innerText = "建立新活動";
+    
+    // 4. (選填) 重置表單，避免上次輸入的殘留
+    document.getElementById('new-name').value = '';
+    document.getElementById('new-time-single').value = '';
+    // 如果有其他欄位想清空也可以加在這裡
+}
+        
         function switchView(viewId) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             document.getElementById(viewId).classList.remove('hidden');
@@ -1417,13 +1434,21 @@ async function fetchStats(forceRefresh = false) {
         }
 
 function copyDetailsToClipboard() {
-            fetchDetails().then(data => {
-                if (!data.length) return showToast("無資料可複製");
+const btn = document.getElementById('btn-copy-list');
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> 讀取中...';
+    lucide.createIcons();
+
+    fetchDetails().then(data => {
+        if (!data.length) {
+            btn.innerHTML = originalHTML; // 復原按鈕
+            return showToast("無資料可複製");
+        }
 
                 // 建立標題
-                let text = `【${appState.currentEvent.name}】報名名單\n`;
-                text += `統計時間: ${new Date().toLocaleString('zh-TW', {hour12: false, month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'})}\n`;
-                text += `========================\n`;
+               let text = `【${appState.currentEvent.name}】報名名單\n`;
+        text += `統計時間: ${new Date().toLocaleString('zh-TW', {hour12: false, month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'})}\n`;
+        text += `========================\n`;
 
                 data.forEach((p, i) => {
                     // ------------------------------------------------
@@ -1499,22 +1524,26 @@ function copyDetailsToClipboard() {
                 }
                 
                 // 執行複製到剪貼簿
-                navigator.clipboard.writeText(text).then(() => {
-                    const btn = document.getElementById('btn-copy-list');
-                    const originalHTML = btn.innerHTML;
-                    btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> 已複製！';
-                    btn.classList.add('bg-green-600');
-                    if(typeof lucide !== 'undefined') lucide.createIcons();
-                    
-                    setTimeout(() => {
-                        btn.innerHTML = originalHTML;
-                        btn.classList.remove('bg-green-600');
-                        if(typeof lucide !== 'undefined') lucide.createIcons();
-                    }, 2000);
-                    showToast("已複製名單到剪貼簿");
-                });
-            });
-        }
+               igator.clipboard.writeText(text).then(() => {
+            btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> 已複製！';
+            btn.classList.add('bg-green-600');
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('bg-green-600');
+                if(typeof lucide !== 'undefined') lucide.createIcons();
+            }, 2000);
+            showToast("已複製名單到剪貼簿");
+        }).catch(err => {
+            console.error("複製失敗:", err);
+            showToast("複製失敗，請手動複製");
+            // 如果失敗，可以考慮用 alert 顯示文字讓使用者自己複製
+            // alert(text); 
+            btn.innerHTML = originalHTML;
+        });
+    });
+}
 
         function formatDate(isoStr) {
             if (!isoStr) return '';
