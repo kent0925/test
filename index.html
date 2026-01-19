@@ -383,20 +383,13 @@
                             <option value="travel">旅遊活動</option>
                         </select>
                     </div>
-                    
-                    <div id="travel-notice" class="hidden p-3 bg-yellow-50 text-yellow-700 text-sm rounded-lg border border-yellow-200 flex gap-2 items-start">
-                        <i data-lucide="alert-circle" class="w-5 h-5 shrink-0 mt-0.5"></i>
-                        <span>上車地點及房型、房型價格請通知管理員由管理員填寫</span>
-                    </div>
-
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1.5">活動名稱</label>
                         <input type="text" id="new-name" required class="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-black/10 outline-none" placeholder="例如：五月慶生會">
                     </div>
-                    
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1.5">主辦人</label>
-                        <input type="text" id="new-organizer" readonly class="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-gray-100 text-gray-500 cursor-not-allowed">
+                        <select id="new-organizer-select" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-white"><option value="">載入中...</option></select>
                     </div>
                     
                     <div id="new-field-time-single">
@@ -422,12 +415,12 @@
 
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1.5">地點名稱</label>
-                        <input type="text" id="new-location" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-black/10 outline-none" placeholder="請輸入地點">
+                        <select id="new-location-select" onchange="onLocationChange()" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-white"><option value="">載入中...</option></select>
                     </div>
                     
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1.5">詳細地址</label>
-                        <input type="text" id="new-address" class="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-black/10 outline-none" placeholder="請輸入地址">
+                        <input type="text" id="new-address" readonly class="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-gray-100 text-gray-500">
                     </div>
                     
                     <div id="new-field-itinerary" class="hidden">
@@ -618,7 +611,7 @@
             try { 
                 const res = await fetch(`${GAS_URL}?action=getSettings`); 
                 appState.settings = await res.json(); 
-                // Deleted populateCreateDropdowns call as we now use manual inputs
+                populateCreateDropdowns(); 
             } catch (e) { 
                 console.warn("API Error (getSettings)", e);
             } 
@@ -1309,7 +1302,6 @@
             }
         }
 
-        // ★ 補回遺失的核心導航與功能函式
         function switchView(viewId) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             document.getElementById(viewId).classList.remove('hidden');
@@ -1410,14 +1402,6 @@
             // 4. 重置表單
             document.getElementById('new-name').value = '';
             document.getElementById('new-time-single').value = '';
-            document.getElementById('new-location').value = '';
-            document.getElementById('new-address').value = '';
-            
-            // 自動填入主辦人 (抓取當前 LINE 名稱)
-            document.getElementById('new-organizer').value = appState.user.displayName;
-            
-            // 預設觸發一次以更新 Travel Notice 顯示狀態
-            toggleCreateFields();
         }
 
         function copyDetailsToClipboard() {
@@ -1600,6 +1584,55 @@
             renderGuestList();
         }
 
+        function renderAddSponsorUI() {
+            const type = document.querySelector('input[name="addSponsorType"]:checked').value;
+            const area = document.getElementById('sponsor-input-area');
+            if (type === 'alcohol') {
+                area.innerHTML = `
+                    <input id="sp-qty" type="number" class="w-20 border border-gray-300 rounded px-2 py-1 text-sm" placeholder="數量" min="1">
+                    <select id="sp-unit" class="border border-gray-300 rounded px-2 py-1 text-sm bg-white">
+                        <option value="瓶">瓶</option>
+                        <option value="箱">箱</option>
+                    </select>`;
+            } else if (type === 'money') {
+                area.innerHTML = `<input id="sp-money" type="number" class="w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="金額 (100為單位)" min="100" step="100">`;
+            } else {
+                area.innerHTML = `<input id="sp-other" type="text" class="w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="贊助內容">`;
+            }
+        }
+        
+        function addSponsor() {
+            const type = document.querySelector('input[name="addSponsorType"]:checked').value;
+            let res = '';
+            
+            if (type === 'alcohol') {
+                const qty = document.getElementById('sp-qty').value;
+                const unit = document.getElementById('sp-unit').value;
+                if (!qty || parseInt(qty) <= 0) return showToast("請輸入有效數量");
+                res = `酒類: ${qty}${unit}`;
+            } else if (type === 'money') {
+                const val = document.getElementById('sp-money').value;
+                const num = parseInt(val);
+                if (!num || num <= 0) return showToast("金額不能為負數或零");
+                if (num % 100 !== 0) return showToast("金額須為 100 的倍數");
+                res = `紅包: ${num}元`;
+            } else {
+                const val = document.getElementById('sp-other').value.trim();
+                if (!val) return showToast("請輸入內容");
+                res = `其他: ${val}`;
+            }
+            appState.sponsorList.push(res);
+            renderSponsorList();
+        }
+        function removeSponsor(i) { appState.sponsorList.splice(i, 1); renderSponsorList(); }
+        function restoreSponsorList(str) {
+            appState.sponsorList = [];
+            if(str && str !== '無') {
+                 appState.sponsorList.push(str); // Simplified
+                 renderSponsorList();
+            }
+        }
+
         // --- Helpers for Select Population ---
         function populateSelect(id, items) {
             const el = document.getElementById(id);
@@ -1683,16 +1716,6 @@
             document.getElementById('new-field-time-single').classList.toggle('hidden', isTravel);
             document.getElementById('new-field-time-range').classList.toggle('hidden', !isTravel);
             document.getElementById('new-field-itinerary').classList.toggle('hidden', !isTravel);
-            
-            // 顯示/隱藏旅遊活動的提示訊息
-            const travelNotice = document.getElementById('travel-notice');
-            if (travelNotice) {
-                if (isTravel) {
-                    travelNotice.classList.remove('hidden');
-                } else {
-                    travelNotice.classList.add('hidden');
-                }
-            }
         }
         
         function renderItinerary(str) {
