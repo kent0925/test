@@ -1308,6 +1308,49 @@
             }
         }
 
+        function toggleHistoryView() {
+            const container = document.getElementById('history-list');
+            const isHidden = container.classList.contains('hidden');
+            const btnText = document.getElementById('history-btn-text');
+            const activeCats = document.getElementById('active-categories');
+            const createBtn = document.getElementById('btn-create-event');
+            
+            if (isHidden) {
+                // 切換到歷史模式
+                activeCats.classList.add('hidden');
+                createBtn.classList.add('hidden');
+                container.classList.remove('hidden');
+                btnText.innerText = "返回首頁";
+                
+                // 渲染歷史列表
+                const list = document.getElementById('history-items');
+                list.innerHTML = '';
+                // 篩選已結束的活動 (isActive !== 'open')
+                const history = appState.events.filter(e => !isEventOpen(e));
+                
+                if(history.length === 0) {
+                     list.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">無歷史紀錄</div>';
+                } else {
+                     history.forEach(e => {
+                         list.innerHTML += `
+                            <div onclick="enterEventDetail('${e.id}')" class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex justify-between items-center cursor-pointer hover:bg-gray-50">
+                                <div>
+                                    <h4 class="font-bold text-gray-700">${e.name}</h4>
+                                    <div class="text-xs text-gray-400 mt-1">${formatDateShort(e.time)}</div>
+                                </div>
+                                <span class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">已結束</span>
+                            </div>`;
+                     });
+                }
+            } else {
+                // 切換回首頁模式
+                activeCats.classList.remove('hidden');
+                createBtn.classList.remove('hidden');
+                container.classList.add('hidden');
+                btnText.innerText = "查看歷史活動";
+            }
+        } 
+        
         function enterCategory(type) {
             appState.currentCategory = type;
             appState.historyStack.push('list');
