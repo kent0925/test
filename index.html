@@ -1530,6 +1530,35 @@
                     </div>`;
             });
         }
+
+        function showCreateView() {
+            // 1. 切換歷史堆疊
+            appState.historyStack.push('create');
+            
+            // 2. 切換畫面
+            switchView('view-create');
+            
+            // 3. 更新標題
+            document.getElementById('header-title').innerText = "建立新活動";
+            
+            // 4. 重置表單
+            document.getElementById('new-name').value = '';
+            document.getElementById('new-time-single').value = '';
+            // 清空日期範圍欄位
+            if(document.getElementById('new-date-start')) document.getElementById('new-date-start').value = '';
+            if(document.getElementById('new-date-end')) document.getElementById('new-date-end').value = '';
+            
+            document.getElementById('new-location').value = '';
+            document.getElementById('new-address').value = '';
+            document.getElementById('new-deadline').value = '';
+            document.getElementById('new-itinerary').value = '';
+            
+            // 自動填入主辦人 (抓取當前使用者名稱)
+            document.getElementById('new-organizer').value = appState.user.displayName;
+            
+            // 預設觸發一次以更新欄位顯示狀態 (例如隱藏/顯示旅遊選項)
+            toggleCreateFields();
+        }
         
         // --- Create Event (Real Submit) ---
         async function handleCreateEvent(e) {
