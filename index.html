@@ -1328,6 +1328,97 @@ async function fetchStats(forceRefresh = false) {
             }
         }
 
+// ==========================================
+        // ★ 補回遺失的核心功能函式 (請貼在 refreshIcons 之後)
+        // ==========================================
+
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            document.getElementById(viewId).classList.remove('hidden');
+            
+            const backBtn = document.getElementById('btn-back');
+            if (viewId === 'view-home') {
+                backBtn.classList.add('hidden');
+                appState.historyStack = ['home'];
+            } else {
+                backBtn.classList.remove('hidden');
+            }
+            window.scrollTo(0, 0);
+        }
+
+        function handleBackNav() {
+            const current = appState.historyStack.pop(); 
+            const prev = appState.historyStack[appState.historyStack.length - 1]; 
+            
+            if (!prev || prev === 'home') {
+                document.getElementById('header-title').innerText = "活動與報名";
+                switchView('view-home');
+                appState.historyStack = ['home'];
+                appState.currentEvent = null;
+            } else if (prev === 'list') {
+                switchView('view-event-list');
+                document.getElementById('header-title').innerText = getCategoryTitle(appState.currentCategory);
+                appState.currentEvent = null;
+                renderEventGrid(appState.currentCategory);
+            }
+        }
+
+        function enterCategory(type) {
+            appState.currentCategory = type;
+            appState.historyStack.push('list');
+            switchView('view-event-list');
+            document.getElementById('header-title').innerText = getCategoryTitle(type);
+            switchCategory(type);
+        }
+
+        function switchCategory(type) {
+            appState.currentCategory = type;
+            document.querySelectorAll('.filter-tab').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`tab-${type}`).classList.add('active');
+            renderEventGrid(type);
+        }
+
+        function getCategoryTitle(t) { 
+            const map = { 'general': '一般活動', 'banquet': '大型餐會', 'travel': '旅遊活動', 'all': '所有活動' }; 
+            return map[t] || '活動列表'; 
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('opacity-0', 'pointer-events-none', 'top-6');
+            toast.classList.add('top-20', 'opacity-100');
+            
+            setTimeout(() => {
+                toast.classList.remove('top-20', 'opacity-100');
+                toast.classList.add('opacity-0', 'pointer-events-none', 'top-6');
+            }, 2500);
+        }
+
+        function showConfirm(msg) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('confirm-modal');
+                document.getElementById('confirm-msg').innerHTML = msg;
+                modal.classList.remove('hidden');
+                
+                const cleanup = () => {
+                    modal.classList.add('hidden');
+                    document.getElementById('confirm-yes').onclick = null;
+                    document.getElementById('confirm-no').onclick = null;
+                };
+
+                document.getElementById('confirm-yes').onclick = () => { cleanup(); resolve(true); };
+                document.getElementById('confirm-no').onclick = () => { cleanup(); resolve(false); };
+            });
+        }
+        
+        function closeDetailsModal() {
+            const content = document.getElementById('modal-content');
+            content.classList.remove('translate-y-10', 'sm:translate-y-0', 'opacity-100');
+            content.classList.add('translate-y-full', 'opacity-0');
+            setTimeout(() => document.getElementById('details-modal').classList.add('hidden'), 300);
+        }
+        
          // --- 補上遺失的 showCreateView 函式 ---
 // ==========================================
 // 修正後的函式：請替換原本的這兩個函式
