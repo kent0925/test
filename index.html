@@ -1885,13 +1885,6 @@
             }
         }
         
-            // Go Home
-            appState.historyStack = ['home'];
-            handleBackNav();
-            btn.disabled = false; btn.innerHTML = '<span>確認建立</span><i data-lucide="check-square" class="w-4 h-4"></i>';
-            lucide.createIcons();
-        }
-        
         // --- Status Toggle ---
         async function toggleEventStatus() {
             const btn = document.getElementById('btn-status-toggle');
