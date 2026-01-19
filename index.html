@@ -6,7 +6,6 @@
     <title>活動報名系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <!-- 使用 UMD 版本確保 Lucide 載入 -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
@@ -48,7 +47,6 @@
 </head>
 <body class="bg-gray-50 min-h-screen pb-safe">
 
-    <!-- Header -->
     <header class="bg-[#06c755] text-white px-4 py-3 shadow-md sticky top-0 z-50 flex justify-between items-center h-14 lg:h-16">
         <div class="flex items-center gap-3">
             <button id="btn-back" onclick="handleBackNav()" class="hidden p-1.5 hover:bg-white/20 rounded-full transition active:scale-90">
@@ -66,9 +64,7 @@
 
     <div class="max-w-md mx-auto p-4 pb-24 relative min-h-[calc(100vh-64px)]">
 
-        <!-- VIEW 1: HOME (Categories) -->
         <div id="view-home" class="view-section space-y-6 animate-fade-in">
-            <!-- Hero / Welcome Area -->
             <div class="bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-xl"></div>
                 <h2 class="text-2xl font-bold mb-1">歡迎使用</h2>
@@ -125,9 +121,7 @@
             </button>
         </div>
 
-        <!-- VIEW 2: EVENT SELECTION (List with Tabs) -->
         <div id="view-event-list" class="view-section hidden space-y-4">
-             <!-- Filter Tabs -->
              <div id="filter-container" class="flex gap-2 overflow-x-auto hide-scrollbar pb-2 sticky top-[0px] pt-2 z-40 bg-gray-50/95 backdrop-blur-sm">
                  <button onclick="switchCategory('all')" id="tab-all" class="filter-tab px-4 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium whitespace-nowrap shadow-sm">全部</button>
                  <button onclick="switchCategory('general')" id="tab-general" class="filter-tab px-4 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium whitespace-nowrap shadow-sm">一般</button>
@@ -149,9 +143,7 @@
              </div>
         </div>
 
-        <!-- VIEW 3: ACTIVITY DETAIL & FORM -->
         <div id="view-activity-detail" class="view-section hidden space-y-5 animate-fade-in">
-            <!-- Event Info Card -->
             <div id="event-info-card" class="bg-white rounded-2xl shadow-sm p-5 border border-gray-100 relative overflow-hidden transition-all duration-300">
                 <div class="absolute top-0 right-0 p-3">
                     <div id="manager-controls" class="hidden">
@@ -210,7 +202,6 @@
                 </div>
             </div>
 
-            <!-- Registration Form -->
             <form id="regForm" class="bg-white rounded-2xl shadow-sm p-5 space-y-6 border border-gray-100 relative" onsubmit="handleSubmit(event)">
                 <div class="flex items-center gap-2 pb-3 border-b border-gray-100">
                     <div class="bg-green-100 p-1.5 rounded-lg"><i data-lucide="edit-3" class="w-5 h-5 text-green-600"></i></div>
@@ -222,7 +213,6 @@
                 <input type="hidden" id="eventName" name="eventName">
                 <input type="hidden" id="formAction" value="register"> 
 
-                <!-- User Info -->
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1.5">報名者</label>
@@ -250,9 +240,7 @@
                     </div>
                 </div>
 
-                <!-- Dynamic Fields -->
                 <div id="dynamic-fields" class="space-y-4">
-                    <!-- Travel Options -->
                     <div id="field-travel" class="hidden space-y-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
                         <div class="text-sm font-bold text-blue-800 flex items-center gap-1.5 mb-2"><i data-lucide="bus" class="w-4 h-4"></i> 旅遊選項</div>
                         
@@ -282,7 +270,6 @@
                         </div>
                     </div>
                     
-                    <!-- Banquet Options -->
                     <div id="field-banquet" class="hidden p-4 bg-red-50/50 rounded-xl border border-red-100">
                         <div class="flex justify-between items-center">
                             <label class="text-sm font-bold text-red-800 flex items-center gap-1.5"><i data-lucide="monitor" class="w-4 h-4"></i> 認桌數量</label>
@@ -301,7 +288,6 @@
                     </div>
                 </div>
                 
-                <!-- Guest Section -->
                 <div class="bg-orange-50/50 p-4 rounded-xl border border-orange-100">
                     <div class="flex justify-between items-center mb-3">
                         <label class="text-sm font-bold text-orange-800 flex items-center gap-1.5"><i data-lucide="user-plus" class="w-4 h-4"></i> 新增來賓</label>
@@ -330,7 +316,6 @@
                     </div>
                 </div>
 
-                <!-- Sponsor Section -->
                 <div class="p-4 border border-gray-200 rounded-xl bg-gray-50/30">
                     <label class="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-1.5"><i data-lucide="gift" class="w-4 h-4 text-purple-500"></i> 贊助項目</label>
                     <div id="sponsor-list-container" class="space-y-2 mb-3 empty:hidden"></div>
@@ -349,7 +334,6 @@
                     </div>
                 </div>
 
-                <!-- Submit Area -->
                 <div class="flex gap-3 pt-2">
                     <button type="submit" id="submit-btn" class="flex-1 bg-[#06c755] text-white font-bold py-3.5 rounded-xl hover:bg-green-600 transition shadow-md active:scale-95 flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                         <span>確認報名</span><i data-lucide="send" class="w-4 h-4"></i>
@@ -360,7 +344,6 @@
                 </div>
             </form>
 
-            <!-- Stats Card -->
             <div class="bg-gray-800 text-white rounded-2xl shadow-lg p-5 mb-8 relative overflow-hidden">
                 <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full blur-xl"></div>
                 <div class="flex justify-between items-center mb-4 border-b border-gray-600 pb-3">
@@ -388,7 +371,6 @@
             </div>
         </div>
 
-        <!-- VIEW 4: CREATE EVENT -->
         <div id="view-create" class="view-section hidden space-y-5 animate-fade-in">
              <div class="bg-white rounded-2xl shadow-sm p-6 border border-gray-200">
                 <h2 class="text-xl font-bold text-gray-800 mb-5 flex items-center gap-2"><i data-lucide="plus-square" class="w-6 h-6 text-gray-900"></i> 建立新活動</h2>
@@ -454,7 +436,6 @@
         </div>
     </div>
 
-    <!-- Details Modal -->
     <div id="details-modal" class="hidden fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
         <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-sm max-h-[85vh] flex flex-col relative transform translate-y-full sm:translate-y-10 opacity-0 transition-all duration-300" id="modal-content">
             <div class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/80 rounded-t-2xl backdrop-blur-md sticky top-0 z-10">
@@ -474,11 +455,9 @@
                     <div class="px-4 py-2 bg-gray-100 text-xs font-bold text-gray-500 sticky top-0">人員名單</div>
                     <ul id="details-list-people" class="divide-y divide-gray-100"></ul>
                     
-                    <!-- Travel Details -->
                     <div id="travel-separator" class="hidden px-4 py-2 bg-gray-100 text-xs font-bold text-gray-500 sticky top-0 mt-2">住宿與交通</div>
                     <ul id="details-list-travel" class="hidden divide-y divide-gray-100"></ul>
                     
-                    <!-- Sponsor -->
                     <div id="details-separator" class="hidden px-4 py-2 bg-gray-100 text-xs font-bold text-gray-500 sticky top-0 mt-2">贊助與認桌</div>
                     <ul id="details-list-items" class="divide-y divide-gray-100"></ul>
                 </div>
@@ -497,7 +476,6 @@
         </div>
     </div>
 
-    <!-- Confirm Modal -->
     <div id="confirm-modal" class="hidden fixed inset-0 z-[80] flex items-center justify-center bg-black/60 backdrop-blur-sm p-6 animate-fade-in">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xs p-6 transform scale-100 transition-all">
             <h3 class="text-lg font-bold text-gray-900 mb-2">確認動作</h3>
@@ -509,7 +487,6 @@
         </div>
     </div>
     
-    <!-- Toast Notification -->
     <div id="toast" class="fixed top-6 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-5 py-3 rounded-full shadow-2xl opacity-0 transition-all duration-300 pointer-events-none z-[100] text-sm flex items-center gap-2.5 backdrop-blur-md">
         <div class="bg-green-500 rounded-full p-0.5"><i data-lucide="check" class="w-3 h-3 text-white"></i></div>
         <span id="toast-msg" class="font-medium tracking-wide">操作成功</span>
@@ -542,9 +519,6 @@
         };
 
         // ==========================================
-        // 2. INITIALIZATION
-        // ==========================================
-// ==========================================
         // 2. INITIALIZATION (初始化)
         // ==========================================
         window.onload = async function() {
@@ -655,7 +629,7 @@
             }
         }
         
-async function fetchStats(forceRefresh = false) { 
+        async function fetchStats(forceRefresh = false) { 
             if (!appState.currentEvent || !GAS_URL) return; 
             
             const totalEl = document.getElementById('stat-total');
@@ -1328,10 +1302,6 @@ async function fetchStats(forceRefresh = false) {
             }
         }
 
-// ==========================================
-        // ★ 補回遺失的核心功能函式 (請貼在 refreshIcons 之後)
-        // ==========================================
-
         function switchView(viewId) {
             document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
             document.getElementById(viewId).classList.remove('hidden');
@@ -1418,126 +1388,119 @@ async function fetchStats(forceRefresh = false) {
             content.classList.add('translate-y-full', 'opacity-0');
             setTimeout(() => document.getElementById('details-modal').classList.add('hidden'), 300);
         }
-        
-         // --- 補上遺失的 showCreateView 函式 ---
-// ==========================================
-// 修正後的函式：請替換原本的這兩個函式
-// ==========================================
 
-// 1. 確保這個函式放在 Script 的最外層，不要被包在其他括號內
-function showCreateView() {
-    // 1. 切換歷史堆疊
-    appState.historyStack.push('create');
-    
-    // 2. 切換畫面
-    switchView('view-create');
-    
-    // 3. 更新標題
-    document.getElementById('header-title').innerText = "建立新活動";
-    
-    // 4. 重置表單
-    document.getElementById('new-name').value = '';
-    document.getElementById('new-time-single').value = '';
-}
-
-// 2. 修正拼字錯誤與權限問題的複製函式
-function copyDetailsToClipboard() {
-    const btn = document.getElementById('btn-copy-list');
-    const originalHTML = btn.innerHTML;
-    
-    // UI 顯示讀取中
-    btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> 讀取中...';
-    if(typeof lucide !== 'undefined') lucide.createIcons();
-
-    fetchDetails().then(data => {
-        if (!data.length) {
-            btn.innerHTML = originalHTML; 
-            return showToast("無資料可複製");
+        function showCreateView() {
+            // 1. 切換歷史堆疊
+            appState.historyStack.push('create');
+            
+            // 2. 切換畫面
+            switchView('view-create');
+            
+            // 3. 更新標題
+            document.getElementById('header-title').innerText = "建立新活動";
+            
+            // 4. 重置表單
+            document.getElementById('new-name').value = '';
+            document.getElementById('new-time-single').value = '';
         }
 
-        // --- 產生文字內容 ---
-        let text = `【${appState.currentEvent.name}】報名名單\n`;
-        text += `統計時間: ${new Date().toLocaleString('zh-TW', {hour12: false, month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'})}\n`;
-        text += `========================\n`;
-
-        data.forEach((p, i) => {
-            let guestTotal = 0;
-            if(p.guestList && p.guestList.length > 0) {
-                 guestTotal = p.guestList.reduce((acc, g) => acc + (parseInt(g.count)||1), 0);
-            } else {
-                 guestTotal = parseInt(p.guestCount) || 0;
-            }
-            const total = 1 + (parseInt(p.family)||0) + guestTotal;
+        function copyDetailsToClipboard() {
+            const btn = document.getElementById('btn-copy-list');
+            const originalHTML = btn.innerHTML;
             
-            text += `${i+1}. ${p.name}`;
-            if(total > 1) text += ` (共${total}人)`;
-            text += `\n`;
-
-            let midLines = []; 
-            let botLines = []; 
-
-            if (p.tableCount > 0) midLines.push(`認桌: ${p.tableCount}桌`);
-            if (p.sponsorList && p.sponsorList.length > 0) {
-                p.sponsorList.forEach(s => midLines.push(`贊助: ${s}`));
-            }
-
-            if (p.pickup && p.pickup !== '無') botLines.push(`[主]車: ${p.pickup}`);
-            if (p.room && p.room !== '無') botLines.push(`[主]房: ${p.room}`);
-            
-            if (p.guestList && p.guestList.length > 0) {
-                let gInfos = [];
-                p.guestList.forEach(g => {
-                    let infoParts = [];
-                    if(g.pickup) infoParts.push(g.pickup);
-                    if(g.room) infoParts.push(g.room);
-                    if(infoParts.length > 0) {
-                        gInfos.push(`${g.name}(${infoParts.join('/')})`);
-                    }
-                });
-                if(gInfos.length > 0) botLines.push(`[賓]: ${gInfos.join('、')}`);
-            }
-
-            if (midLines.length > 0) {
-                text += `   ------------------\n`;
-                midLines.forEach(line => text += `   ${line}\n`);
-            }
-
-            if (botLines.length > 0) {
-                text += `   ------------------\n`; 
-                botLines.forEach(line => text += `   ${line}\n`);
-            }
-            text += `\n`;
-        });
-
-        text += `========================\n`;
-        text += `總計人數: ${appState.currentStats.totalPeople || 0} 人\n`;
-        if(appState.currentStats.tableCount > 0) {
-            text += `總計認桌: ${appState.currentStats.tableCount} 桌\n`;
-        }
-
-        // --- ★ 關鍵修正點 ---
-        // 1. 強制取得焦點，解決 "Document is not focused" 錯誤
-        window.focus(); 
-        
-        // 2. 修正這裡：原本寫錯成 igator，正確是 navigator
-        navigator.clipboard.writeText(text).then(() => {
-            btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> 已複製！';
-            btn.classList.add('bg-green-600');
+            // UI 顯示讀取中
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> 讀取中...';
             if(typeof lucide !== 'undefined') lucide.createIcons();
-            
-            setTimeout(() => {
-                btn.innerHTML = originalHTML;
-                btn.classList.remove('bg-green-600');
-                if(typeof lucide !== 'undefined') lucide.createIcons();
-            }, 2000);
-            showToast("已複製名單到剪貼簿");
-        }).catch(err => {
-            console.error("複製失敗:", err);
-            showToast("複製失敗，請手動複製");
-            btn.innerHTML = originalHTML;
-        });
-    });
-}
+
+            fetchDetails().then(data => {
+                if (!data.length) {
+                    btn.innerHTML = originalHTML; 
+                    return showToast("無資料可複製");
+                }
+
+                // --- 產生文字內容 ---
+                let text = `【${appState.currentEvent.name}】報名名單\n`;
+                text += `統計時間: ${new Date().toLocaleString('zh-TW', {hour12: false, month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'})}\n`;
+                text += `========================\n`;
+
+                data.forEach((p, i) => {
+                    let guestTotal = 0;
+                    if(p.guestList && p.guestList.length > 0) {
+                        guestTotal = p.guestList.reduce((acc, g) => acc + (parseInt(g.count)||1), 0);
+                    } else {
+                        guestTotal = parseInt(p.guestCount) || 0;
+                    }
+                    const total = 1 + (parseInt(p.family)||0) + guestTotal;
+                    
+                    text += `${i+1}. ${p.name}`;
+                    if(total > 1) text += ` (共${total}人)`;
+                    text += `\n`;
+
+                    let midLines = []; 
+                    let botLines = []; 
+
+                    if (p.tableCount > 0) midLines.push(`認桌: ${p.tableCount}桌`);
+                    if (p.sponsorList && p.sponsorList.length > 0) {
+                        p.sponsorList.forEach(s => midLines.push(`贊助: ${s}`));
+                    }
+
+                    if (p.pickup && p.pickup !== '無') botLines.push(`[主]車: ${p.pickup}`);
+                    if (p.room && p.room !== '無') botLines.push(`[主]房: ${p.room}`);
+                    
+                    if (p.guestList && p.guestList.length > 0) {
+                        let gInfos = [];
+                        p.guestList.forEach(g => {
+                            let infoParts = [];
+                            if(g.pickup) infoParts.push(g.pickup);
+                            if(g.room) infoParts.push(g.room);
+                            if(infoParts.length > 0) {
+                                gInfos.push(`${g.name}(${infoParts.join('/')})`);
+                            }
+                        });
+                        if(gInfos.length > 0) botLines.push(`[賓]: ${gInfos.join('、')}`);
+                    }
+
+                    if (midLines.length > 0) {
+                        text += `   ------------------\n`;
+                        midLines.forEach(line => text += `   ${line}\n`);
+                    }
+
+                    if (botLines.length > 0) {
+                        text += `   ------------------\n`; 
+                        botLines.forEach(line => text += `   ${line}\n`);
+                    }
+                    text += `\n`;
+                });
+
+                text += `========================\n`;
+                text += `總計人數: ${appState.currentStats.totalPeople || 0} 人\n`;
+                if(appState.currentStats.tableCount > 0) {
+                    text += `總計認桌: ${appState.currentStats.tableCount} 桌\n`;
+                }
+
+                // --- ★ 關鍵修正點 ---
+                // 1. 強制取得焦點，解決 "Document is not focused" 錯誤
+                window.focus(); 
+                
+                // 2. 修正這裡：原本寫錯成 igator，正確是 navigator
+                navigator.clipboard.writeText(text).then(() => {
+                    btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> 已複製！';
+                    btn.classList.add('bg-green-600');
+                    if(typeof lucide !== 'undefined') lucide.createIcons();
+                    
+                    setTimeout(() => {
+                        btn.innerHTML = originalHTML;
+                        btn.classList.remove('bg-green-600');
+                        if(typeof lucide !== 'undefined') lucide.createIcons();
+                    }, 2000);
+                    showToast("已複製名單到剪貼簿");
+                }).catch(err => {
+                    console.error("複製失敗:", err);
+                    showToast("複製失敗，請手動複製");
+                    btn.innerHTML = originalHTML;
+                });
+            });
+        }
 
         function formatDate(isoStr) {
             if (!isoStr) return '';
