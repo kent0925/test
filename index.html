@@ -1671,15 +1671,44 @@
             }
         }
         
-        // --- Status Toggle ---
+        // --- Status Toggle (修復版：真正傳送資料給 GAS) ---
         async function toggleEventStatus() {
             const btn = document.getElementById('btn-status-toggle');
-            btn.innerHTML = '<i class="animate-spin" data-lucide="loader-2"></i>';
-            lucide.createIcons();
-            await new Promise(r => setTimeout(r, 800));
-            appState.currentEvent.isActive = isEventOpen(appState.currentEvent) ? "關閉" : "開放";
-            renderEventStaticInfo();
-            showToast("狀態已更新");
+            const originalHTML = btn.innerHTML; // 記住原本按鈕長怎樣
+            
+            // 1. 顯示讀取動畫
+            btn.disabled = true;
+            btn.innerHTML = '<i class="animate-spin" data-lucide="loader-2"></i> 處理中';
+            if(typeof lucide !== 'undefined') lucide.createIcons();
+
+            // 2. 判斷目前狀態並決定新狀態
+            // 目前是開放 -> 要改成 close
+            // 目前是關閉 -> 要改成 open
+            const currentStatus = isEventOpen(appState.currentEvent);
+            const newStatus = currentStatus ? "close" : "open";
+
+            try {
+                // 3. 發送請求給 GAS
+                await apiSubmit({
+                    action: 'toggleStatus',
+                    eventId: appState.currentEvent.id,
+                    userId: appState.user.userId, // 用於驗證是否為主辦人
+                    status: newStatus
+                });
+
+                // 4. 更新本地資料與畫面
+                appState.currentEvent.isActive = newStatus;
+                renderEventStaticInfo();
+                showToast(newStatus === "open" ? "活動已重新開放" : "活動已關閉");
+
+            } catch (err) {
+                console.error(err);
+                showToast("狀態更新失敗，請檢查網路");
+            } finally {
+                // 5. 恢復按鈕
+                btn.disabled = false;
+                // renderEventStaticInfo 會自動更新按鈕文字，所以這裡不需要還原 originalHTML
+            }
         }
         
         // Utils
