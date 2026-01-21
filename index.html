@@ -814,7 +814,7 @@
         function performCopySync(data, options, btnElement = null, originalBtnHTML = '') {
             if (!data || !data.length) return showToast("無資料可複製");
             const e = appState.currentEvent;
-            let text = `主辦人：${e.organizer}\n📋 ${e.name}\n📅 ${formatDateShort(e.time)} ${new Date(e.time).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit', hour12:false})}\n📍 ${e.location}\n──────────────\n`;
+            let text = `🤵：${e.organizer}\n📋 ${e.name}\n📅 ${formatDateShort(e.time)} ${new Date(e.time).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit', hour12:false})}\n📍 ${e.location}\n──────────────\n`;
 
             data.forEach((p, i) => {
                 let guestTotal = 0;
