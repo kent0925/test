@@ -1756,27 +1756,6 @@
             }
         }
 
-        // 5. NAVIGATION & CATEGORY
-        function enterCategory(category) {
-            appState.currentCategory = category;
-
-            // Filter events
-            const allEvents = appState.allEvents || [];
-            if (category === 'general') {
-                // 一般活動: excludes 'banquet' types if any, currently logic is just all non-banquet? 
-                // Or maybe the user wants to filter by type.
-                // Assuming 'general' shows everything OR specific type. 
-                // Let's assume 'general' = everything except 'banquet' logic if types exist.
-                // For now, let's just set state and render.
-                document.getElementById('page-title').innerText = "近期活動";
-            } else if (category === 'banquet') {
-                document.getElementById('page-title').innerText = "大型餐會";
-            }
-
-            renderEvents(); // You might need to update renderEvents to respect appState.currentCategory
-            switchView('view-list');
-        }
-
         // ==========================================
         // 6. UTILITY FUNCTIONS
         // ==========================================
