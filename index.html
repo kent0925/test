@@ -1562,9 +1562,7 @@
                 const firstItem = data[0];
                 const keys = Object.keys(firstItem).join(", ");
                 console.log("Debug Keys:", keys);
-                // showToast("Debug Keys: " + keys); // Uncomment if needed for user feedback
-                showToast("Debug Keys: " + keys);
-            }
+           }
 
             data.forEach((row, idx) => {
 
@@ -1574,7 +1572,7 @@
 
                 // Guest Handling: Prioritize JSON, fallback to String
                 let guestData = [];
-                const guestJson = row.guestJson || row.GuestJson || row['GuestJson'] || row['來賓資料JSON'];
+                const guestJson = row.guestList || row.guestJson || row.GuestJson || row['GuestJson'] || row['來賓資料JSON'];
                 const guestNameStr = row.guestName || row.GuestName || row['GuestName'] || row['Guest Name'] || row['來賓姓名'] || row['來賓'];
                 const guestCountFallback = parseInt(row.guestCount || row.GuestCount || row['GuestCount'] || row['來賓人數']) || 0;
 
@@ -1659,7 +1657,7 @@
                 const tableCount = parseInt(row.tableCount || row.TableCount || row['TableCount'] || row['Table Count'] || row['認桌數量'] || row['認桌']) || 0;
 
                 // Sponsor: Try Sponsorship, Sponsor, 贊助項目, 贊助
-                const sponsor = row.sponsor || row.Sponsorship || row.Sponsor || row['Sponsorship'] || row['贊助項目'] || row['贊助'];
+               const sponsor = row.sponsorList || row.sponsor || row.Sponsorship || row.Sponsor || row['Sponsorship'] || row['贊助項目'] || row['贊助'];
 
                 listP.innerHTML += `
                     <li class="px-4 py-3 hover:bg-gray-50 transition">
