@@ -1026,31 +1026,40 @@
 
             document.getElementById('form-title').innerText = "編輯您的報名";
 
+            // Map Backend Keys to Local Variables
+            const family = record.family || 0; // Assuming family key is unchanged or not provided in list
+            const tableCount = record.tableCount || record.TableCount;
+            const room = record.room || record.RoomType;
+            const pickup = record.pickup || record.Pickup;
+            const guestJson = record.guestJson || record.GuestJson; // Guessing json key
+            const guestName = record.guestName || record.GuestName;
+            const sponsor = record.sponsor || record.Sponsorship;
+
             // Fill Fields
-            document.getElementById('family-count').value = record.family || 0;
-            if (record.tableCount) document.getElementById('table-count').value = record.tableCount;
+            document.getElementById('family-count').value = family;
+            if (tableCount) document.getElementById('table-count').value = tableCount;
 
             // Travel Fields
-            if (record.room && record.room !== '無') document.getElementById('room-type').value = record.room;
-            if (record.pickup && record.pickup !== '無') document.getElementById('pickup-loc').value = record.pickup;
+            if (room && room !== '無') document.getElementById('room-type').value = room;
+            if (pickup && pickup !== '無') document.getElementById('pickup-loc').value = pickup;
 
             // Restore Complex Lists (Guests & Sponsors)
             // Use guestJson if available for precise restoration
-            if (record.guestJson && record.guestJson !== '[]') {
+            if (guestJson && guestJson !== '[]') {
                 try {
-                    const guests = JSON.parse(record.guestJson);
+                    const guests = JSON.parse(guestJson);
                     appState.guestList = guests.map(g => ({
                         ...g,
                         id: g.id || ('g_' + Date.now() + Math.random().toString(36).substr(2, 5)) // ensure ID exists
                     }));
                     renderGuestList();
                 } catch (e) {
-                    restoreGuestList(record.guestName); // fallback
+                    restoreGuestList(guestName); // fallback
                 }
             } else {
-                restoreGuestList(record.guestName);
+                restoreGuestList(guestName);
             }
-            restoreSponsorList(record.sponsor);
+            restoreSponsorList(sponsor);
 
             refreshIcons();
             showToast("已載入您的報名資料");
@@ -1528,14 +1537,24 @@
             let hasItems = false;
 
             data.forEach((row, idx) => {
+                // Mapping Keys
+                const name = row.name || row.Name; // assuming name might be Name?
+                const family = parseInt(row.family) || 0;
+                const guestCount = parseInt(row.guestCount || row.GuestCount) || 0;
+                const guestName = row.guestName || row.GuestName;
+                const pickup = row.pickup || row.Pickup;
+                const room = row.room || row.RoomType;
+                const tableCount = parseInt(row.tableCount || row.TableCount) || 0;
+                const sponsor = row.sponsor || row.Sponsorship;
+
                 let badge = '';
-                const total = 1 + (parseInt(row.family) || 0) + (parseInt(row.guestCount) || 0);
+                const total = 1 + family + guestCount;
                 if (total > 1) badge = `<span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs font-bold">+${total - 1}</span>`;
 
                 // Parse guests with details if available
                 let subHtml = '';
-                if (row.guestName && row.guestName !== '無') {
-                    const guestEntries = row.guestName.split(', ');
+                if (guestName && guestName !== '無') {
+                    const guestEntries = guestName.split(', ');
                     let guestTexts = [];
                     guestEntries.forEach(g => {
                         let parts = g.split('|');
@@ -1556,7 +1575,7 @@
                         <div class="flex justify-between items-center">
                             <div class="flex items-center gap-3">
                                 <span class="text-xs text-gray-300 font-mono w-4">${idx + 1}</span>
-                                <span class="font-bold text-gray-800">${row.name}</span>
+                                <span class="font-bold text-gray-800">${name}</span>
                                 ${badge}
                             </div>
                         </div>
@@ -1564,30 +1583,30 @@
                     </li>`;
 
                 if (appState.currentEvent.type === 'travel') {
-                    const rowHasTravel = (row.pickup && row.pickup !== '無') || (row.room && row.room !== '無');
+                    const rowHasTravel = (pickup && pickup !== '無') || (room && room !== '無');
                     if (rowHasTravel) {
                         hasTravel = true;
                         listT.innerHTML += `
                             <li class="px-4 py-2 flex justify-between items-center hover:bg-gray-50 text-sm">
-                                <span class="font-medium text-gray-700">${row.name}</span>
+                                <span class="font-medium text-gray-700">${name}</span>
                                 <div class="text-right text-xs text-gray-500">
-                                    ${row.pickup !== '無' ? `<div class="text-blue-600">${row.pickup}</div>` : ''}
-                                    ${row.room !== '無' ? `<div class="text-orange-600">${row.room}</div>` : ''}
+                                    ${pickup && pickup !== '無' ? `<div class="text-blue-600">${pickup}</div>` : ''}
+                                    ${room && room !== '無' ? `<div class="text-orange-600">${room}</div>` : ''}
                                 </div>
                             </li>`;
                     }
                 }
 
                 const items = [];
-                if (row.tableCount > 0) items.push(`認桌 ${row.tableCount} 桌`);
-                if (row.sponsor && row.sponsor !== '無') items.push(row.sponsor);
+                if (tableCount > 0) items.push(`認桌 ${tableCount} 桌`);
+                if (sponsor && sponsor !== '無') items.push(sponsor);
 
                 if (items.length > 0) {
                     hasItems = true;
                     listI.innerHTML += `
                         <li class="px-4 py-3 hover:bg-gray-50">
                             <div class="flex justify-between items-start">
-                                <span class="font-medium text-gray-800 text-sm">${row.name}</span>
+                                <span class="font-medium text-gray-800 text-sm">${name}</span>
                                 <div class="text-right flex-1 pl-4">
                                     ${items.map(i => `<div class="text-xs text-purple-600 bg-purple-50 inline-block px-2 py-1 rounded mb-1">${i}</div>`).join('')}
                                 </div>
