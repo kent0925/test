@@ -1536,20 +1536,102 @@
             let hasTravel = false;
             let hasItems = false;
 
+            if (data.length > 0) {
+                // DEBUG: Show keys of the first item to debug missing data
+                const firstItem = data[0];
+                const keys = Object.keys(firstItem).join(", ");
+                console.log("Debug Keys:", keys);
+                // showToast("Debug Keys: " + keys); // Uncomment if needed for user feedback
+                showToast("Debug Keys: " + keys);
+            }
+
             data.forEach((row, idx) => {
 
-                // Comprehensive Key Mapping (English & Chinese Fallback)
+                // Comprehensive Key Mapping
                 const name = row.name || row.Name || row['姓名'];
                 const family = parseInt(row.family || row.Family || row['眷屬'] || row['眷屬人數']) || 0;
-                const guestCount = parseInt(row.guestCount || row.GuestCount || row['來賓人數']) || 0;
 
-                // Guest Name: Try GuestName, Guest Name, 來賓姓名, 來賓
-                const guestName = row.guestName || row.GuestName || row['GuestName'] || row['Guest Name'] || row['來賓姓名'] || row['來賓'];
+                // Guest Handling: Prioritize JSON, fallback to String
+                let guestData = [];
+                const guestJson = row.guestJson || row.GuestJson || row['GuestJson'] || row['來賓資料JSON'];
+                const guestNameStr = row.guestName || row.GuestName || row['GuestName'] || row['Guest Name'] || row['來賓姓名'] || row['來賓'];
+                const guestCountFallback = parseInt(row.guestCount || row.GuestCount || row['GuestCount'] || row['來賓人數']) || 0;
 
-                // Pickup: Try Pickup, Pick up, 上車地點
+                if (guestJson && guestJson !== '[]') {
+                    try {
+                        const parsed = (typeof guestJson === 'string') ? JSON.parse(guestJson) : guestJson;
+                        if (Array.isArray(parsed)) {
+                            guestData = parsed.map(g => ({
+                                name: g.name,
+                                count: parseInt(g.count) || 1,
+                                pickup: g.pickup,
+                                room: g.room
+                            }));
+                        }
+                    } catch (e) { console.warn("Guest JSON parse error", e); }
+                }
+
+                // Fallback: Parse String if JSON failed or empty, but string exists
+                if (guestData.length === 0 && guestNameStr && guestNameStr !== '無') {
+                    // Split by comma or Chinese comma
+                    const guestEntries = guestNameStr.split(/[,、]\s*/);
+                    guestEntries.forEach(g => {
+                        if (!g.trim()) return;
+
+                        // Parse legacy format: "Name(Count)|Pickup|Room" or "Name"
+                        let parts = g.split('|');
+                        const part0 = parts[0].trim();
+
+                        let displayName = part0;
+                        let count = 1;
+
+                        const match = part0.match(/(.*?)\((\d+)\)/);
+                        if (match) {
+                            displayName = match[1].trim();
+                            count = parseInt(match[2]);
+                        }
+
+                        guestData.push({
+                            name: displayName,
+                            count: count,
+                            pickup: parts[1] && parts[1] !== '無' ? parts[1] : '',
+                            room: parts[2] && parts[2] !== '無' ? parts[2] : ''
+                        });
+                    });
+                }
+
+                // Calculate total count
+                const guestTotalCount = guestData.reduce((acc, g) => acc + g.count, 0);
+                const finalGuestCount = guestTotalCount > 0 ? guestTotalCount : guestCountFallback;
+                const total = 1 + family + finalGuestCount;
+
+                let badge = '';
+                if (total > 1) badge = `<span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs font-bold">+${total - 1}</span>`;
+
+                // Build Guest Sub-HTML
+                let subHtml = '';
+                if (guestData.length > 0) {
+                    let guestTexts = [];
+                    guestData.forEach(g => {
+                        let str = g.name;
+                        if (g.count > 1) str += ` (${g.count}人)`;
+
+                        let extras = [];
+                        if (g.pickup) extras.push(g.pickup);
+                        if (g.room) extras.push(g.room);
+                        if (extras.length) str += ` [${extras.join('/')}]`;
+
+                        guestTexts.push(str);
+                    });
+                    subHtml = `<div class="text-xs text-gray-500 mt-0.5 pl-6">賓: ${guestTexts.join('、')}</div>`;
+                } else if (guestNameStr && guestNameStr !== '無') {
+                    subHtml = `<div class="text-xs text-gray-500 mt-0.5 pl-6">賓: ${guestNameStr}</div>`;
+                } else if (finalGuestCount > 0) {
+                    subHtml = `<div class="text-xs text-gray-500 mt-0.5 pl-6">賓: ${finalGuestCount} 人</div>`;
+                }
+
+                // Re-extract main person travel info for the list
                 const pickup = row.pickup || row.Pickup || row['上車地點'];
-
-                // Room: Try RoomType, Room, 房型
                 const room = row.room || row.RoomType || row['RoomType'] || row['房型'];
 
                 // Table: Try TableCount, Table Count, 認桌數量, 認桌
@@ -1557,42 +1639,6 @@
 
                 // Sponsor: Try Sponsorship, Sponsor, 贊助項目, 贊助
                 const sponsor = row.sponsor || row.Sponsorship || row.Sponsor || row['Sponsorship'] || row['贊助項目'] || row['贊助'];
-
-                let badge = '';
-                const total = 1 + family + guestCount;
-                if (total > 1) badge = `<span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs font-bold">+${total - 1}</span>`;
-
-                // Parse guests with details if available
-                let subHtml = '';
-                if (guestName && guestName !== '無') {
-                    const guestEntries = guestName.split(', ');
-                    let guestTexts = [];
-                    guestEntries.forEach(g => {
-                        let parts = g.split('|');
-
-                        // Fix: Extract Name and Count instead of removing count
-                        // Data format: Name(Count) or Name
-                        const namePart = parts[0];
-                        let displayName = namePart;
-                        let countStr = '';
-
-                        const match = namePart.match(/(.*?)\((\d+)\)/);
-                        if (match) {
-                            displayName = match[1];
-                            const c = parseInt(match[2]);
-                            if (c > 1) countStr = ` (${c}人)`;
-                        }
-
-                        let extras = [];
-                        if (parts[1] && parts[1] !== '無') extras.push(parts[1]);
-                        if (parts[2] && parts[2] !== '無') extras.push(parts[2]);
-
-                        let str = displayName + countStr;
-                        if (extras.length) str += ` [${extras.join('/')}]`;
-                        guestTexts.push(str);
-                    });
-                    subHtml = `<div class="text-xs text-gray-500 mt-0.5 pl-6">賓: ${guestTexts.join('、')}</div>`;
-                }
 
                 listP.innerHTML += `
                     <li class="px-4 py-3 hover:bg-gray-50 transition">
@@ -1607,8 +1653,8 @@
                     </li>`;
 
                 if (appState.currentEvent.type === 'travel') {
-                    const rowHasTravel = (pickup && pickup !== '無') || (room && room !== '無');
-                    if (rowHasTravel) {
+                    // Check main person
+                    if ((pickup && pickup !== '無') || (room && room !== '無')) {
                         hasTravel = true;
                         listT.innerHTML += `
                             <li class="px-4 py-2 flex justify-between items-center hover:bg-gray-50 text-sm">
@@ -1619,16 +1665,49 @@
                                 </div>
                             </li>`;
                     }
+
+                    // Check guests
+                    guestData.forEach(g => {
+                        if ((g.pickup && g.pickup !== '無') || (g.room && g.room !== '無')) {
+                            hasTravel = true;
+                            listT.innerHTML += `
+                                <li class="px-4 py-2 flex justify-between items-center hover:bg-gray-50 text-sm">
+                                    <span class="font-medium text-gray-700"><span class="text-xs text-gray-400 mr-1">賓</span>${g.name}</span>
+                                    <div class="text-right text-xs text-gray-500">
+                                        ${g.pickup && g.pickup !== '無' ? `<div class="text-blue-600">${g.pickup}</div>` : ''}
+                                        ${g.room && g.room !== '無' ? `<div class="text-orange-600">${g.room}</div>` : ''}
+                                    </div>
+                                </li>`;
+                        }
+                    });
                 }
 
                 const items = [];
                 if (tableCount > 0) items.push(`認桌 ${tableCount} 桌`);
 
-                // Fix: Split sponsor string by comma to show individual items
+                // Sponsor: Robust Parsing (JSON Array vs String)
                 if (sponsor && sponsor !== '無') {
-                    const spItems = sponsor.split(/[,、]\s*/);
-                    spItems.forEach(s => {
-                        if (s.trim()) items.push(s.trim());
+                    let spList = [];
+                    let parsed = false;
+
+                    // Try JSON parse first
+                    try {
+                        const json = (typeof sponsor === 'string' && (sponsor.startsWith('[') || sponsor.startsWith('{'))) ? JSON.parse(sponsor) : sponsor;
+                        if (Array.isArray(json)) {
+                            spList = json;
+                            parsed = true;
+                        }
+                    } catch (e) { /* Not JSON, fallback to string split */ }
+
+                    if (!parsed) {
+                        // Fallback: Split by comma/semicolon/Chinese comma
+                        spList = sponsor.split(/[,、;]\s*/);
+                    }
+
+                    spList.forEach(s => {
+                        if (s && typeof s === 'string' && s.trim()) {
+                            items.push(s.trim());
+                        }
                     });
                 }
 
@@ -1639,7 +1718,7 @@
                             <div class="flex justify-between items-start">
                                 <span class="font-medium text-gray-800 text-sm">${name}</span>
                                 <div class="text-right flex-1 pl-4">
-                                    ${items.map(i => `<div class="text-xs text-purple-600 bg-purple-50 inline-block px-2 py-1 rounded mb-1">${i}</div>`).join('')}
+                                    ${items.map(i => `<div class="text-xs text-purple-600 bg-purple-50 inline-block px-2 py-1 rounded mb-1 ml-1">${i}</div>`).join('')}
                                 </div>
                             </div>
                         </li>`;
