@@ -899,8 +899,10 @@
             }
         }
 
-        async function fetchStats(forceRefresh = false) {
-            if (!appState.currentEvent || !GAS_URL) return;
+          async function fetchStats(forceRefresh = false) {
+            // ★ 修改 1：先將 currentEvent 存入區域變數 e，避免非同步期間狀態改變導致錯誤
+            const e = appState.currentEvent;
+            if (!e || !GAS_URL) return;
 
             const totalEl = document.getElementById('stat-total');
             const secEl = document.getElementById('stat-sec-val');
@@ -911,28 +913,28 @@
             }
 
             try {
-                const res = await fetch(`${GAS_URL}?action=stats&eventId=${appState.currentEvent.id}&_=${Date.now()}`);
+                // ★ 修改 2：這裡改用變數 e 來取得 id
+                const res = await fetch(`${GAS_URL}?action=stats&eventId=${e.id}&_=${Date.now()}`);
                 appState.currentStats = await res.json();
 
                 // Update UI numbers
                 animateValue(totalEl, 0, appState.currentStats.totalPeople || 0, 500);
 
-                // ★ 修改這裡：根據活動類型決定顯示哪個數字
+                // 根據活動類型決定顯示哪個數字
                 let secValue = 0;
-                if (appState.currentEvent.type === 'travel') {
-                    // 如果是旅遊，顯示總房數
+                
+                // ★ 修改 3：這裡改用變數 e 來判斷 type，確保不會因為 currentEvent 變成 null 而報錯
+                if (e.type === 'travel') {
                     secValue = appState.currentStats.totalRooms || 0;
-                } else if (appState.currentEvent.type === 'banquet') {
-                    // 如果是餐會，顯示桌數
+                } else if (e.type === 'banquet') {
                     secValue = appState.currentStats.tableCount || 0;
                 } else {
-                    // 其他顯示預設 (贊助數)
                     secValue = appState.currentStats.secondary || 0;
                 }
 
                 animateValue(secEl, 0, secValue, 500);
-            } catch (e) {
-                console.warn("Fetch Stats Failed", e);
+            } catch (err) {
+                console.warn("Fetch Stats Failed", err);
             }
         }
 
