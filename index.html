@@ -2473,10 +2473,23 @@
 
         function restoreSponsorList(str) {
             appState.sponsorList = [];
-            if (!str || str === '無') return;
+            if (!str || str === '無') {
+                renderSponsorList();
+                return;
+            }
 
-            // Fix: Split by comma to handle multiple items (e.g., "酒類: 1瓶, 紅包: 100元")
-            const items = str.split(/[,、]\s*/); // Split by comma or Chinese comma, allow spaces
+            // Try JSON first
+            try {
+                const json = (typeof str === 'string' && (str.startsWith('[') || str.startsWith('{'))) ? JSON.parse(str) : str;
+                if (Array.isArray(json)) {
+                    appState.sponsorList = json;
+                    renderSponsorList();
+                    return;
+                }
+            } catch (e) { }
+
+            // Fallback: Split by comma/semicolon/Chinese comma
+            const items = str.split(/[,、;]\s*/);
             items.forEach(item => {
                 const cleanItem = item.trim();
                 if (cleanItem && cleanItem !== '無') {
@@ -2487,31 +2500,63 @@
         }
 
         function restoreGuestList(str) {
+            // Note: This function is usually a fallback. 
+            // fillFormWithRecord tries to use 'guestJson' first. 
+            // If that fails, it calls this with the 'guestName' string.
+
             appState.guestList = [];
-            if (!str || str === '無') return;
-            // Parsing logic based on backend format "Guest(1), Guest2(2)|Loc|Room"
-            str.split(', ').forEach(s => {
+            if (!str || str === '無') {
+                renderGuestList();
+                return;
+            }
+
+            // Split by comma or Chinese comma
+            const entries = str.split(/[,、]\s*/);
+
+            entries.forEach(s => {
+                if (!s.trim()) return;
+
+                // Parsing logic: "Guest(1), Guest2(2)|Loc|Room"
                 const match = s.match(/(.*?)\((\d+)\)/);
+
                 if (match) {
-                    let full = match[1];
+                    let full = match[1].trim(); // Name part might contain |Loc|Room legacy
+                    const count = parseInt(match[2]);
+
                     let pickup = '', room = '';
                     if (full.includes('|')) {
                         const parts = full.split('|');
-                        full = parts[0];
+                        full = parts[0].trim();
+                        pickup = parts[1] || '';
+                        room = parts[2] || '';
+                    } else if (s.includes('|')) {
+                        // Case: "Name(1)|Loc|Room" -> match[1] is "Name" but s has rest
+                        const parts = s.split('|');
                         pickup = parts[1] || '';
                         room = parts[2] || '';
                     }
-                    // Extract name from "Name[Loc/Room]" format if present (legacy compat)
+
+                    // Legacy bracket support: Name[Loc/Room]
                     if (full.includes('[')) {
                         full = full.split('[')[0].trim();
                     }
 
                     const id = 'g_' + Date.now() + Math.random().toString(36).substr(2, 5);
-                    appState.guestList.push({ id, name: full.trim(), count: parseInt(match[2]), pickup, room });
+                    appState.guestList.push({ id, name: full, count, pickup, room });
                 } else {
-                    // Fallback for simple name without count (e.g. "GuestName")
+                    // Fallback for simple name "GuestName" or "GuestName|Loc|Room"
+                    let full = s;
+                    let pickup = '', room = '';
+
+                    if (full.includes('|')) {
+                        const parts = full.split('|');
+                        full = parts[0].trim();
+                        pickup = parts[1] || '';
+                        room = parts[2] || '';
+                    }
+
                     const id = 'g_' + Date.now() + Math.random().toString(36).substr(2, 5);
-                    appState.guestList.push({ id, name: s.trim(), count: 1, pickup: '', room: '' });
+                    appState.guestList.push({ id, name: full, count: 1, pickup, room });
                 }
             });
             renderGuestList();
