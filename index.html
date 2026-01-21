@@ -1537,64 +1537,64 @@
             let hasItems = false;
 
             data.forEach((row, idx) => {
-                data.forEach((row, idx) => {
-                    // Comprehensive Key Mapping (English & Chinese Fallback)
-                    const name = row.name || row.Name || row['姓名'];
-                    const family = parseInt(row.family || row.Family || row['眷屬'] || row['眷屬人數']) || 0;
-                    const guestCount = parseInt(row.guestCount || row.GuestCount || row['來賓人數']) || 0;
 
-                    // Guest Name: Try GuestName, Guest Name, 來賓姓名, 來賓
-                    const guestName = row.guestName || row.GuestName || row['GuestName'] || row['Guest Name'] || row['來賓姓名'] || row['來賓'];
+                // Comprehensive Key Mapping (English & Chinese Fallback)
+                const name = row.name || row.Name || row['姓名'];
+                const family = parseInt(row.family || row.Family || row['眷屬'] || row['眷屬人數']) || 0;
+                const guestCount = parseInt(row.guestCount || row.GuestCount || row['來賓人數']) || 0;
 
-                    // Pickup: Try Pickup, Pick up, 上車地點
-                    const pickup = row.pickup || row.Pickup || row['上車地點'];
+                // Guest Name: Try GuestName, Guest Name, 來賓姓名, 來賓
+                const guestName = row.guestName || row.GuestName || row['GuestName'] || row['Guest Name'] || row['來賓姓名'] || row['來賓'];
 
-                    // Room: Try RoomType, Room, 房型
-                    const room = row.room || row.RoomType || row['RoomType'] || row['房型'];
+                // Pickup: Try Pickup, Pick up, 上車地點
+                const pickup = row.pickup || row.Pickup || row['上車地點'];
 
-                    // Table: Try TableCount, Table Count, 認桌數量, 認桌
-                    const tableCount = parseInt(row.tableCount || row.TableCount || row['TableCount'] || row['Table Count'] || row['認桌數量'] || row['認桌']) || 0;
+                // Room: Try RoomType, Room, 房型
+                const room = row.room || row.RoomType || row['RoomType'] || row['房型'];
 
-                    // Sponsor: Try Sponsorship, Sponsor, 贊助項目, 贊助
-                    const sponsor = row.sponsor || row.Sponsorship || row.Sponsor || row['Sponsorship'] || row['贊助項目'] || row['贊助'];
+                // Table: Try TableCount, Table Count, 認桌數量, 認桌
+                const tableCount = parseInt(row.tableCount || row.TableCount || row['TableCount'] || row['Table Count'] || row['認桌數量'] || row['認桌']) || 0;
 
-                    let badge = '';
-                    const total = 1 + family + guestCount;
-                    if (total > 1) badge = `<span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs font-bold">+${total - 1}</span>`;
+                // Sponsor: Try Sponsorship, Sponsor, 贊助項目, 贊助
+                const sponsor = row.sponsor || row.Sponsorship || row.Sponsor || row['Sponsorship'] || row['贊助項目'] || row['贊助'];
 
-                    // Parse guests with details if available
-                    let subHtml = '';
-                    if (guestName && guestName !== '無') {
-                        const guestEntries = guestName.split(', ');
-                        let guestTexts = [];
-                        guestEntries.forEach(g => {
-                            let parts = g.split('|');
+                let badge = '';
+                const total = 1 + family + guestCount;
+                if (total > 1) badge = `<span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs font-bold">+${total - 1}</span>`;
 
-                            // Fix: Extract Name and Count instead of removing count
-                            // Data format: Name(Count) or Name
-                            const namePart = parts[0];
-                            let displayName = namePart;
-                            let countStr = '';
+                // Parse guests with details if available
+                let subHtml = '';
+                if (guestName && guestName !== '無') {
+                    const guestEntries = guestName.split(', ');
+                    let guestTexts = [];
+                    guestEntries.forEach(g => {
+                        let parts = g.split('|');
 
-                            const match = namePart.match(/(.*?)\((\d+)\)/);
-                            if (match) {
-                                displayName = match[1];
-                                const c = parseInt(match[2]);
-                                if (c > 1) countStr = ` (${c}人)`;
-                            }
+                        // Fix: Extract Name and Count instead of removing count
+                        // Data format: Name(Count) or Name
+                        const namePart = parts[0];
+                        let displayName = namePart;
+                        let countStr = '';
 
-                            let extras = [];
-                            if (parts[1] && parts[1] !== '無') extras.push(parts[1]);
-                            if (parts[2] && parts[2] !== '無') extras.push(parts[2]);
+                        const match = namePart.match(/(.*?)\((\d+)\)/);
+                        if (match) {
+                            displayName = match[1];
+                            const c = parseInt(match[2]);
+                            if (c > 1) countStr = ` (${c}人)`;
+                        }
 
-                            let str = displayName + countStr;
-                            if (extras.length) str += ` [${extras.join('/')}]`;
-                            guestTexts.push(str);
-                        });
-                        subHtml = `<div class="text-xs text-gray-500 mt-0.5 pl-6">賓: ${guestTexts.join('、')}</div>`;
-                    }
+                        let extras = [];
+                        if (parts[1] && parts[1] !== '無') extras.push(parts[1]);
+                        if (parts[2] && parts[2] !== '無') extras.push(parts[2]);
 
-                    listP.innerHTML += `
+                        let str = displayName + countStr;
+                        if (extras.length) str += ` [${extras.join('/')}]`;
+                        guestTexts.push(str);
+                    });
+                    subHtml = `<div class="text-xs text-gray-500 mt-0.5 pl-6">賓: ${guestTexts.join('、')}</div>`;
+                }
+
+                listP.innerHTML += `
                     <li class="px-4 py-3 hover:bg-gray-50 transition">
                         <div class="flex justify-between items-center">
                             <div class="flex items-center gap-3">
@@ -1606,11 +1606,11 @@
                         ${subHtml}
                     </li>`;
 
-                    if (appState.currentEvent.type === 'travel') {
-                        const rowHasTravel = (pickup && pickup !== '無') || (room && room !== '無');
-                        if (rowHasTravel) {
-                            hasTravel = true;
-                            listT.innerHTML += `
+                if (appState.currentEvent.type === 'travel') {
+                    const rowHasTravel = (pickup && pickup !== '無') || (room && room !== '無');
+                    if (rowHasTravel) {
+                        hasTravel = true;
+                        listT.innerHTML += `
                             <li class="px-4 py-2 flex justify-between items-center hover:bg-gray-50 text-sm">
                                 <span class="font-medium text-gray-700">${name}</span>
                                 <div class="text-right text-xs text-gray-500">
@@ -1618,23 +1618,23 @@
                                     ${room && room !== '無' ? `<div class="text-orange-600">${room}</div>` : ''}
                                 </div>
                             </li>`;
-                        }
                     }
+                }
 
-                    const items = [];
-                    if (tableCount > 0) items.push(`認桌 ${tableCount} 桌`);
+                const items = [];
+                if (tableCount > 0) items.push(`認桌 ${tableCount} 桌`);
 
-                    // Fix: Split sponsor string by comma to show individual items
-                    if (sponsor && sponsor !== '無') {
-                        const spItems = sponsor.split(/[,、]\s*/);
-                        spItems.forEach(s => {
-                            if (s.trim()) items.push(s.trim());
-                        });
-                    }
+                // Fix: Split sponsor string by comma to show individual items
+                if (sponsor && sponsor !== '無') {
+                    const spItems = sponsor.split(/[,、]\s*/);
+                    spItems.forEach(s => {
+                        if (s.trim()) items.push(s.trim());
+                    });
+                }
 
-                    if (items.length > 0) {
-                        hasItems = true;
-                        listI.innerHTML += `
+                if (items.length > 0) {
+                    hasItems = true;
+                    listI.innerHTML += `
                         <li class="px-4 py-3 hover:bg-gray-50">
                             <div class="flex justify-between items-start">
                                 <span class="font-medium text-gray-800 text-sm">${name}</span>
@@ -1643,84 +1643,105 @@
                                 </div>
                             </div>
                         </li>`;
-                    }
-                });
+                }
+            });
 
-                if (hasTravel) {
-                    document.getElementById('travel-separator').classList.remove('hidden');
-                    listT.classList.remove('hidden');
-                }
-                if (hasItems) {
-                    document.getElementById('details-separator').classList.remove('hidden');
-                    listI.classList.remove('hidden');
-                }
+            if (hasTravel) {
+                document.getElementById('travel-separator').classList.remove('hidden');
+                listT.classList.remove('hidden');
             }
+            if (hasItems) {
+                document.getElementById('details-separator').classList.remove('hidden');
+                listI.classList.remove('hidden');
+            }
+        }
+
+        // 5. NAVIGATION & CATEGORY
+        function enterCategory(category) {
+            appState.currentCategory = category;
+
+            // Filter events
+            const allEvents = appState.allEvents || [];
+            if (category === 'general') {
+                // 一般活動: excludes 'banquet' types if any, currently logic is just all non-banquet? 
+                // Or maybe the user wants to filter by type.
+                // Assuming 'general' shows everything OR specific type. 
+                // Let's assume 'general' = everything except 'banquet' logic if types exist.
+                // For now, let's just set state and render.
+                document.getElementById('page-title').innerText = "近期活動";
+            } else if (category === 'banquet') {
+                document.getElementById('page-title').innerText = "大型餐會";
+            }
+
+            renderEvents(); // You might need to update renderEvents to respect appState.currentCategory
+            switchView('view-list');
+        }
 
         // ==========================================
         // 6. UTILITY FUNCTIONS
         // ==========================================
         function refreshIcons() {
-                    if (typeof lucide !== 'undefined') {
-                        lucide.createIcons();
-                    }
-                }
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }
 
         function switchView(viewId) {
-                    document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
-                    document.getElementById(viewId).classList.remove('hidden');
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            document.getElementById(viewId).classList.remove('hidden');
 
-                    const backBtn = document.getElementById('btn-back');
-                    if (viewId === 'view-home') {
-                        backBtn.classList.add('hidden');
-                        appState.historyStack = ['home'];
-                    } else {
-                        backBtn.classList.remove('hidden');
-                    }
-                    window.scrollTo(0, 0);
-                }
+            const backBtn = document.getElementById('btn-back');
+            if (viewId === 'view-home') {
+                backBtn.classList.add('hidden');
+                appState.historyStack = ['home'];
+            } else {
+                backBtn.classList.remove('hidden');
+            }
+            window.scrollTo(0, 0);
+        }
 
         function handleBackNav() {
-                    const current = appState.historyStack.pop();
-                    const prev = appState.historyStack[appState.historyStack.length - 1];
+            const current = appState.historyStack.pop();
+            const prev = appState.historyStack[appState.historyStack.length - 1];
 
-                    if (!prev || prev === 'home') {
-                        document.getElementById('header-title').innerText = "活動與報名";
-                        switchView('view-home');
-                        appState.historyStack = ['home'];
-                        appState.currentEvent = null;
-                    } else if (prev === 'list') {
-                        switchView('view-event-list');
-                        document.getElementById('header-title').innerText = getCategoryTitle(appState.currentCategory);
-                        appState.currentEvent = null;
-                        renderEventGrid(appState.currentCategory);
-                    }
-                }
+            if (!prev || prev === 'home') {
+                document.getElementById('header-title').innerText = "活動與報名";
+                switchView('view-home');
+                appState.historyStack = ['home'];
+                appState.currentEvent = null;
+            } else if (prev === 'list') {
+                switchView('view-event-list');
+                document.getElementById('header-title').innerText = getCategoryTitle(appState.currentCategory);
+                appState.currentEvent = null;
+                renderEventGrid(appState.currentCategory);
+            }
+        }
 
         function toggleHistoryView() {
-                    const container = document.getElementById('history-list');
-                    const isHidden = container.classList.contains('hidden');
-                    const btnText = document.getElementById('history-btn-text');
-                    const activeCats = document.getElementById('active-categories');
-                    const createBtn = document.getElementById('btn-create-event');
+            const container = document.getElementById('history-list');
+            const isHidden = container.classList.contains('hidden');
+            const btnText = document.getElementById('history-btn-text');
+            const activeCats = document.getElementById('active-categories');
+            const createBtn = document.getElementById('btn-create-event');
 
-                    if (isHidden) {
-                        // 切換到歷史模式
-                        activeCats.classList.add('hidden');
-                        createBtn.classList.add('hidden');
-                        container.classList.remove('hidden');
-                        btnText.innerText = "返回首頁";
+            if (isHidden) {
+                // 切換到歷史模式
+                activeCats.classList.add('hidden');
+                createBtn.classList.add('hidden');
+                container.classList.remove('hidden');
+                btnText.innerText = "返回首頁";
 
-                        // 渲染歷史列表
-                        const list = document.getElementById('history-items');
-                        list.innerHTML = '';
-                        // 篩選已結束的活動 (isActive !== 'open')
-                        const history = appState.events.filter(e => !isEventOpen(e));
+                // 渲染歷史列表
+                const list = document.getElementById('history-items');
+                list.innerHTML = '';
+                // 篩選已結束的活動 (isActive !== 'open')
+                const history = appState.events.filter(e => !isEventOpen(e));
 
-                        if (history.length === 0) {
-                            list.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">無歷史紀錄</div>';
-                        } else {
-                            history.forEach(e => {
-                                list.innerHTML += `
+                if (history.length === 0) {
+                    list.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">無歷史紀錄</div>';
+                } else {
+                    history.forEach(e => {
+                        list.innerHTML += `
                             <div onclick="enterEventDetail('${e.id}')" class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex justify-between items-center cursor-pointer hover:bg-gray-50">
                                 <div>
                                     <h4 class="font-bold text-gray-700">${e.name}</h4>
@@ -1728,694 +1749,694 @@
                                 </div>
                                 <span class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">已結束</span>
                             </div>`;
-                            });
-                        }
-                    } else {
-                        // 切換回首頁模式
-                        activeCats.classList.remove('hidden');
-                        createBtn.classList.remove('hidden');
-                        container.classList.add('hidden');
-                        btnText.innerText = "查看歷史活動";
-                    }
-                }
-
-        function enterCategory(type) {
-                    appState.currentCategory = type;
-                    appState.historyStack.push('list');
-                    switchView('view-event-list');
-                    document.getElementById('header-title').innerText = getCategoryTitle(type);
-                    switchCategory(type);
-                }
-
-        function switchCategory(type) {
-                    appState.currentCategory = type;
-                    document.querySelectorAll('.filter-tab').forEach(btn => btn.classList.remove('active'));
-                    document.getElementById(`tab-${type}`).classList.add('active');
-                    renderEventGrid(type);
-                }
-
-        function getCategoryTitle(t) {
-                    const map = { 'general': '一般活動', 'banquet': '大型餐會', 'travel': '旅遊活動', 'all': '所有活動' };
-                    return map[t] || '活動列表';
-                }
-
-        function showToast(msg) {
-                    const toast = document.getElementById('toast');
-                    document.getElementById('toast-msg').innerText = msg;
-                    toast.classList.remove('opacity-0', 'pointer-events-none', 'top-6');
-                    toast.classList.add('top-20', 'opacity-100');
-
-                    setTimeout(() => {
-                        toast.classList.remove('top-20', 'opacity-100');
-                        toast.classList.add('opacity-0', 'pointer-events-none', 'top-6');
-                    }, 2500);
-                }
-
-        function showConfirm(msg) {
-                    return new Promise((resolve) => {
-                        const modal = document.getElementById('confirm-modal');
-                        document.getElementById('confirm-msg').innerHTML = msg;
-                        modal.classList.remove('hidden');
-
-                        const cleanup = () => {
-                            modal.classList.add('hidden');
-                            document.getElementById('confirm-yes').onclick = null;
-                            document.getElementById('confirm-no').onclick = null;
-                        };
-
-                        document.getElementById('confirm-yes').onclick = () => { cleanup(); resolve(true); };
-                        document.getElementById('confirm-no').onclick = () => { cleanup(); resolve(false); };
                     });
                 }
+            } else {
+                // 切換回首頁模式
+                activeCats.classList.remove('hidden');
+                createBtn.classList.remove('hidden');
+                container.classList.add('hidden');
+                btnText.innerText = "查看歷史活動";
+            }
+        }
+
+        function enterCategory(type) {
+            appState.currentCategory = type;
+            appState.historyStack.push('list');
+            switchView('view-event-list');
+            document.getElementById('header-title').innerText = getCategoryTitle(type);
+            switchCategory(type);
+        }
+
+        function switchCategory(type) {
+            appState.currentCategory = type;
+            document.querySelectorAll('.filter-tab').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`tab-${type}`).classList.add('active');
+            renderEventGrid(type);
+        }
+
+        function getCategoryTitle(t) {
+            const map = { 'general': '一般活動', 'banquet': '大型餐會', 'travel': '旅遊活動', 'all': '所有活動' };
+            return map[t] || '活動列表';
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.remove('opacity-0', 'pointer-events-none', 'top-6');
+            toast.classList.add('top-20', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('top-20', 'opacity-100');
+                toast.classList.add('opacity-0', 'pointer-events-none', 'top-6');
+            }, 2500);
+        }
+
+        function showConfirm(msg) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('confirm-modal');
+                document.getElementById('confirm-msg').innerHTML = msg;
+                modal.classList.remove('hidden');
+
+                const cleanup = () => {
+                    modal.classList.add('hidden');
+                    document.getElementById('confirm-yes').onclick = null;
+                    document.getElementById('confirm-no').onclick = null;
+                };
+
+                document.getElementById('confirm-yes').onclick = () => { cleanup(); resolve(true); };
+                document.getElementById('confirm-no').onclick = () => { cleanup(); resolve(false); };
+            });
+        }
 
         function closeDetailsModal() {
-                    const content = document.getElementById('modal-content');
-                    content.classList.remove('translate-y-10', 'sm:translate-y-0', 'opacity-100');
-                    content.classList.add('translate-y-full', 'opacity-0');
-                    setTimeout(() => document.getElementById('details-modal').classList.add('hidden'), 300);
-                }
+            const content = document.getElementById('modal-content');
+            content.classList.remove('translate-y-10', 'sm:translate-y-0', 'opacity-100');
+            content.classList.add('translate-y-full', 'opacity-0');
+            setTimeout(() => document.getElementById('details-modal').classList.add('hidden'), 300);
+        }
 
         // --- Sponsor Functions ---
         function renderAddSponsorUI() {
-                    const type = document.querySelector('input[name="addSponsorType"]:checked').value;
-                    const area = document.getElementById('sponsor-input-area');
-                    if (type === 'alcohol') {
-                        area.innerHTML = `
+            const type = document.querySelector('input[name="addSponsorType"]:checked').value;
+            const area = document.getElementById('sponsor-input-area');
+            if (type === 'alcohol') {
+                area.innerHTML = `
                     <input id="sp-qty" type="number" class="w-20 border border-gray-300 rounded px-2 py-1 text-sm" placeholder="數量" min="1">
                     <select id="sp-unit" class="border border-gray-300 rounded px-2 py-1 text-sm bg-white">
                         <option value="瓶">瓶</option>
                         <option value="箱">箱</option>
                     </select>`;
-                    } else if (type === 'money') {
-                        area.innerHTML = `<input id="sp-money" type="number" class="w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="金額 (100為單位)" min="100" step="100">`;
-                    } else {
-                        area.innerHTML = `<input id="sp-other" type="text" class="w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="贊助內容">`;
-                    }
-                }
+            } else if (type === 'money') {
+                area.innerHTML = `<input id="sp-money" type="number" class="w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="金額 (100為單位)" min="100" step="100">`;
+            } else {
+                area.innerHTML = `<input id="sp-other" type="text" class="w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="贊助內容">`;
+            }
+        }
 
         function addSponsor() {
-                    const type = document.querySelector('input[name="addSponsorType"]:checked').value;
-                    let res = '';
+            const type = document.querySelector('input[name="addSponsorType"]:checked').value;
+            let res = '';
 
-                    if (type === 'alcohol') {
-                        const qty = document.getElementById('sp-qty').value;
-                        const unit = document.getElementById('sp-unit').value;
-                        if (!qty || parseInt(qty) <= 0) return showToast("請輸入有效數量");
-                        res = `酒類: ${qty}${unit}`;
-                    } else if (type === 'money') {
-                        const val = document.getElementById('sp-money').value;
-                        const num = parseInt(val);
-                        if (!num || num <= 0) return showToast("金額不能為負數或零");
-                        if (num % 100 !== 0) return showToast("金額須為 100 的倍數");
-                        res = `紅包: ${num}元`;
-                    } else {
-                        const val = document.getElementById('sp-other').value.trim();
-                        if (!val) return showToast("請輸入內容");
-                        res = `其他: ${val}`;
-                    }
-                    appState.sponsorList.push(res);
-                    renderSponsorList();
-                }
+            if (type === 'alcohol') {
+                const qty = document.getElementById('sp-qty').value;
+                const unit = document.getElementById('sp-unit').value;
+                if (!qty || parseInt(qty) <= 0) return showToast("請輸入有效數量");
+                res = `酒類: ${qty}${unit}`;
+            } else if (type === 'money') {
+                const val = document.getElementById('sp-money').value;
+                const num = parseInt(val);
+                if (!num || num <= 0) return showToast("金額不能為負數或零");
+                if (num % 100 !== 0) return showToast("金額須為 100 的倍數");
+                res = `紅包: ${num}元`;
+            } else {
+                const val = document.getElementById('sp-other').value.trim();
+                if (!val) return showToast("請輸入內容");
+                res = `其他: ${val}`;
+            }
+            appState.sponsorList.push(res);
+            renderSponsorList();
+        }
 
         function removeSponsor(i) { appState.sponsorList.splice(i, 1); renderSponsorList(); }
 
         function restoreSponsorList(str) {
-                    appState.sponsorList = [];
-                    if (str && str !== '無') {
-                        appState.sponsorList.push(str);
-                        renderSponsorList();
-                    }
-                }
+            appState.sponsorList = [];
+            if (str && str !== '無') {
+                appState.sponsorList.push(str);
+                renderSponsorList();
+            }
+        }
 
         // --- Helpers for Select Population ---
         function populateSelect(id, items) {
-                    const el = document.getElementById(id);
-                    if (!el) return;
-                    const val = el.value; // Preserve value
-                    el.innerHTML = '<option value="">請選擇...</option>';
-                    if (items) items.forEach(i => {
-                        const v = i.includes('|') ? i.split('|')[0] : i; // Handle "Label|Url" format
-                        // Ensure text does not contain URL if it is Name|Url
-                        const text = i.includes('|') ? i.split('|')[0] : v;
-                        el.add(new Option(text, v));
-                    });
-                    el.value = val;
-                }
+            const el = document.getElementById(id);
+            if (!el) return;
+            const val = el.value; // Preserve value
+            el.innerHTML = '<option value="">請選擇...</option>';
+            if (items) items.forEach(i => {
+                const v = i.includes('|') ? i.split('|')[0] : i; // Handle "Label|Url" format
+                // Ensure text does not contain URL if it is Name|Url
+                const text = i.includes('|') ? i.split('|')[0] : v;
+                el.add(new Option(text, v));
+            });
+            el.value = val;
+        }
 
         function populateRoomOptions(id, opts) {
-                    const el = document.getElementById(id);
-                    const currentVal = el.value; // Preserve value
-                    el.innerHTML = '<option value="">請選擇...</option>';
-                    if (!opts) return;
+            const el = document.getElementById(id);
+            const currentVal = el.value; // Preserve value
+            el.innerHTML = '<option value="">請選擇...</option>';
+            if (!opts) return;
 
-                    opts.forEach(opt => {
-                        let name = opt;
-                        let limit = null;
-                        // Parse "Double:10"
-                        if (opt.includes(':')) {
-                            const parts = opt.split(':');
-                            name = parts[0];
-                            limit = parts[1];
-                        }
-
-                        // Get Current Stats
-                        const current = (appState.currentStats.roomCounts && appState.currentStats.roomCounts[name]) || 0;
-
-                        let label = name;
-                        if (limit) {
-                            label += ` (已訂:${current}/${limit})`;
-                        } else {
-                            label += ` (已訂:${current})`;
-                        }
-                        el.add(new Option(label, name));
-                    });
-                    el.value = currentVal;
+            opts.forEach(opt => {
+                let name = opt;
+                let limit = null;
+                // Parse "Double:10"
+                if (opt.includes(':')) {
+                    const parts = opt.split(':');
+                    name = parts[0];
+                    limit = parts[1];
                 }
+
+                // Get Current Stats
+                const current = (appState.currentStats.roomCounts && appState.currentStats.roomCounts[name]) || 0;
+
+                let label = name;
+                if (limit) {
+                    label += ` (已訂:${current}/${limit})`;
+                } else {
+                    label += ` (已訂:${current})`;
+                }
+                el.add(new Option(label, name));
+            });
+            el.value = currentVal;
+        }
 
         function populateCountOptions() {
-                    const f = document.getElementById('family-count');
-                    const g = document.getElementById('add-guest-count');
-                    for (let i = 1; i <= 10; i++) {
-                        f.add(new Option(`${i} 人`, i));
-                        g.add(new Option(`${i} 人`, i));
-                    }
-                }
+            const f = document.getElementById('family-count');
+            const g = document.getElementById('add-guest-count');
+            for (let i = 1; i <= 10; i++) {
+                f.add(new Option(`${i} 人`, i));
+                g.add(new Option(`${i} 人`, i));
+            }
+        }
         function populateCreateDropdowns() {
-                    populateSelect('new-organizer-select', appState.settings.organizers);
-                    const locEl = document.getElementById('new-location-select');
-                    locEl.innerHTML = '<option value="">請選擇</option>';
-                    appState.settings.locations.forEach(l => locEl.add(new Option(l.name, l.name)));
-                }
+            populateSelect('new-organizer-select', appState.settings.organizers);
+            const locEl = document.getElementById('new-location-select');
+            locEl.innerHTML = '<option value="">請選擇</option>';
+            appState.settings.locations.forEach(l => locEl.add(new Option(l.name, l.name)));
+        }
         function onLocationChange() {
-                    const val = document.getElementById('new-location-select').value;
-                    const loc = appState.settings.locations.find(l => l.name === val);
-                    document.getElementById('new-address').value = loc ? loc.address : '';
-                }
+            const val = document.getElementById('new-location-select').value;
+            const loc = appState.settings.locations.find(l => l.name === val);
+            document.getElementById('new-address').value = loc ? loc.address : '';
+        }
         function updatePickupMap() {
-                    const val = document.getElementById('pickup-loc').value;
-                    const btn = document.getElementById('pickup-map-btn');
-                    // Enhanced check for "Name|Url" format
-                    const opt = appState.currentEvent.pickupOpts?.find(o => o.startsWith(val) || (o.includes('|') && o.split('|')[0] === val));
+            const val = document.getElementById('pickup-loc').value;
+            const btn = document.getElementById('pickup-map-btn');
+            // Enhanced check for "Name|Url" format
+            const opt = appState.currentEvent.pickupOpts?.find(o => o.startsWith(val) || (o.includes('|') && o.split('|')[0] === val));
 
-                    if (opt && opt.includes('|')) {
-                        btn.classList.remove('hidden');
-                        btn.href = opt.split('|')[1];
-                    } else {
-                        btn.classList.add('hidden');
-                    }
-                }
+            if (opt && opt.includes('|')) {
+                btn.classList.remove('hidden');
+                btn.href = opt.split('|')[1];
+            } else {
+                btn.classList.add('hidden');
+            }
+        }
         function toggleCreateFields() {
-                    const type = document.getElementById('new-type').value;
-                    const isTravel = type === 'travel';
-                    document.getElementById('new-field-time-single').classList.toggle('hidden', isTravel);
-                    document.getElementById('new-field-time-range').classList.toggle('hidden', !isTravel);
-                    document.getElementById('new-field-itinerary').classList.toggle('hidden', !isTravel);
+            const type = document.getElementById('new-type').value;
+            const isTravel = type === 'travel';
+            document.getElementById('new-field-time-single').classList.toggle('hidden', isTravel);
+            document.getElementById('new-field-time-range').classList.toggle('hidden', !isTravel);
+            document.getElementById('new-field-itinerary').classList.toggle('hidden', !isTravel);
 
-                    // 顯示/隱藏旅遊活動的提示訊息
-                    const travelNotice = document.getElementById('travel-notice');
-                    if (travelNotice) {
-                        if (isTravel) {
-                            travelNotice.classList.remove('hidden');
-                        } else {
-                            travelNotice.classList.add('hidden');
-                        }
-                    }
+            // 顯示/隱藏旅遊活動的提示訊息
+            const travelNotice = document.getElementById('travel-notice');
+            if (travelNotice) {
+                if (isTravel) {
+                    travelNotice.classList.remove('hidden');
+                } else {
+                    travelNotice.classList.add('hidden');
                 }
+            }
+        }
 
         function renderItinerary(str) {
-                    const container = document.getElementById('itinerary-accordion-content');
-                    container.innerHTML = '';
-                    if (!str) return;
+            const container = document.getElementById('itinerary-accordion-content');
+            container.innerHTML = '';
+            if (!str) return;
 
-                    str.split(';').forEach(dayStr => {
-                        if (!dayStr.trim()) return;
-                        const [day, content] = dayStr.includes(':') ? dayStr.split(':') : ['行程', dayStr];
-                        const [title, desc] = content.includes('|') ? content.split('|') : [content, ''];
+            str.split(';').forEach(dayStr => {
+                if (!dayStr.trim()) return;
+                const [day, content] = dayStr.includes(':') ? dayStr.split(':') : ['行程', dayStr];
+                const [title, desc] = content.includes('|') ? content.split('|') : [content, ''];
 
-                        container.innerHTML += `
+                container.innerHTML += `
                     <div class="relative pl-4 border-l-2 border-green-200 ml-1 py-1">
                         <div class="absolute -left-[5px] top-2 w-2.5 h-2.5 bg-white border-2 border-green-400 rounded-full"></div>
                         <div class="text-xs font-bold text-green-700 mb-0.5">${day}</div>
                         <div class="text-sm font-bold text-gray-800">${title}</div>
                         ${desc ? `<div class="text-xs text-gray-500 mt-1 bg-gray-50 p-1.5 rounded">${desc}</div>` : ''}
                     </div>`;
-                    });
-                }
+            });
+        }
 
         function showCreateView() {
-                    // 1. 切換歷史堆疊
-                    appState.historyStack.push('create');
+            // 1. 切換歷史堆疊
+            appState.historyStack.push('create');
 
-                    // 2. 切換畫面
-                    switchView('view-create');
+            // 2. 切換畫面
+            switchView('view-create');
 
-                    // 3. 更新標題
-                    document.getElementById('header-title').innerText = "建立新活動";
+            // 3. 更新標題
+            document.getElementById('header-title').innerText = "建立新活動";
 
-                    // 4. 重置表單
-                    document.getElementById('new-name').value = '';
-                    document.getElementById('new-time-single').value = '';
-                    // 清空日期範圍欄位
-                    if (document.getElementById('new-date-start')) document.getElementById('new-date-start').value = '';
-                    if (document.getElementById('new-date-end')) document.getElementById('new-date-end').value = '';
+            // 4. 重置表單
+            document.getElementById('new-name').value = '';
+            document.getElementById('new-time-single').value = '';
+            // 清空日期範圍欄位
+            if (document.getElementById('new-date-start')) document.getElementById('new-date-start').value = '';
+            if (document.getElementById('new-date-end')) document.getElementById('new-date-end').value = '';
 
-                    document.getElementById('new-location').value = '';
-                    document.getElementById('new-address').value = '';
-                    document.getElementById('new-deadline').value = '';
-                    document.getElementById('new-itinerary').value = '';
+            document.getElementById('new-location').value = '';
+            document.getElementById('new-address').value = '';
+            document.getElementById('new-deadline').value = '';
+            document.getElementById('new-itinerary').value = '';
 
-                    // 自動填入主辦人 (抓取當前使用者名稱)
-                    document.getElementById('new-organizer').value = appState.user.displayName;
+            // 自動填入主辦人 (抓取當前使用者名稱)
+            document.getElementById('new-organizer').value = appState.user.displayName;
 
-                    // 預設觸發一次以更新欄位顯示狀態 (例如隱藏/顯示旅遊選項)
-                    toggleCreateFields();
-                }
+            // 預設觸發一次以更新欄位顯示狀態 (例如隱藏/顯示旅遊選項)
+            toggleCreateFields();
+        }
 
         // --- Create Event (Real Submit) ---
         async function handleCreateEvent(e) {
-                    e.preventDefault();
-                    const btn = document.getElementById('create-btn');
-                    const originalBtnHTML = btn.innerHTML; // 保存原始按鈕內容
+            e.preventDefault();
+            const btn = document.getElementById('create-btn');
+            const originalBtnHTML = btn.innerHTML; // 保存原始按鈕內容
 
-                    // 1. 鎖定按鈕避免重複點擊
-                    btn.disabled = true;
-                    btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> 建立中...';
-                    if (typeof lucide !== 'undefined') lucide.createIcons();
+            // 1. 鎖定按鈕避免重複點擊
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> 建立中...';
+            if (typeof lucide !== 'undefined') lucide.createIcons();
 
-                    // 2. 收集表單資料
-                    const type = document.getElementById('new-type').value;
-                    let timeVal = '';
+            // 2. 收集表單資料
+            const type = document.getElementById('new-type').value;
+            let timeVal = '';
 
-                    // 根據類型處理時間格式
-                    if (type === 'travel') {
-                        const start = document.getElementById('new-date-start').value;
-                        const end = document.getElementById('new-date-end').value;
-                        if (!start || !end) {
-                            alert("旅遊活動請填寫出發與回程日期");
-                            btn.disabled = false; btn.innerHTML = originalBtnHTML; return;
-                        }
-                        timeVal = `${start}~${end}`;
-                    } else {
-                        timeVal = document.getElementById('new-time-single').value;
-                        if (!timeVal) {
-                            alert("請填寫活動時間");
-                            btn.disabled = false; btn.innerHTML = originalBtnHTML; return;
-                        }
-                    }
-
-                    // 3. 準備傳送的資料物件
-                    const payload = {
-                        action: 'createEvent', // 告訴 GAS 這是「建立活動」的請求
-                        userId: appState.user.userId, // 記錄是誰建立的
-                        type: type,
-                        name: document.getElementById('new-name').value,
-                        organizer: document.getElementById('new-organizer').value,
-                        location: document.getElementById('new-location').value,
-                        address: document.getElementById('new-address').value,
-                        deadline: document.getElementById('new-deadline').value,
-                        time: timeVal,
-                        itinerary: document.getElementById('new-itinerary').value // 旅遊行程
-                    };
-
-                    try {
-                        // 4. 發送至後端
-                        await apiSubmit(payload);
-
-                        showToast("活動建立成功！");
-
-                        // 5. 重新讀取活動列表並回到首頁
-                        await fetchEvents();
-                        appState.historyStack = ['home'];
-                        handleBackNav();
-
-                    } catch (err) {
-                        console.error(err);
-                        showToast("建立失敗，請檢查網路或稍後再試");
-                    } finally {
-                        // 6. 復原按鈕狀態
-                        btn.disabled = false;
-                        btn.innerHTML = originalBtnHTML;
-                        if (typeof lucide !== 'undefined') lucide.createIcons();
-                    }
+            // 根據類型處理時間格式
+            if (type === 'travel') {
+                const start = document.getElementById('new-date-start').value;
+                const end = document.getElementById('new-date-end').value;
+                if (!start || !end) {
+                    alert("旅遊活動請填寫出發與回程日期");
+                    btn.disabled = false; btn.innerHTML = originalBtnHTML; return;
                 }
+                timeVal = `${start}~${end}`;
+            } else {
+                timeVal = document.getElementById('new-time-single').value;
+                if (!timeVal) {
+                    alert("請填寫活動時間");
+                    btn.disabled = false; btn.innerHTML = originalBtnHTML; return;
+                }
+            }
+
+            // 3. 準備傳送的資料物件
+            const payload = {
+                action: 'createEvent', // 告訴 GAS 這是「建立活動」的請求
+                userId: appState.user.userId, // 記錄是誰建立的
+                type: type,
+                name: document.getElementById('new-name').value,
+                organizer: document.getElementById('new-organizer').value,
+                location: document.getElementById('new-location').value,
+                address: document.getElementById('new-address').value,
+                deadline: document.getElementById('new-deadline').value,
+                time: timeVal,
+                itinerary: document.getElementById('new-itinerary').value // 旅遊行程
+            };
+
+            try {
+                // 4. 發送至後端
+                await apiSubmit(payload);
+
+                showToast("活動建立成功！");
+
+                // 5. 重新讀取活動列表並回到首頁
+                await fetchEvents();
+                appState.historyStack = ['home'];
+                handleBackNav();
+
+            } catch (err) {
+                console.error(err);
+                showToast("建立失敗，請檢查網路或稍後再試");
+            } finally {
+                // 6. 復原按鈕狀態
+                btn.disabled = false;
+                btn.innerHTML = originalBtnHTML;
+                if (typeof lucide !== 'undefined') lucide.createIcons();
+            }
+        }
 
         // --- Status Toggle (修復版：真正傳送資料給 GAS) ---
         async function toggleEventStatus() {
-                    const btn = document.getElementById('btn-status-toggle');
-                    const originalHTML = btn.innerHTML; // 記住原本按鈕長怎樣
+            const btn = document.getElementById('btn-status-toggle');
+            const originalHTML = btn.innerHTML; // 記住原本按鈕長怎樣
 
-                    // 1. 顯示讀取動畫
-                    btn.disabled = true;
-                    btn.innerHTML = '<i class="animate-spin" data-lucide="loader-2"></i> 處理中';
-                    if (typeof lucide !== 'undefined') lucide.createIcons();
+            // 1. 顯示讀取動畫
+            btn.disabled = true;
+            btn.innerHTML = '<i class="animate-spin" data-lucide="loader-2"></i> 處理中';
+            if (typeof lucide !== 'undefined') lucide.createIcons();
 
-                    // 2. 判斷目前狀態並決定新狀態
-                    // 目前是開放 -> 要改成 close
-                    // 目前是關閉 -> 要改成 open
-                    const currentStatus = isEventOpen(appState.currentEvent);
-                    const newStatus = currentStatus ? "close" : "open";
+            // 2. 判斷目前狀態並決定新狀態
+            // 目前是開放 -> 要改成 close
+            // 目前是關閉 -> 要改成 open
+            const currentStatus = isEventOpen(appState.currentEvent);
+            const newStatus = currentStatus ? "close" : "open";
 
-                    try {
-                        // 3. 發送請求給 GAS
-                        await apiSubmit({
-                            action: 'toggleStatus',
-                            eventId: appState.currentEvent.id,
-                            userId: appState.user.userId, // 用於驗證是否為主辦人
-                            status: newStatus
-                        });
+            try {
+                // 3. 發送請求給 GAS
+                await apiSubmit({
+                    action: 'toggleStatus',
+                    eventId: appState.currentEvent.id,
+                    userId: appState.user.userId, // 用於驗證是否為主辦人
+                    status: newStatus
+                });
 
-                        // 4. 更新本地資料與畫面
-                        appState.currentEvent.isActive = newStatus;
-                        renderEventStaticInfo();
-                        showToast(newStatus === "open" ? "活動已重新開放" : "活動已關閉");
+                // 4. 更新本地資料與畫面
+                appState.currentEvent.isActive = newStatus;
+                renderEventStaticInfo();
+                showToast(newStatus === "open" ? "活動已重新開放" : "活動已關閉");
 
-                    } catch (err) {
-                        console.error(err);
-                        showToast("狀態更新失敗，請檢查網路");
-                    } finally {
-                        // 5. 恢復按鈕
-                        btn.disabled = false;
-                        // renderEventStaticInfo 會自動更新按鈕文字，所以這裡不需要還原 originalHTML
-                    }
-                }
+            } catch (err) {
+                console.error(err);
+                showToast("狀態更新失敗，請檢查網路");
+            } finally {
+                // 5. 恢復按鈕
+                btn.disabled = false;
+                // renderEventStaticInfo 會自動更新按鈕文字，所以這裡不需要還原 originalHTML
+            }
+        }
 
         // Utils
         function isEventOpen(e) { return e.isActive === true || e.isActive === '開放' || e.isActive === 'open'; }
         function normalizeType(t) {
-                    t = t.toLowerCase();
-                    if (t.includes('一般')) return 'general';
-                    if (t.includes('餐會')) return 'banquet';
-                    if (t.includes('旅遊')) return 'travel';
-                    return t;
-                }
+            t = t.toLowerCase();
+            if (t.includes('一般')) return 'general';
+            if (t.includes('餐會')) return 'banquet';
+            if (t.includes('旅遊')) return 'travel';
+            return t;
+        }
 
         // --- Share Modal Logic ---
         function openShareModal() {
-                    const e = appState.currentEvent;
-                    const s = appState.currentStats;
-                    if (!e) return;
+            const e = appState.currentEvent;
+            const s = appState.currentStats;
+            if (!e) return;
 
-                    // 重置 checkbox 狀態
-                    document.getElementById('share-opt-sponsor').checked = true;
-                    document.getElementById('share-opt-travel').checked = true;
+            // 重置 checkbox 狀態
+            document.getElementById('share-opt-sponsor').checked = true;
+            document.getElementById('share-opt-travel').checked = true;
 
-                    // 判斷是否顯示「贊助/認桌」選項
-                    const hasTable = s.tableCount && s.tableCount > 0;
-                    const hasSponsor = hasTable || (e.type !== 'travel' && s.secondary > 0);
+            // 判斷是否顯示「贊助/認桌」選項
+            const hasTable = s.tableCount && s.tableCount > 0;
+            const hasSponsor = hasTable || (e.type !== 'travel' && s.secondary > 0);
 
-                    const sponsorEl = document.getElementById('opt-container-sponsor');
-                    if (hasSponsor) {
-                        sponsorEl.classList.remove('hidden');
-                    } else {
-                        sponsorEl.classList.add('hidden');
-                    }
+            const sponsorEl = document.getElementById('opt-container-sponsor');
+            if (hasSponsor) {
+                sponsorEl.classList.remove('hidden');
+            } else {
+                sponsorEl.classList.add('hidden');
+            }
 
-                    // 判斷是否顯示「上車/房型」選項
-                    const isTravel = e.type === 'travel';
-                    const travelEl = document.getElementById('opt-container-travel');
-                    if (isTravel) {
-                        travelEl.classList.remove('hidden');
-                    } else {
-                        travelEl.classList.add('hidden');
-                    }
+            // 判斷是否顯示「上車/房型」選項
+            const isTravel = e.type === 'travel';
+            const travelEl = document.getElementById('opt-container-travel');
+            if (isTravel) {
+                travelEl.classList.remove('hidden');
+            } else {
+                travelEl.classList.add('hidden');
+            }
 
-                    // ★ 智慧判斷：如果沒什麼好選的，直接複製並跳過視窗
-                    const showSponsor = !sponsorEl.classList.contains('hidden');
-                    const showTravel = !travelEl.classList.contains('hidden');
+            // ★ 智慧判斷：如果沒什麼好選的，直接複製並跳過視窗
+            const showSponsor = !sponsorEl.classList.contains('hidden');
+            const showTravel = !travelEl.classList.contains('hidden');
 
-                    if (!showSponsor && !showTravel) {
-                        performCopy({ includeSponsor: false, includeTravel: false });
-                        return;
-                    }
+            if (!showSponsor && !showTravel) {
+                performCopy({ includeSponsor: false, includeTravel: false });
+                return;
+            }
 
-                    // 如果都沒有選項顯示但不是全空 (例如只隱藏了部分)
-                    const noOptsEl = document.getElementById('share-no-opts');
-                    if (!showSponsor && !showTravel) {
-                        noOptsEl.classList.remove('hidden');
-                    } else {
-                        noOptsEl.classList.add('hidden');
-                    }
+            // 如果都沒有選項顯示但不是全空 (例如只隱藏了部分)
+            const noOptsEl = document.getElementById('share-no-opts');
+            if (!showSponsor && !showTravel) {
+                noOptsEl.classList.remove('hidden');
+            } else {
+                noOptsEl.classList.add('hidden');
+            }
 
-                    document.getElementById('share-modal').classList.remove('hidden');
-                    if (typeof lucide !== 'undefined') lucide.createIcons();
-                }
+            document.getElementById('share-modal').classList.remove('hidden');
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
 
         function confirmShareCopy() {
-                    // 取得使用者勾選狀態
-                    const includeSponsor = document.getElementById('share-opt-sponsor').checked && !document.getElementById('opt-container-sponsor').classList.contains('hidden');
-                    const includeTravel = document.getElementById('share-opt-travel').checked && !document.getElementById('opt-container-travel').classList.contains('hidden');
+            // 取得使用者勾選狀態
+            const includeSponsor = document.getElementById('share-opt-sponsor').checked && !document.getElementById('opt-container-sponsor').classList.contains('hidden');
+            const includeTravel = document.getElementById('share-opt-travel').checked && !document.getElementById('opt-container-travel').classList.contains('hidden');
 
-                    // 關閉視窗
-                    document.getElementById('share-modal').classList.add('hidden');
+            // 關閉視窗
+            document.getElementById('share-modal').classList.add('hidden');
 
-                    // 執行複製，傳入參數
-                    performCopy({ includeSponsor, includeTravel });
-                }
+            // 執行複製，傳入參數
+            performCopy({ includeSponsor, includeTravel });
+        }
 
         // 舊按鈕 (名單視窗下方) 呼叫此函式：預設複製全部
         function copyDetailsToClipboard() {
-                    performCopy({ includeSponsor: true, includeTravel: true });
-                }
+            performCopy({ includeSponsor: true, includeTravel: true });
+        }
 
         // 核心複製邏輯：支援參數與格式化
         function performCopy(options = { includeSponsor: true, includeTravel: true }) {
-                    showToast("正在讀取並產生名單...");
+            showToast("正在讀取並產生名單...");
 
-                    fetchDetails().then(data => {
-                        if (!data.length) return showToast("無資料可複製");
+            fetchDetails().then(data => {
+                if (!data.length) return showToast("無資料可複製");
 
-                        const e = appState.currentEvent;
+                const e = appState.currentEvent;
 
-                        // 1. 標頭
-                        let text = `🤵：${e.organizer}\n`;
-                        text += `📋 ${e.name}\n`;
-                        text += `📅 ${formatDateShort(e.time)} ${new Date(e.time).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false })}\n`;
-                        text += `📍 ${e.location}\n`;
-                        text += `──────────────\n`;
+                // 1. 標頭
+                let text = `🤵：${e.organizer}\n`;
+                text += `📋 ${e.name}\n`;
+                text += `📅 ${formatDateShort(e.time)} ${new Date(e.time).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false })}\n`;
+                text += `📍 ${e.location}\n`;
+                text += `──────────────\n`;
 
-                        // 2. 名單
-                        let count = 0;
-                        data.forEach((p, i) => {
-                            count++;
-                            // 計算人數
-                            let guestTotal = 0;
-                            if (p.guestList && Array.isArray(p.guestList)) {
-                                guestTotal = p.guestList.reduce((acc, g) => acc + (parseInt(g.count) || 1), 0);
-                            } else {
-                                guestTotal = parseInt(p.guestCount) || 0;
-                            }
-                            const total = 1 + (parseInt(p.family) || 0) + guestTotal;
+                // 2. 名單
+                let count = 0;
+                data.forEach((p, i) => {
+                    count++;
+                    // 計算人數
+                    let guestTotal = 0;
+                    if (p.guestList && Array.isArray(p.guestList)) {
+                        guestTotal = p.guestList.reduce((acc, g) => acc + (parseInt(g.count) || 1), 0);
+                    } else {
+                        guestTotal = parseInt(p.guestCount) || 0;
+                    }
+                    const total = 1 + (parseInt(p.family) || 0) + guestTotal;
 
-                            // 編號. (補零)
-                            const num = count.toString().padStart(2, '0');
+                    // 編號. (補零)
+                    const num = count.toString().padStart(2, '0');
 
-                            // 嘗試尋找狀態欄位 (根據 JS 版邏輯，雖前端目前無 explicit status 欄位，但保留擴充彈性)
-                            const status = p.status || p.note || '';
-                            const prefix = status ? status : '';
+                    // 嘗試尋找狀態欄位 (根據 JS 版邏輯，雖前端目前無 explicit status 欄位，但保留擴充彈性)
+                    const status = p.status || p.note || '';
+                    const prefix = status ? status : '';
 
-                            // 組合: 01. !姓名 *2
-                            // 注意：序號後有一個空格
-                            text += `${num}. ${prefix}${p.name}`;
-                            if (total > 1) text += ` *${total}`;
-                            text += `\n`;
+                    // 組合: 01. !姓名 *2
+                    // 注意：序號後有一個空格
+                    text += `${num}. ${prefix}${p.name}`;
+                    if (total > 1) text += ` *${total}`;
+                    text += `\n`;
 
-                            // 來賓 (縮排 6 空格)
-                            if (p.guestList && Array.isArray(p.guestList) && p.guestList.length > 0) {
-                                p.guestList.forEach(g => {
-                                    text += `      來賓：${g.name}`;
-                                    // if (g.count > 1) text += ` (+${g.count - 1})`; // 根據範例，來賓行似乎只顯示姓名，但若有需顯示人數可保留
-                                    // 參考範例 "來賓：蔡嘟嘟" 為單純姓名，這裡先只顯示姓名，若有複數來賓再另外處理
-                                    if (g.count > 1) text += ` *${g.count}`;
-                                    text += `\n`;
-                                });
-                            } else if (p.guestName && p.guestName !== '無') {
-                                // 舊版資料格式相容
-                                text += `      來賓：${p.guestName}\n`;
-                            }
-
-                            // --- 區塊 1: 贊助與認桌 (縮排顯示) ---
-                            if (options.includeSponsor) {
-                                let moneyLines = [];
-                                if (p.tableCount > 0) moneyLines.push(`認桌: ${p.tableCount}桌`);
-                                if (p.sponsorList && Array.isArray(p.sponsorList) && p.sponsorList.length > 0) {
-                                    p.sponsorList.forEach(s => moneyLines.push(`贊助: ${s}`));
-                                } else if (p.sponsor && p.sponsor !== '無') {
-                                    moneyLines.push(`贊助: ${p.sponsor}`);
-                                }
-
-                                if (moneyLines.length > 0) {
-                                    // text += `   ------------------\n`;
-                                    moneyLines.forEach(l => text += `      ${l}\n`);
-                                }
-                            }
-
-                            // --- 區塊 2: 交通與住宿 (縮排顯示) ---
-                            if (options.includeTravel) {
-                                let travelLines = [];
-                                if (p.pickup && p.pickup !== '無') travelLines.push(`[主]車: ${p.pickup}`);
-                                if (p.room && p.room !== '無') travelLines.push(`[主]房: ${p.room}`);
-
-                                if (p.guestList && Array.isArray(p.guestList)) {
-                                    p.guestList.forEach(g => {
-                                        let extras = [];
-                                        if (g.pickup) extras.push(g.pickup);
-                                        if (g.room) extras.push(g.room);
-                                        if (extras.length > 0) {
-                                            travelLines.push(`[賓]${g.name}: ${extras.join('/')}`);
-                                        }
-                                    });
-                                }
-
-                                if (travelLines.length > 0) {
-                                    // text += `   ------------------\n`;
-                                    travelLines.forEach(l => text += `      ${l}\n`);
-                                }
-                            }
-
-                            // 每個項目之間空一行 (最後一個項目後是否要空行? 範例中看起來是項目間有區隔)
+                    // 來賓 (縮排 6 空格)
+                    if (p.guestList && Array.isArray(p.guestList) && p.guestList.length > 0) {
+                        p.guestList.forEach(g => {
+                            text += `      來賓：${g.name}`;
+                            // if (g.count > 1) text += ` (+${g.count - 1})`; // 根據範例，來賓行似乎只顯示姓名，但若有需顯示人數可保留
+                            // 參考範例 "來賓：蔡嘟嘟" 為單純姓名，這裡先只顯示姓名，若有複數來賓再另外處理
+                            if (g.count > 1) text += ` *${g.count}`;
                             text += `\n`;
                         });
+                    } else if (p.guestName && p.guestName !== '無') {
+                        // 舊版資料格式相容
+                        text += `      來賓：${p.guestName}\n`;
+                    }
 
-                        // 移除最後多餘的換行
-                        text = text.trimEnd() + '\n';
+                    // --- 區塊 1: 贊助與認桌 (縮排顯示) ---
+                    if (options.includeSponsor) {
+                        let moneyLines = [];
+                        if (p.tableCount > 0) moneyLines.push(`認桌: ${p.tableCount}桌`);
+                        if (p.sponsorList && Array.isArray(p.sponsorList) && p.sponsorList.length > 0) {
+                            p.sponsorList.forEach(s => moneyLines.push(`贊助: ${s}`));
+                        } else if (p.sponsor && p.sponsor !== '無') {
+                            moneyLines.push(`贊助: ${p.sponsor}`);
+                        }
 
-                        // 3. 結尾
-                        text += `──────────────\n`;
-                        text += `共 ${appState.currentStats.totalPeople || 0} 人報名\n`;
-                        text += `🔗 報名連結：\n`;
-                        text += `https://liff.line.me/${LIFF_ID}\n`;
+                        if (moneyLines.length > 0) {
+                            // text += `   ------------------\n`;
+                            moneyLines.forEach(l => text += `      ${l}\n`);
+                        }
+                    }
 
-                        // 4. 執行複製
-                        window.focus();
-                        navigator.clipboard.writeText(text).then(() => {
-                            showToast("已複製名單到剪貼簿");
-                        }).catch(err => {
-                            console.error(err);
-                            showToast("複製失敗，請手動複製");
-                        });
-                    });
-                }
+                    // --- 區塊 2: 交通與住宿 (縮排顯示) ---
+                    if (options.includeTravel) {
+                        let travelLines = [];
+                        if (p.pickup && p.pickup !== '無') travelLines.push(`[主]車: ${p.pickup}`);
+                        if (p.room && p.room !== '無') travelLines.push(`[主]房: ${p.room}`);
+
+                        if (p.guestList && Array.isArray(p.guestList)) {
+                            p.guestList.forEach(g => {
+                                let extras = [];
+                                if (g.pickup) extras.push(g.pickup);
+                                if (g.room) extras.push(g.room);
+                                if (extras.length > 0) {
+                                    travelLines.push(`[賓]${g.name}: ${extras.join('/')}`);
+                                }
+                            });
+                        }
+
+                        if (travelLines.length > 0) {
+                            // text += `   ------------------\n`;
+                            travelLines.forEach(l => text += `      ${l}\n`);
+                        }
+                    }
+
+                    // 每個項目之間空一行 (最後一個項目後是否要空行? 範例中看起來是項目間有區隔)
+                    text += `\n`;
+                });
+
+                // 移除最後多餘的換行
+                text = text.trimEnd() + '\n';
+
+                // 3. 結尾
+                text += `──────────────\n`;
+                text += `共 ${appState.currentStats.totalPeople || 0} 人報名\n`;
+                text += `🔗 報名連結：\n`;
+                text += `https://liff.line.me/${LIFF_ID}\n`;
+
+                // 4. 執行複製
+                window.focus();
+                navigator.clipboard.writeText(text).then(() => {
+                    showToast("已複製名單到剪貼簿");
+                }).catch(err => {
+                    console.error(err);
+                    showToast("複製失敗，請手動複製");
+                });
+            });
+        }
 
         // --- ★★★ 這裡就是修正的關鍵，原本遺失的函式 ★★★ ---
         function formatDateShort(isoStr) {
-                    if (!isoStr) return '';
+            if (!isoStr) return '';
 
-                    // 如果是旅遊活動的時間範圍 (例如: 2023-10-10~2023-10-12)
-                    if (isoStr.includes('~')) {
-                        const start = isoStr.split('~')[0];
-                        const d = new Date(start);
-                        // 如果日期無效，回傳原始字串
-                        if (isNaN(d.getTime())) return start;
-                        return `${d.getMonth() + 1}/${d.getDate()}...`;
-                    }
+            // 如果是旅遊活動的時間範圍 (例如: 2023-10-10~2023-10-12)
+            if (isoStr.includes('~')) {
+                const start = isoStr.split('~')[0];
+                const d = new Date(start);
+                // 如果日期無效，回傳原始字串
+                if (isNaN(d.getTime())) return start;
+                return `${d.getMonth() + 1}/${d.getDate()}...`;
+            }
 
-                    const d = new Date(isoStr);
-                    // 如果日期無效，回傳原始字串
-                    if (isNaN(d.getTime())) return isoStr;
+            const d = new Date(isoStr);
+            // 如果日期無效，回傳原始字串
+            if (isNaN(d.getTime())) return isoStr;
 
-                    const week = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
-                    // 回傳格式: 月/日 (星期)
-                    return `${d.getMonth() + 1}/${d.getDate()} (${week})`;
-                }
+            const week = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
+            // 回傳格式: 月/日 (星期)
+            return `${d.getMonth() + 1}/${d.getDate()} (${week})`;
+        }
 
         function formatDate(isoStr) {
-                    if (!isoStr) return '';
-                    const d = new Date(isoStr);
-                    if (isNaN(d.getTime())) return isoStr;
-                    const week = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
-                    return `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')} (${week}) ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-                }
+            if (!isoStr) return '';
+            const d = new Date(isoStr);
+            if (isNaN(d.getTime())) return isoStr;
+            const week = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
+            return `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')} (${week}) ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+        }
 
         function formatDateOnly(isoStr) {
-                    if (!isoStr) return '';
-                    const d = new Date(isoStr);
-                    if (isNaN(d.getTime())) return isoStr;
-                    const week = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
-                    return `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')} (${week})`;
-                }
+            if (!isoStr) return '';
+            const d = new Date(isoStr);
+            if (isNaN(d.getTime())) return isoStr;
+            const week = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
+            return `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')} (${week})`;
+        }
 
         function animateValue(obj, start, end, duration) {
-                    let startTimestamp = null;
-                    const step = (timestamp) => {
-                        if (!startTimestamp) startTimestamp = timestamp;
-                        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                        obj.innerHTML = Math.floor(progress * (end - start) + start);
-                        if (progress < 1) { window.requestAnimationFrame(step); }
-                    };
-                    window.requestAnimationFrame(step);
-                }
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerHTML = Math.floor(progress * (end - start) + start);
+                if (progress < 1) { window.requestAnimationFrame(step); }
+            };
+            window.requestAnimationFrame(step);
+        }
 
         function validateForm() {
-                    // const type = document.querySelector('input[name="addSponsorType"]:checked').value;
-                    // Add basic validation logic if needed
-                    return true;
-                }
+            // const type = document.querySelector('input[name="addSponsorType"]:checked').value;
+            // Add basic validation logic if needed
+            return true;
+        }
 
         function addGuest() {
-                    const name = document.getElementById('add-guest-name').value.trim();
-                    const count = parseInt(document.getElementById('add-guest-count').value);
-                    if (!name) return showToast("請輸入來賓姓名");
+            const name = document.getElementById('add-guest-name').value.trim();
+            const count = parseInt(document.getElementById('add-guest-count').value);
+            if (!name) return showToast("請輸入來賓姓名");
 
-                    const pickup = document.getElementById('add-guest-pickup').value;
-                    const room = document.getElementById('add-guest-room').value;
+            const pickup = document.getElementById('add-guest-pickup').value;
+            const room = document.getElementById('add-guest-room').value;
 
-                    // Generate simple temp ID
-                    const id = 'g_' + Date.now() + Math.random().toString(36).substr(2, 5);
+            // Generate simple temp ID
+            const id = 'g_' + Date.now() + Math.random().toString(36).substr(2, 5);
 
-                    appState.guestList.push({ id, name, count, pickup, room });
-                    document.getElementById('add-guest-name').value = '';
-                    renderGuestList();
-                }
+            appState.guestList.push({ id, name, count, pickup, room });
+            document.getElementById('add-guest-name').value = '';
+            renderGuestList();
+        }
         function removeGuest(id) {
-                    appState.guestList = appState.guestList.filter(g => g.id !== id);
-                    renderGuestList();
-                }
+            appState.guestList = appState.guestList.filter(g => g.id !== id);
+            renderGuestList();
+        }
 
         function restoreSponsorList(str) {
-                    appState.sponsorList = [];
-                    if (!str || str === '無') return;
+            appState.sponsorList = [];
+            if (!str || str === '無') return;
 
-                    // Fix: Split by comma to handle multiple items (e.g., "酒類: 1瓶, 紅包: 100元")
-                    const items = str.split(/[,、]\s*/); // Split by comma or Chinese comma, allow spaces
-                    items.forEach(item => {
-                        const cleanItem = item.trim();
-                        if (cleanItem && cleanItem !== '無') {
-                            appState.sponsorList.push(cleanItem);
-                        }
-                    });
-                    renderSponsorList();
+            // Fix: Split by comma to handle multiple items (e.g., "酒類: 1瓶, 紅包: 100元")
+            const items = str.split(/[,、]\s*/); // Split by comma or Chinese comma, allow spaces
+            items.forEach(item => {
+                const cleanItem = item.trim();
+                if (cleanItem && cleanItem !== '無') {
+                    appState.sponsorList.push(cleanItem);
                 }
+            });
+            renderSponsorList();
+        }
 
         function restoreGuestList(str) {
-                    appState.guestList = [];
-                    if (!str || str === '無') return;
-                    // Parsing logic based on backend format "Guest(1), Guest2(2)|Loc|Room"
-                    str.split(', ').forEach(s => {
-                        const match = s.match(/(.*?)\((\d+)\)/);
-                        if (match) {
-                            let full = match[1];
-                            let pickup = '', room = '';
-                            if (full.includes('|')) {
-                                const parts = full.split('|');
-                                full = parts[0];
-                                pickup = parts[1] || '';
-                                room = parts[2] || '';
-                            }
-                            // Extract name from "Name[Loc/Room]" format if present (legacy compat)
-                            if (full.includes('[')) {
-                                full = full.split('[')[0].trim();
-                            }
+            appState.guestList = [];
+            if (!str || str === '無') return;
+            // Parsing logic based on backend format "Guest(1), Guest2(2)|Loc|Room"
+            str.split(', ').forEach(s => {
+                const match = s.match(/(.*?)\((\d+)\)/);
+                if (match) {
+                    let full = match[1];
+                    let pickup = '', room = '';
+                    if (full.includes('|')) {
+                        const parts = full.split('|');
+                        full = parts[0];
+                        pickup = parts[1] || '';
+                        room = parts[2] || '';
+                    }
+                    // Extract name from "Name[Loc/Room]" format if present (legacy compat)
+                    if (full.includes('[')) {
+                        full = full.split('[')[0].trim();
+                    }
 
-                            const id = 'g_' + Date.now() + Math.random().toString(36).substr(2, 5);
-                            appState.guestList.push({ id, name: full.trim(), count: parseInt(match[2]), pickup, room });
-                        } else {
-                            // Fallback for simple name without count (e.g. "GuestName")
-                            const id = 'g_' + Date.now() + Math.random().toString(36).substr(2, 5);
-                            appState.guestList.push({ id, name: s.trim(), count: 1, pickup: '', room: '' });
-                        }
-                    });
-                    renderGuestList();
+                    const id = 'g_' + Date.now() + Math.random().toString(36).substr(2, 5);
+                    appState.guestList.push({ id, name: full.trim(), count: parseInt(match[2]), pickup, room });
+                } else {
+                    // Fallback for simple name without count (e.g. "GuestName")
+                    const id = 'g_' + Date.now() + Math.random().toString(36).substr(2, 5);
+                    appState.guestList.push({ id, name: s.trim(), count: 1, pickup: '', room: '' });
                 }
+            });
+            renderGuestList();
+        }
     </script>
 </body>
 
