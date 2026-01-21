@@ -1031,10 +1031,10 @@
             const tableCount = parseInt(record.tableCount || record.TableCount || record['TableCount'] || record['Table Count'] || record['認桌數量'] || record['認桌']) || 0;
             const room = record.room || record.RoomType || record['RoomType'] || record['Room Type'] || record['房型'];
             const pickup = record.pickup || record.Pickup || record['上車地點'];
-            const guestJson = record.guestJson || record.GuestJson || record['GuestJson'] || record['來賓資料JSON'];
+            const guestJson = record.guestList || record.guestJson || record.GuestJson || record['GuestJson'] || record['來賓資料JSON'];
             const guestName = record.guestName || record.GuestName || record['GuestName'] || record['Guest Name'] || record['來賓姓名'] || record['來賓'];
             const guestCount = parseInt(record.guestCount || record.GuestCount || record['GuestCount'] || record['Guest Count'] || record['來賓人數']) || 0;
-            const sponsor = record.sponsor || record.Sponsorship || record.Sponsor || record['Sponsorship'] || record['贊助項目'] || record['贊助'];
+            const sponsor = record.sponsorList || record.sponsor || record.Sponsorship || record.Sponsor || record['Sponsorship'] || record['贊助項目'] || record['贊助'];;
 
             console.log("FillForm Record:", record);
 
