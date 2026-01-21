@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>活動系統</title>
+    <title>活動系統</title>const guestJson = record.guestJson
     <script src="https://cdn.tailwindcss.com"></script>
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
@@ -1034,7 +1034,7 @@
             const guestJson = record.guestList || record.guestJson || record.GuestJson || record['GuestJson'] || record['來賓資料JSON'];
             const guestName = record.guestName || record.GuestName || record['GuestName'] || record['Guest Name'] || record['來賓姓名'] || record['來賓'];
             const guestCount = parseInt(record.guestCount || record.GuestCount || record['GuestCount'] || record['Guest Count'] || record['來賓人數']) || 0;
-            const sponsor = record.sponsorList || record.sponsor || record.Sponsorship || record.Sponsor || record['Sponsorship'] || record['贊助項目'] || record['贊助'];;
+            const sponsor = record.sponsorList || record.sponsor || record.Sponsorship || record.Sponsor || record['Sponsorship'] || record['贊助項目'] || record['贊助'];
 
             console.log("FillForm Record:", record);
 
