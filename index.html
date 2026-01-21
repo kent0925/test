@@ -2499,16 +2499,48 @@
             renderSponsorList();
         }
 
-        function restoreGuestList(str) {
-            // Note: This function is usually a fallback. 
-            // fillFormWithRecord tries to use 'guestJson' first. 
-            // If that fails, it calls this with the 'guestName' string.
-
+function restoreGuestList(str) {
             appState.guestList = [];
             if (!str || str === '無') {
                 renderGuestList();
                 return;
             }
+
+            // Split by comma or Chinese comma
+            const entries = str.split(/[,、]\s*/);
+
+            entries.forEach(s => {
+                if (!s.trim()) return;
+
+                // 1. 先根據 | 切割，確保取得後面的資訊
+                let parts = s.split('|');
+                let namePart = parts[0].trim();
+                let pickup = parts[1] ? parts[1].trim() : '';
+                let room = parts[2] ? parts[2].trim() : '';
+
+                if (pickup === '無') pickup = '';
+                if (room === '無') room = '';
+
+                let displayName = namePart;
+                let count = 1;
+
+                // 2. 再從姓名部分解析人數 (Count)
+                const match = namePart.match(/(.*?)\((\d+)\)/);
+                if (match) {
+                    displayName = match[1].trim();
+                    count = parseInt(match[2]);
+                }
+
+                // 3. 處理舊格式的中括號 [Loc/Room]
+                if (displayName.includes('[')) {
+                    displayName = displayName.split('[')[0].trim();
+                }
+
+                const id = 'g_' + Date.now() + Math.random().toString(36).substr(2, 5);
+                appState.guestList.push({ id, name: displayName, count, pickup, room });
+            });
+            renderGuestList();
+        }
 
             // Split by comma or Chinese comma
             const entries = str.split(/[,、]\s*/);
