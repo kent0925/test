@@ -523,36 +523,28 @@
                         <span id="stat-title">活動即時統計</span>
                     </h2>
                     <div class="flex gap-3">
-                        <button onclick="copyDetailsToClipboard()"
-                            class="glass-effect text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all text-xs font-semibold">
+                        <button onclick="openShareModal()"
+                            class="glass-effect text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all text-xs font-semibold hover:bg-white/20">
                             <i data-lucide="share-2" class="w-3.5 h-3.5"></i> 分享
                         </button>
                         <button onclick="fetchStats(true)"
-                            class="glass-effect text-white p-1.5 rounded-xl transition-all">
+                            class="glass-effect text-white p-1.5 rounded-xl transition-all hover:bg-white/20">
                             <i data-lucide="refresh-cw" class="w-4 h-4"></i>
                         </button>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4 relative z-10 cursor-pointer group" onclick="openDetailsModal()">
-                    <div
-                        class="glass-effect p-5 rounded-2xl group-hover:bg-white/20 transition-all border-white/10 text-center">
+                <div class="grid grid-cols-2 gap-4 relative z-10">
+                    <div onclick="openDetailsModal('people')"
+                        class="glass-effect p-5 rounded-2xl hover:bg-white/20 transition-all border-white/10 text-center cursor-pointer active:scale-95">
                         <div class="text-xs text-green-100 mb-2 font-medium">報名總人數</div>
                         <div class="text-4xl font-black text-white tracking-tighter" id="stat-total">0</div>
                     </div>
-                    <div
-                        class="glass-effect p-5 rounded-2xl group-hover:bg-white/20 transition-all border-white/10 text-center">
+                    <div onclick="openDetailsModal('secondary')"
+                        class="glass-effect p-5 rounded-2xl hover:bg-white/20 transition-all border-white/10 text-center cursor-pointer active:scale-95">
                         <div class="text-xs text-green-100 mb-2 font-medium" id="stat-sec-label">次要統計</div>
                         <div class="text-4xl font-black text-accent tracking-tighter" id="stat-sec-val">0</div>
                     </div>
-                </div>
-
-                <div class="mt-5 text-center relative z-10">
-                    <span
-                        class="text-xs text-green-100/70 flex items-center justify-center gap-1.5 cursor-pointer hover:text-white transition-all font-medium"
-                        onclick="openDetailsModal()">
-                        查看詳細報名名單 <i data-lucide="chevron-right" class="w-4 h-4"></i>
-                    </span>
                 </div>
             </div>
         </div>
@@ -718,6 +710,47 @@
         class="fixed top-6 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-5 py-3 rounded-full shadow-2xl opacity-0 transition-all duration-300 pointer-events-none z-[100] text-sm flex items-center gap-2.5 backdrop-blur-md">
         <div class="bg-green-500 rounded-full p-0.5"><i data-lucide="check" class="w-3 h-3 text-white"></i></div>
         <span id="toast-msg" class="font-medium tracking-wide">操作成功</span>
+    </div>
+
+    <div id="share-modal" class="hidden fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-sm p-6 animate-fade-in">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xs p-5 transform transition-all scale-100">
+            <h3 class="text-lg font-bold text-gray-900 mb-4 border-b border-gray-100 pb-2 flex items-center gap-2">
+                <i data-lucide="share-2" class="w-5 h-5 text-gray-700"></i> 分享選項
+            </h3>
+            
+            <p class="text-xs text-gray-500 mb-3">請勾選要包含在複製內容中的資訊：</p>
+
+            <div class="space-y-3 mb-6">
+                <label class="hidden flex items-center gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition border border-gray-100" id="opt-container-sponsor">
+                    <div class="relative flex items-center">
+                        <input type="checkbox" id="share-opt-sponsor" checked class="peer w-5 h-5 rounded text-green-500 focus:ring-green-500 border-gray-300">
+                        <i data-lucide="check" class="absolute w-3.5 h-3.5 text-white pointer-events-none opacity-0 peer-checked:opacity-100 left-0.5 top-0.5"></i>
+                    </div>
+                    <span class="text-sm font-medium text-gray-700">贊助 / 認桌資訊</span>
+                </label>
+                
+                <label class="hidden flex items-center gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition border border-gray-100" id="opt-container-travel">
+                    <div class="relative flex items-center">
+                        <input type="checkbox" id="share-opt-travel" checked class="peer w-5 h-5 rounded text-green-500 focus:ring-green-500 border-gray-300">
+                        <i data-lucide="check" class="absolute w-3.5 h-3.5 text-white pointer-events-none opacity-0 peer-checked:opacity-100 left-0.5 top-0.5"></i>
+                    </div>
+                    <span class="text-sm font-medium text-gray-700">上車地點 / 房型</span>
+                </label>
+
+                <div id="share-no-opts" class="hidden text-center text-sm text-gray-400 py-2">
+                    無額外資訊可選，將複製基本名單
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <button onclick="document.getElementById('share-modal').classList.add('hidden')" 
+                    class="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-bold text-sm hover:bg-gray-50 transition">取消</button>
+                <button onclick="confirmShareCopy()" 
+                    class="flex-1 py-2.5 rounded-xl bg-gray-900 text-white font-bold text-sm hover:bg-gray-800 shadow-lg flex justify-center items-center gap-2 transition active:scale-95">
+                    <i data-lucide="copy" class="w-4 h-4"></i> 確認複製
+                </button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1380,7 +1413,7 @@
         }
 
         // --- Modal & Details Logic ---
-        async function openDetailsModal() {
+        async function openDetailsModal(filterType = 'all') {
             if (!appState.currentEvent) return;
             const modal = document.getElementById('details-modal');
             const content = document.getElementById('modal-content');
@@ -1390,6 +1423,20 @@
                 content.classList.remove('translate-y-full', 'opacity-0');
                 content.classList.add('translate-y-10', 'sm:translate-y-0', 'opacity-100');
             }, 10);
+
+            // 動態修改標題
+            const titleEl = document.querySelector('#details-modal h3');
+            if (filterType === 'people') {
+                titleEl.innerHTML = '<i data-lucide="users" class="w-5 h-5 text-gray-600"></i> 人員名單';
+            } else if (filterType === 'secondary') {
+                const type = appState.currentEvent.type;
+                const icon = type === 'travel' ? 'bus' : 'gift';
+                const text = type === 'travel' ? '住宿與交通' : '贊助與認桌';
+                titleEl.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5 text-gray-600"></i> ${text}明細`;
+            } else {
+                titleEl.innerHTML = '<i data-lucide="list" class="w-5 h-5 text-gray-600"></i> 詳細名單';
+            }
+            if (typeof lucide !== 'undefined') lucide.createIcons();
 
             // Populate Summary
             const sumDiv = document.getElementById('modal-summary');
@@ -1423,6 +1470,38 @@
 
             listContainer.classList.remove('hidden');
             renderDetailLists(data);
+
+            // ★ 根據 filterType 隱藏不需要的區塊
+            const listP = document.getElementById('details-list-people');
+            const labelP = listP.previousElementSibling; 
+            const listT = document.getElementById('details-list-travel');
+            const labelT = document.getElementById('travel-separator');
+            const listI = document.getElementById('details-list-items');
+            const labelI = document.getElementById('details-separator');
+
+            if (filterType === 'people') {
+                if(listT) listT.classList.add('hidden');
+                if(labelT) labelT.classList.add('hidden');
+                if(listI) listI.classList.add('hidden');
+                if(labelI) labelI.classList.add('hidden');
+                listP.classList.remove('hidden');
+                labelP.classList.remove('hidden');
+            } else if (filterType === 'secondary') {
+                listP.classList.add('hidden');
+                labelP.classList.add('hidden');
+                const evtType = appState.currentEvent.type;
+                if (evtType === 'travel') {
+                    if(listT) listT.classList.remove('hidden');
+                    if(labelT) labelT.classList.remove('hidden');
+                    if(listI) listI.classList.add('hidden');
+                    if(labelI) labelI.classList.add('hidden');
+                } else {
+                    if(listI) listI.classList.remove('hidden');
+                    if(labelI) labelI.classList.remove('hidden');
+                    if(listT) listT.classList.add('hidden');
+                    if(labelT) labelT.classList.add('hidden');
+                }
+            }
         }
 
         function renderDetailLists(data) {
@@ -1447,11 +1526,6 @@
                 // Parse guests with details if available
                 let subHtml = '';
                 if (row.guestName && row.guestName !== '無') {
-                    // Try to use guestJson if available from backend, otherwise parse string
-                    // Current mock setup simulates guestJson string in guestName for simple parsing, 
-                    // or relies on the string format.
-                    // Ideally we should use row.guestJson if available.
-                    // For display consistency, we can stick to the string format returned by GAS.
                     const guestEntries = row.guestName.split(', ');
                     let guestTexts = [];
                     guestEntries.forEach(g => {
@@ -1976,101 +2050,171 @@
             return t;
         }
 
-        // --- Copy to Clipboard ---
-        function copyDetailsToClipboard() {
-            const btn = document.getElementById('btn-copy-list');
-            const originalHTML = btn.innerHTML;
+        // --- Share Modal Logic ---
+        function openShareModal() {
+            const e = appState.currentEvent;
+            const s = appState.currentStats;
+            if (!e) return;
 
-            // UI 顯示讀取中
-            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> 讀取中...';
+            // 重置 checkbox 狀態
+            document.getElementById('share-opt-sponsor').checked = true;
+            document.getElementById('share-opt-travel').checked = true;
+
+            // 判斷是否顯示「贊助/認桌」選項
+            const hasTable = s.tableCount && s.tableCount > 0;
+            const hasSponsor = hasTable || (e.type !== 'travel' && s.secondary > 0);
+            
+            const sponsorEl = document.getElementById('opt-container-sponsor');
+            if (hasSponsor) {
+                sponsorEl.classList.remove('hidden');
+            } else {
+                sponsorEl.classList.add('hidden');
+            }
+
+            // 判斷是否顯示「上車/房型」選項
+            const isTravel = e.type === 'travel';
+            const travelEl = document.getElementById('opt-container-travel');
+            if (isTravel) {
+                travelEl.classList.remove('hidden');
+            } else {
+                travelEl.classList.add('hidden');
+            }
+
+            // ★ 智慧判斷：如果沒什麼好選的，直接複製並跳過視窗
+            const showSponsor = !sponsorEl.classList.contains('hidden');
+            const showTravel = !travelEl.classList.contains('hidden');
+            
+            if (!showSponsor && !showTravel) {
+                performCopy({ includeSponsor: false, includeTravel: false });
+                return;
+            }
+
+            // 如果都沒有選項顯示但不是全空 (例如只隱藏了部分)
+            const noOptsEl = document.getElementById('share-no-opts');
+            if (!showSponsor && !showTravel) {
+                 noOptsEl.classList.remove('hidden');
+            } else {
+                noOptsEl.classList.add('hidden');
+            }
+
+            document.getElementById('share-modal').classList.remove('hidden');
             if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
 
+        function confirmShareCopy() {
+            // 取得使用者勾選狀態
+            const includeSponsor = document.getElementById('share-opt-sponsor').checked && !document.getElementById('opt-container-sponsor').classList.contains('hidden');
+            const includeTravel = document.getElementById('share-opt-travel').checked && !document.getElementById('opt-container-travel').classList.contains('hidden');
+
+            // 關閉視窗
+            document.getElementById('share-modal').classList.add('hidden');
+
+            // 執行複製，傳入參數
+            performCopy({ includeSponsor, includeTravel });
+        }
+
+        // 舊按鈕 (名單視窗下方) 呼叫此函式：預設複製全部
+        function copyDetailsToClipboard() {
+            performCopy({ includeSponsor: true, includeTravel: true });
+        }
+
+        // 核心複製邏輯：支援參數與格式化
+        function performCopy(options = { includeSponsor: true, includeTravel: true }) {
+            showToast("正在讀取並產生名單...");
+            
             fetchDetails().then(data => {
-                if (!data.length) {
-                    btn.innerHTML = originalHTML;
-                    return showToast("無資料可複製");
-                }
+                if (!data.length) return showToast("無資料可複製");
 
-                // --- 產生文字內容 ---
-                let text = `【${appState.currentEvent.name}】報名名單\n`;
-                text += `統計時間: ${new Date().toLocaleString('zh-TW', { hour12: false, month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}\n`;
-                text += `========================\n`;
+                const e = appState.currentEvent;
+                
+                // 1. 標頭
+                let text = `主辦人：${e.organizer}\n`;
+                text += `📋 ${e.name}\n`;
+                text += `📅 ${formatDateShort(e.time)} ${new Date(e.time).toLocaleTimeString('zh-TW', {hour:'2-digit', minute:'2-digit', hour12:false})}\n`;
+                text += `📍 ${e.location}\n`;
+                text += `──────────────\n`;
 
+                // 2. 名單
                 data.forEach((p, i) => {
+                    // 計算人數
                     let guestTotal = 0;
-                    if (p.guestList && p.guestList.length > 0) {
+                    if (p.guestList && Array.isArray(p.guestList)) {
                         guestTotal = p.guestList.reduce((acc, g) => acc + (parseInt(g.count) || 1), 0);
                     } else {
                         guestTotal = parseInt(p.guestCount) || 0;
                     }
                     const total = 1 + (parseInt(p.family) || 0) + guestTotal;
 
-                    text += `${i + 1}. ${p.name}`;
-                    if (total > 1) text += ` (共${total}人)`;
+                    // 編號. 姓名
+                    const num = (i + 1).toString().padStart(2, '0');
+                    text += `${num}. ${p.name}`;
+                    if (total > 1) text += ` *${total}`;
                     text += `\n`;
 
-                    let midLines = [];
-                    let botLines = [];
-
-                    if (p.tableCount > 0) midLines.push(`認桌: ${p.tableCount}桌`);
-                    if (p.sponsorList && p.sponsorList.length > 0) {
-                        p.sponsorList.forEach(s => midLines.push(`贊助: ${s}`));
-                    }
-
-                    if (p.pickup && p.pickup !== '無') botLines.push(`[主]車: ${p.pickup}`);
-                    if (p.room && p.room !== '無') botLines.push(`[主]房: ${p.room}`);
-
-                    if (p.guestList && p.guestList.length > 0) {
-                        let gInfos = [];
+                    // 來賓
+                    if (p.guestList && Array.isArray(p.guestList) && p.guestList.length > 0) {
                         p.guestList.forEach(g => {
-                            let infoParts = [];
-                            if (g.pickup) infoParts.push(g.pickup);
-                            if (g.room) infoParts.push(g.room);
-                            if (infoParts.length > 0) {
-                                gInfos.push(`${g.name}(${infoParts.join('/')})`);
-                            }
+                            text += `\u3000\u3000\u3000 來賓：${g.name}`;
+                            if (g.count > 1) text += ` (+${g.count-1})`;
+                            text += `\n`;
                         });
-                        if (gInfos.length > 0) botLines.push(`[賓]: ${gInfos.join('、')}`);
+                    } else if (p.guestName && p.guestName !== '無') {
+                        text += `\u3000\u3000\u3000 來賓：${p.guestName}\n`;
                     }
 
-                    if (midLines.length > 0) {
-                        text += `   ------------------\n`;
-                        midLines.forEach(line => text += `   ${line}\n`);
+                    // --- 區塊 1: 贊助與認桌 (根據 options 決定是否加入) ---
+                    if (options.includeSponsor) {
+                        let moneyLines = [];
+                        if (p.tableCount > 0) moneyLines.push(`認桌: ${p.tableCount}桌`);
+                        if (p.sponsorList && Array.isArray(p.sponsorList) && p.sponsorList.length > 0) {
+                            p.sponsorList.forEach(s => moneyLines.push(`贊助: ${s}`));
+                        } else if (p.sponsor && p.sponsor !== '無') {
+                            moneyLines.push(`贊助: ${p.sponsor}`);
+                        }
+
+                        if (moneyLines.length > 0) {
+                            text += `   ------------------\n`;
+                            moneyLines.forEach(l => text += `   ${l}\n`);
+                        }
                     }
 
-                    if (botLines.length > 0) {
-                        text += `   ------------------\n`;
-                        botLines.forEach(line => text += `   ${line}\n`);
+                    // --- 區塊 2: 交通與住宿 (根據 options 決定是否加入) ---
+                    if (options.includeTravel) {
+                        let travelLines = [];
+                        if (p.pickup && p.pickup !== '無') travelLines.push(`[主]車: ${p.pickup}`);
+                        if (p.room && p.room !== '無') travelLines.push(`[主]房: ${p.room}`);
+                        
+                        if (p.guestList && Array.isArray(p.guestList)) {
+                            p.guestList.forEach(g => {
+                                let extras = [];
+                                if(g.pickup) extras.push(g.pickup);
+                                if(g.room) extras.push(g.room);
+                                if(extras.length > 0) {
+                                    travelLines.push(`[賓]${g.name}: ${extras.join('/')}`);
+                                }
+                            });
+                        }
+
+                        if (travelLines.length > 0) {
+                            text += `   ------------------\n`;
+                            travelLines.forEach(l => text += `   ${l}\n`);
+                        }
                     }
-                    text += `\n`;
                 });
 
-                text += `========================\n`;
-                text += `總計人數: ${appState.currentStats.totalPeople || 0} 人\n`;
-                if (appState.currentStats.tableCount > 0) {
-                    text += `總計認桌: ${appState.currentStats.tableCount} 桌\n`;
-                }
+                // 3. 結尾
+                text += `──────────────\n`;
+                text += `共 ${appState.currentStats.totalPeople || 0} 人報名\n`;
+                text += `🔗 報名連結：\n`;
+                text += `https://liff.line.me/${LIFF_ID}\n`;
 
-                // --- ★ 關鍵修正點 ---
-                // 1. 強制取得焦點，解決 "Document is not focused" 錯誤
+                // 4. 執行複製
                 window.focus();
-
-                // 2. 修正這裡：原本寫錯成 igator，正確是 navigator
                 navigator.clipboard.writeText(text).then(() => {
-                    btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i> 已複製！';
-                    btn.classList.add('bg-green-600');
-                    if (typeof lucide !== 'undefined') lucide.createIcons();
-
-                    setTimeout(() => {
-                        btn.innerHTML = originalHTML;
-                        btn.classList.remove('bg-green-600');
-                        if (typeof lucide !== 'undefined') lucide.createIcons();
-                    }, 2000);
                     showToast("已複製名單到剪貼簿");
                 }).catch(err => {
-                    console.error("複製失敗:", err);
+                    console.error(err);
                     showToast("複製失敗，請手動複製");
-                    btn.innerHTML = originalHTML;
                 });
             });
         }
