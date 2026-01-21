@@ -2541,60 +2541,6 @@ function restoreGuestList(str) {
             });
             renderGuestList();
         }
-
-        
-            // Split by comma or Chinese comma
-            const entries = str.split(/[,、]\s*/);
-
-            entries.forEach(s => {
-                if (!s.trim()) return;
-
-                // Parsing logic: "Guest(1), Guest2(2)|Loc|Room"
-                const match = s.match(/(.*?)\((\d+)\)/);
-
-                if (match) {
-                    let full = match[1].trim(); // Name part might contain |Loc|Room legacy
-                    const count = parseInt(match[2]);
-
-                    let pickup = '', room = '';
-                    if (full.includes('|')) {
-                        const parts = full.split('|');
-                        full = parts[0].trim();
-                        pickup = parts[1] || '';
-                        room = parts[2] || '';
-                    } else if (s.includes('|')) {
-                        // Case: "Name(1)|Loc|Room" -> match[1] is "Name" but s has rest
-                        const parts = s.split('|');
-                        pickup = parts[1] || '';
-                        room = parts[2] || '';
-                    }
-
-                    // Legacy bracket support: Name[Loc/Room]
-                    if (full.includes('[')) {
-                        full = full.split('[')[0].trim();
-                    }
-
-                    const id = 'g_' + Date.now() + Math.random().toString(36).substr(2, 5);
-                    appState.guestList.push({ id, name: full, count, pickup, room });
-                } else {
-                    // Fallback for simple name "GuestName" or "GuestName|Loc|Room"
-                    let full = s;
-                    let pickup = '', room = '';
-
-                    if (full.includes('|')) {
-                        const parts = full.split('|');
-                        full = parts[0].trim();
-                        pickup = parts[1] || '';
-                        room = parts[2] || '';
-                    }
-
-                    const id = 'g_' + Date.now() + Math.random().toString(36).substr(2, 5);
-                    appState.guestList.push({ id, name: full, count: 1, pickup, room });
-                }
-            });
-            renderGuestList();
-        }
     </script>
 </body>
-
 </html>
