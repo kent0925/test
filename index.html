@@ -2181,6 +2181,32 @@
                 lucide.createIcons();
             }
         }
+// --- 補回遺失的分類切換函式 ---
+
+        function enterCategory(type) {
+            appState.currentCategory = type;
+            appState.historyStack.push('list');
+            switchView('view-event-list');
+            document.getElementById('header-title').innerText = getCategoryTitle(type);
+            switchCategory(type);
+        }
+
+        function switchCategory(type) {
+            appState.currentCategory = type;
+            // 移除所有 Tab 的 active 樣式
+            document.querySelectorAll('.filter-tab').forEach(btn => btn.classList.remove('active'));
+            // 加上當前 Tab 的 active 樣式
+            const tab = document.getElementById(`tab-${type}`);
+            if (tab) tab.classList.add('active');
+            
+            renderEventGrid(type);
+        }
+
+        function getCategoryTitle(t) {
+            const map = { 'general': '一般活動', 'banquet': '大型餐會', 'travel': '旅遊活動', 'all': '所有活動' };
+            return map[t] || '活動列表';
+        }
+
 /* 隱藏預設的三角形 */
 .itinerary-group summary::-webkit-details-marker {
     display: none;
