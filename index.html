@@ -2049,19 +2049,101 @@
             container.innerHTML = '';
             if (!str) return;
 
-            str.split(';').forEach(dayStr => {
-                if (!dayStr.trim()) return;
-                const [day, content] = dayStr.includes(':') ? dayStr.split(':') : ['行程', dayStr];
-                const [title, desc] = content.includes('|') ? content.split('|') : [content, ''];
+            // Split by semicolon for days
+            const days = str.split(';');
 
-                container.innerHTML += `
-                    <div class="relative pl-4 border-l-2 border-green-200 ml-1 py-1">
-                        <div class="absolute -left-[5px] top-2 w-2.5 h-2.5 bg-white border-2 border-green-400 rounded-full"></div>
-                        <div class="text-xs font-bold text-green-700 mb-0.5">${day}</div>
-                        <div class="text-sm font-bold text-gray-800">${title}</div>
-                        ${desc ? `<div class="text-xs text-gray-500 mt-1 bg-gray-50 p-1.5 rounded">${desc}</div>` : ''}
-                    </div>`;
+            days.forEach((dayStr, index) => {
+                if (!dayStr.trim()) return;
+
+                // Parse Day vs Content (D1: Title|Desc)
+                let dayLabel = `第 ${index + 1} 天`;
+                let contentAll = dayStr;
+
+                if (dayStr.includes(':')) {
+                    const parts = dayStr.split(':');
+                    dayLabel = parts[0].trim();
+                    contentAll = parts.slice(1).join(':').trim();
+                }
+
+                // Parse Title vs Description
+                let title = contentAll;
+                let desc = '';
+                if (contentAll.includes('|')) {
+                    const contentParts = contentAll.split('|');
+                    title = contentParts[0].trim();
+                    desc = contentParts.slice(1).join('|').trim();
+                }
+
+                // HTML Construction
+                const isOpen = index === 0; // Open first day by default
+
+                const details = document.createElement('details');
+                details.className = "group border border-gray-200 rounded-xl bg-white mb-3 overflow-hidden shadow-sm transition-all";
+                if (isOpen) details.setAttribute('open', '');
+
+                const summary = document.createElement('summary');
+                summary.className = "flex justify-between items-center p-4 cursor-pointer select-none bg-gray-50 hover:bg-gray-100 transition list-none";
+                summary.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-lg">${dayLabel}</span>
+                        <span class="font-bold text-gray-800 text-base">${title}</span>
+                    </div>
+                    <div class="w-6 h-6 flex items-center justify-center rounded-full border border-gray-300 bg-white text-gray-500 font-bold shrink-0">
+                        <span class="group-open:hidden">+</span>
+                        <span class="hidden group-open:block">−</span>
+                    </div>
+                `;
+
+                const contentDiv = document.createElement('div');
+                contentDiv.className = "p-4 bg-white border-t border-gray-100 text-sm text-gray-600 leading-relaxed space-y-2";
+
+                // Process Description Lines
+                if (desc) {
+                    // Try to parse timeline items (Time anything)
+                    const lines = desc.split(/\r?\n/);
+                    let timelineHtml = '<div class="space-y-3 relative pl-2">';
+
+                    // Add a vertical line guide
+                    timelineHtml += '<div class="absolute left-[5px] top-2 bottom-2 w-0.5 bg-gray-100"></div>';
+
+                    lines.forEach(line => {
+                        const l = line.trim();
+                        if (!l) return;
+
+                        // Match Time HH:MM (simple check)
+                        // Regex: Start with digit(s):digit(s)
+                        const timeMatch = l.match(/^(\d{1,2}:\d{2})\s*(.*)/);
+
+                        if (timeMatch) {
+                            const time = timeMatch[1];
+                            const text = timeMatch[2];
+                            timelineHtml += `
+                                <div class="relative flex gap-4 items-start pl-4 group/item">
+                                    <div class="absolute left-0 top-1.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-sm z-10"></div>
+                                    <div class="font-mono font-bold text-green-700 shrink-0 pt-0.5">${time}</div>
+                                    <div class="text-gray-700 pt-0.5">${text}</div>
+                                </div>`;
+                        } else {
+                            // Normal text line
+                            timelineHtml += `
+                                <div class="relative flex gap-4 items-start pl-4">
+                                     <div class="absolute left-0.5 top-2 w-2 h-2 bg-gray-300 rounded-full z-10"></div>
+                                     <div class="text-gray-600">${l}</div>
+                                </div>`;
+                        }
+                    });
+                    timelineHtml += '</div>';
+                    contentDiv.innerHTML = timelineHtml;
+                } else {
+                    contentDiv.innerHTML = '<span class="text-gray-400 italic">無詳細行程內容</span>';
+                }
+
+                details.appendChild(summary);
+                details.appendChild(contentDiv);
+                container.appendChild(details);
             });
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         function showCreateView() {
