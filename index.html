@@ -2085,12 +2085,24 @@ function renderItinerary(str) {
             container.innerHTML = '';
             if (!str) return;
 
+            // ==========================================
+            // ★ 新增邏輯：取得活動出發日期，用於計算 D1, D2 的實際日期
+            // ==========================================
+            let startDateObj = null;
+            if (appState.currentEvent && appState.currentEvent.time) {
+                // 假設格式為 "2023-10-10~2023-10-12" 或單一時間 "2023-10-10T09:00"
+                const timeStr = appState.currentEvent.time.split('~')[0];
+                const d = new Date(timeStr);
+                if (!isNaN(d.getTime())) {
+                    startDateObj = d;
+                }
+            }
+
             // 用 Map 來依據天數分組
             const groups = new Map();
             
-            // ★ 新增：用來記憶「目前跑到第幾天」
-            // 預設如果第一筆資料沒寫 D1，就當作是 "行程" 或 "D1"
-            let currentDayKey = '行程'; 
+            // 記憶目前跑到第幾天 (預設 D1)
+            let currentDayKey = 'D1'; 
 
             // 以分號切分每一筆行程
             str.split(';').forEach(itemStr => {
@@ -2098,36 +2110,36 @@ function renderItinerary(str) {
 
                 let rawStr = itemStr.trim();
                 
-                // 1. 先抓取天數 (D1, Day1, D2, D3...)
-                // 這裡會自動支援 D3, D4, D5... 無限延伸
+                // --- 1. 抓取並移除天數 (D1, Day1) ---
                 const dayMatch = rawStr.match(/^(D\d+|Day\d+)/i);
-                
                 if (dayMatch) {
-                    // 如果這行有寫天數 (例如 "D2")，就更新目前的記憶
-                    currentDayKey = dayMatch[0].toUpperCase(); 
-                    // 把 D2 從文字中拿掉，避免標題重複顯示
+                    currentDayKey = dayMatch[0].toUpperCase().replace('DAY', 'D'); // 統一轉為 D1 格式
                     rawStr = rawStr.replace(dayMatch[0], '').trim();
                 }
-                // 如果這行沒寫天數，就沿用上一次的 currentDayKey (這就是「記憶」功能)
 
-                // 2. 抓取時間 (HH:mm)
+                // --- 2. 抓取並移除時間 (HH:mm) ---
                 let timeDisplay = '--:--';
                 const timeMatch = rawStr.match(/(\d{1,2}:\d{2})/);
-
                 if (timeMatch) {
                     const rawTime = timeMatch[0];
-                    // 去除開頭 0
-                    timeDisplay = rawTime.replace(/^0/, '');
-                    // 從標題移除時間
-                    rawStr = rawStr.replace(rawTime, '').replace(/^[:\s]+/, '').trim();
+                    timeDisplay = rawTime.replace(/^0/, ''); // 移除開頭 0
+                    // 從字串中移除時間
+                    rawStr = rawStr.replace(rawTime, '').trim();
                 }
 
-                // 3. 剩下的就是標題與描述
-                // 清理開頭殘留的符號
-                rawStr = rawStr.replace(/^[:\s]+/, ''); 
+                // --- 3. ★ 需求2：強力移除內容中可能手打的日期 (如 2023/10/10 或 10/10) ---
+                // 避免使用者在標題重複打了日期，導致顯示很亂
+                // Regex 邏輯：抓取 "4碼年/1-2碼月/1-2碼日" 或 "1-2碼月/1-2碼日"
+                const datePattern = /(\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}|\d{1,2}[\/\-]\d{1,2})/;
+                rawStr = rawStr.replace(datePattern, '').trim();
+
+                // --- 4. 清理開頭殘留符號 ---
+                rawStr = rawStr.replace(/^[:\s]+/, ''); // 移除開頭的冒號或空白
+
+                // 分割標題與描述
                 const [title, desc] = rawStr.split('|');
 
-                // 4. 存入 Map (歸類到那一天的群組)
+                // 存入 Map
                 if (!groups.has(currentDayKey)) {
                     groups.set(currentDayKey, []);
                 }
@@ -2138,17 +2150,40 @@ function renderItinerary(str) {
                 });
             });
 
-            // 5. 渲染 HTML (每一天產生一個 details 區塊)
+            // ==========================================
+            // 渲染 HTML
+            // ==========================================
             let index = 0;
-            groups.forEach((events, day) => {
-                // 第一天預設打開 (open)，第二天之後預設關閉
+            groups.forEach((events, dayKey) => {
                 const openAttr = index === 0 ? 'open' : '';
                 
-                // 視覺顏色切換 (綠/藍/綠/藍...)
+                // 視覺顏色切換
                 const borderColor = index % 2 === 0 ? 'border-green-500' : 'border-blue-500';
                 const badgeColor = index % 2 === 0 ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
 
-                // 產生該天數下的所有行程 HTML
+                // ★ 需求1：將 D1, D2 轉換為 月/日
+                let displayLabel = dayKey; // 預設顯示 D1
+                
+                // 如果有抓到出發日期，且 dayKey 是 D 開頭的數字 (如 D1)
+                if (startDateObj && /^D\d+$/.test(dayKey)) {
+                    const dayNum = parseInt(dayKey.replace('D', '')); // 取出 1
+                    if (!isNaN(dayNum) && dayNum > 0) {
+                        // 複製日期物件以免汙染原始變數
+                        const targetDate = new Date(startDateObj);
+                        // 日期加法： D1 就是 +0天, D2 就是 +1天
+                        targetDate.setDate(startDateObj.getDate() + (dayNum - 1));
+                        
+                        // 格式化為 M/D
+                        const mm = targetDate.getMonth() + 1;
+                        const dd = targetDate.getDate();
+                        const week = ['日', '一', '二', '三', '四', '五', '六'][targetDate.getDay()];
+                        
+                        // 最終顯示格式： "5/20 (一)"
+                        displayLabel = `${mm}/${dd} (${week})`;
+                    }
+                }
+
+                // 產生該天數下的行程細項
                 let eventsHtml = '';
                 events.forEach(evt => {
                     eventsHtml += `
@@ -2168,13 +2203,12 @@ function renderItinerary(str) {
                     `;
                 });
 
-                // 產生該天數的「外框 (Accordion)」
                 const groupHtml = `
                     <details class="itinerary-group group bg-white border border-gray-100 rounded-xl mb-3 overflow-hidden shadow-sm transition-all" ${openAttr}>
                         <summary class="flex justify-between items-center p-4 cursor-pointer bg-gray-50/50 hover:bg-gray-100 transition select-none">
                             <div class="flex items-center gap-3">
-                                <div class="${badgeColor} px-2.5 py-1 rounded-lg text-xs font-bold font-mono shadow-sm">
-                                    ${day}
+                                <div class="${badgeColor} px-2.5 py-1 rounded-lg text-xs font-bold font-mono shadow-sm whitespace-nowrap">
+                                    ${displayLabel}
                                 </div>
                                 <span class="text-xs text-gray-500 font-medium">${events.length} 個行程</span>
                             </div>
@@ -2197,7 +2231,7 @@ function renderItinerary(str) {
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
             }
-        }
+        }}
        
 // --- 補回遺失的分類切換函式 ---
 
