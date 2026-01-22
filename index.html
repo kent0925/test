@@ -2078,53 +2078,65 @@ function renderItinerary(str) {
             container.innerHTML = '';
             if (!str) return;
 
-            // 1. 資料分組邏輯 (使用 Map 來保持天數的順序)
+            // 用 Map 來依據天數分組
             const groups = new Map();
 
-            // 格式假設: "D1 08:00: 標題|描述; D2..."
+            // 以分號切分每一筆行程
             str.split(';').forEach(itemStr => {
                 if (!itemStr.trim()) return;
 
-                // 利用第一個冒號 ":" 將 前半部(日期時間) 與 後半部(內容) 分開
-                let [metaInfo, content] = itemStr.split(/:(.*)/s);
-
-                if (!content) {
-                    content = metaInfo;
-                    metaInfo = '其他';
-                }
-
-                // --- A. 解析時間 (HH:mm) ---
-                // 預設顯示
+                let rawStr = itemStr.trim();
+                
+                // ----------------------------------------------------
+                // ★ 修正重點 1：直接在整段文字中抓取時間 (HH:mm)
+                // ----------------------------------------------------
                 let timeDisplay = '--:--';
-                
-                // 使用正則表達式抓取時間 (例如 09:30 或 9:30)
-                const timeMatch = metaInfo.match(/(\d{1,2}:\d{2})/);
-                
+                const timeMatch = rawStr.match(/(\d{1,2}:\d{2})/); // 抓取像 09:30, 9:30, 00:00
+
                 if (timeMatch) {
-                    // 抓取到的時間
-                    timeDisplay = timeMatch[0];
-                    // ★ 需求2：移除前方的 0 (例如 09:30 -> 9:30)
-                    timeDisplay = timeDisplay.replace(/^0/, '');
+                    // 抓到原始時間字串 (例如 "00:00")
+                    const rawTime = timeMatch[0];
+                    
+                    // 處理顯示時間：移除開頭的 0 (例如 09:30 -> 9:30, 00:00 -> 0:00)
+                    timeDisplay = rawTime.replace(/^0/, '');
+
+                    // ★ 修正重點 2：把抓到的時間從標題文字中「乾淨地移除」
+                    // 1. replace(rawTime, ''): 把 "00:00" 刪掉
+                    // 2. replace(/^[:\s]+/, ''): 把剩餘字串開頭的冒號或空白刪掉
+                    rawStr = rawStr.replace(rawTime, '').replace(/^[:\s]+/, '').trim();
                 }
 
-                // --- B. 解析天數 (Day) ---
-                const dayKey = metaInfo.trim().split(' ')[0] || '行程';
+                // ----------------------------------------------------
+                // 處理天數 (D1, Day1) 與 內容分割
+                // ----------------------------------------------------
+                // 嘗試抓取開頭的 D1, D2 或 Day1
+                let dayKey = '行程';
+                const dayMatch = rawStr.match(/^(D\d+|Day\d+)/i);
+                
+                if (dayMatch) {
+                    dayKey = dayMatch[0]; // 例如 "D1"
+                    // 把 D1 從文字中移除，讓標題更乾淨
+                    rawStr = rawStr.replace(dayKey, '').trim();
+                }
 
-                // --- C. 解析標題與描述 ---
-                const [title, desc] = content.split('|');
+                // 最後剩下的 rawStr 就是「標題|描述」
+                // 確保開頭沒有殘留的冒號
+                rawStr = rawStr.replace(/^[:\s]+/, ''); 
 
-                // --- D. 存入 Map 進行分組 ---
+                const [title, desc] = rawStr.split('|');
+
+                // 存入 Map
                 if (!groups.has(dayKey)) {
                     groups.set(dayKey, []);
                 }
                 groups.get(dayKey).push({
-                    time: timeDisplay, // 這裡已經是處理好的時間 (例如 9:30)
+                    time: timeDisplay,
                     title: (title || '').trim(),
                     desc: (desc || '').trim()
                 });
             });
 
-            // 2. 渲染 HTML
+            // 渲染 HTML
             let index = 0;
             groups.forEach((events, day) => {
                 const openAttr = index === 0 ? 'open' : '';
@@ -2181,6 +2193,7 @@ function renderItinerary(str) {
                 lucide.createIcons();
             }
         }
+        
 // --- 補回遺失的分類切換函式 ---
 
         function enterCategory(type) {
