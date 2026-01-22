@@ -2073,7 +2073,7 @@
             }
         }
 
-       function renderItinerary(str) {
+function renderItinerary(str) {
             const container = document.getElementById('itinerary-accordion-content');
             container.innerHTML = '';
             if (!str) return;
@@ -2086,24 +2086,28 @@
                 if (!itemStr.trim()) return;
 
                 // 利用第一個冒號 ":" 將 前半部(日期時間) 與 後半部(內容) 分開
-                // regex /:(.*)/s 確保只切割第一個冒號
                 let [metaInfo, content] = itemStr.split(/:(.*)/s);
 
                 if (!content) {
-                    // 防呆：如果沒有冒號，將整段視為內容
                     content = metaInfo;
                     metaInfo = '其他';
                 }
 
                 // --- A. 解析時間 (HH:mm) ---
-                // 使用正則表達式只抓取 "00:00" 格式
-                const timeMatch = metaInfo.match(/(\d{2}:\d{2})/);
-                // 假設 item.TIME 是 "09:30:00"
-                const timeDisplay = item.TIME.substring(0, 5); 
-                // 結果： "09:30"
+                // 預設顯示
+                let timeDisplay = '--:--';
+                
+                // 使用正則表達式抓取時間 (例如 09:30 或 9:30)
+                const timeMatch = metaInfo.match(/(\d{1,2}:\d{2})/);
+                
+                if (timeMatch) {
+                    // 抓取到的時間
+                    timeDisplay = timeMatch[0];
+                    // ★ 需求2：移除前方的 0 (例如 09:30 -> 9:30)
+                    timeDisplay = timeDisplay.replace(/^0/, '');
+                }
 
                 // --- B. 解析天數 (Day) ---
-                // 假設第一個空格前的字是天數 (例如 "D1", "Day1", "2023/10/10")
                 const dayKey = metaInfo.trim().split(' ')[0] || '行程';
 
                 // --- C. 解析標題與描述 ---
@@ -2114,7 +2118,7 @@
                     groups.set(dayKey, []);
                 }
                 groups.get(dayKey).push({
-                    time: timeDisplay,
+                    time: timeDisplay, // 這裡已經是處理好的時間 (例如 9:30)
                     title: (title || '').trim(),
                     desc: (desc || '').trim()
                 });
@@ -2123,19 +2127,15 @@
             // 2. 渲染 HTML
             let index = 0;
             groups.forEach((events, day) => {
-                // 邏輯：第一組 (index === 0) 加上 'open' 屬性，其他的預設關閉
                 const openAttr = index === 0 ? 'open' : '';
-                
-                // 視覺優化：偶數天用綠色線，奇數天用藍色線，增加區隔感
                 const borderColor = index % 2 === 0 ? 'border-green-500' : 'border-blue-500';
 
-                // 產生該天底下所有行程的 HTML (時間軸樣式)
                 let eventsHtml = '';
                 events.forEach(evt => {
                     eventsHtml += `
                         <div class="flex gap-3 mb-4 relative last:mb-0">
                             <div class="w-12 text-right shrink-0 pt-0.5">
-                                <span class="text-sm font-bold text-gray-600 font-mono">${evt.time || ${timeStr}}</span>
+                                <span class="text-sm font-bold text-gray-600 font-mono">${evt.time}</span>
                             </div>
                             
                             <div class="relative flex flex-col items-center">
@@ -2151,7 +2151,6 @@
                     `;
                 });
 
-                // 組合手風琴 (Accordion) 區塊
                 const groupHtml = `
                     <details class="itinerary-group group bg-white border border-gray-100 rounded-xl mb-3 overflow-hidden shadow-sm transition-all" ${openAttr}>
                         <summary class="flex justify-between items-center p-4 cursor-pointer bg-gray-50/50 hover:bg-gray-100 transition select-none">
@@ -2178,7 +2177,6 @@
                 index++;
             });
 
-            // 重新繪製圖示 (Lucide icons)
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
             }
