@@ -2098,7 +2098,9 @@
                 // --- A. 解析時間 (HH:mm) ---
                 // 使用正則表達式只抓取 "00:00" 格式
                 const timeMatch = metaInfo.match(/(\d{2}:\d{2})/);
-                const timeDisplay = timeMatch ? timeMatch[0] : ''; // 若無時間則留空
+                // 假設 item.TIME 是 "09:30:00"
+                const timeDisplay = item.TIME.substring(0, 5); 
+                // 結果： "09:30"
 
                 // --- B. 解析天數 (Day) ---
                 // 假設第一個空格前的字是天數 (例如 "D1", "Day1", "2023/10/10")
@@ -2133,7 +2135,7 @@
                     eventsHtml += `
                         <div class="flex gap-3 mb-4 relative last:mb-0">
                             <div class="w-12 text-right shrink-0 pt-0.5">
-                                <span class="text-sm font-bold text-gray-600 font-mono">${evt.time || '--:--'}</span>
+                                <span class="text-sm font-bold text-gray-600 font-mono">${evt.time || ${timeStr}}</span>
                             </div>
                             
                             <div class="relative flex flex-col items-center">
