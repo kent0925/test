@@ -1870,6 +1870,8 @@
             }
         }
 
+       // --- 補回遺失的分類切換函式 ---
+
         function enterCategory(type) {
             appState.currentCategory = type;
             appState.historyStack.push('list');
@@ -1880,11 +1882,16 @@
 
         function switchCategory(type) {
             appState.currentCategory = type;
+            // 移除所有 Tab 的 active 樣式
             document.querySelectorAll('.filter-tab').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`tab-${type}`).classList.add('active');
+            // 加上當前 Tab 的 active 樣式
+            const tab = document.getElementById(`tab-${type}`);
+            if (tab) tab.classList.add('active');
+            
             renderEventGrid(type);
         }
 
+        // 確保這個函式也存在 (通常是用來顯示標題文字)
         function getCategoryTitle(t) {
             const map = { 'general': '一般活動', 'banquet': '大型餐會', 'travel': '旅遊活動', 'all': '所有活動' };
             return map[t] || '活動列表';
@@ -2135,6 +2142,12 @@ function renderItinerary(str) {
                     desc: (desc || '').trim()
                 });
             });
+
+            // ★★★ 請把上面那段補在這裡 ★★★
+              function enterCategory(type) { ... }
+              function switchCategory(type) { ... }
+              function getCategoryTitle(t) { ... }
+    
 
             // 渲染 HTML
             let index = 0;
