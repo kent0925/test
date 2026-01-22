@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -153,34 +154,52 @@
             padding-top: env(safe-area-inset-top);
         }
 
-/* --- 行程表手風琴特效 (新增) --- */
-        
+        /* --- 行程表手風琴特效 (新增) --- */
+
         /* 1. 隱藏瀏覽器預設的 details 三角形 */
         .itinerary-group summary::-webkit-details-marker {
             display: none;
         }
+
         .itinerary-group summary {
             list-style: none;
         }
 
         /* 2. 控制 + 和 - 圖示的切換邏輯 */
         /* 預設狀態 (關閉)：顯示 Plus (+), 隱藏 Minus (-) */
-        .itinerary-group summary .icon-plus { display: block; }
-        .itinerary-group summary .icon-minus { display: none; }
+        .itinerary-group summary .icon-plus {
+            display: block;
+        }
+
+        .itinerary-group summary .icon-minus {
+            display: none;
+        }
 
         /* 當 details 被打開 (open) 時：隱藏 Plus, 顯示 Minus */
-        .itinerary-group[open] summary .icon-plus { display: none; }
-        .itinerary-group[open] summary .icon-minus { display: block; }
+        .itinerary-group[open] summary .icon-plus {
+            display: none;
+        }
+
+        .itinerary-group[open] summary .icon-minus {
+            display: block;
+        }
 
         /* 3. 內容展開時的滑動動畫 */
         .itinerary-group[open] .group-content {
             animation: slideDown 0.3s ease-out;
         }
-        @keyframes slideDown {
-            from { opacity: 0; transform: translateY(-5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
 
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-5px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 
@@ -1868,7 +1887,7 @@
                 btnText.innerText = "查看歷史活動";
             }
         }
-      
+
         function showToast(msg) {
             const toast = document.getElementById('toast');
             document.getElementById('toast-msg').innerText = msg;
@@ -2052,9 +2071,12 @@
             }
         }
 
-function renderItinerary(dataInput) {
-       
-// --- 補回遺失的分類切換函式 ---
+        function renderItinerary(dataInput) {
+
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+        }
+
+        // --- 補回遺失的分類切換函式 ---
 
         function enterCategory(type) {
             appState.currentCategory = type;
@@ -2071,7 +2093,7 @@ function renderItinerary(dataInput) {
             // 加上當前 Tab 的 active 樣式
             const tab = document.getElementById(`tab-${type}`);
             if (tab) tab.classList.add('active');
-            
+
             renderEventGrid(type);
         }
 
@@ -2561,4 +2583,5 @@ function renderItinerary(dataInput) {
         }
     </script>
 </body>
+
 </html>
