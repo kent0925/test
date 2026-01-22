@@ -153,127 +153,147 @@
         .pt-safe {
             padding-top: env(safe-area-inset-top);
         }
+
+        /* Itinerary Timeline Styles */
+        .itinerary-timeline-item {
+            position: relative;
+            padding-left: 1.5rem;
+            padding-bottom: 1.5rem;
+        }
+
+        .itinerary-timeline-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .itinerary-timeline-line {
+            position: absolute;
+            left: 0.35rem;
+            /* Center align with dot */
+            top: 0.5rem;
+            bottom: 0;
+            width: 2px;
+            background-color: #e5e7eb;
+        }
+
+        .itinerary-timeline-item:last-child .itinerary-timeline-line {
+            display: none;
+        }
+
+        .itinerary-dot {
+            position: absolute;
+            left: 0;
+            top: 0.4rem;
+            width: 0.75rem;
+            height: 0.75rem;
+            background-color: var(--primary);
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 0 2px var(--primary-light);
+            z-index: 10;
+        }
+
+        .itinerary-time {
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
     </style>
+
 </head>
 
 <body class="bg-gray-50 min-h-screen pb-safe">
-
     <header
         class="bg-[#06c755] text-white px-4 py-3 shadow-md sticky top-0 z-50 flex justify-between items-center h-14 lg:h-16">
-        <div class="flex items-center gap-3">
-            <button id="btn-back" onclick="handleBackNav()"
-                class="hidden p-1.5 hover:bg-white/20 rounded-full transition active:scale-90">
-                <i data-lucide="arrow-left" class="w-6 h-6"></i>
-            </button>
+        <div class="flex items-center gap-3"><button id="btn-back" onclick="handleBackNav()"
+                class="hidden p-1.5 hover:bg-white/20 rounded-full transition active:scale-90"><i
+                    data-lucide="arrow-left" class="w-6 h-6"></i></button>
             <h1 class="text-lg font-bold tracking-wide" id="header-title">活動與報名</h1>
         </div>
         <div class="flex items-center gap-2">
             <div class="flex items-center gap-2 bg-black/10 px-3 py-1.5 rounded-full backdrop-blur-sm"
-                id="header-user-badge">
-                <img id="header-avatar" src="https://ui-avatars.com/api/?name=Guest&background=random"
-                    class="w-5 h-5 rounded-full border border-white/50">
-                <span class="text-xs font-medium opacity-90 truncate max-w-[80px]" id="header-username">訪客</span>
-            </div>
+                id="header-user-badge"><img id="header-avatar"
+                    src="https://ui-avatars.com/api/?name=Guest&background=random"
+                    class="w-5 h-5 rounded-full border border-white/50"><span
+                    class="text-xs font-medium opacity-90 truncate max-w-[80px]" id="header-username">訪客</span></div>
         </div>
     </header>
-
     <div class="max-w-md mx-auto p-4 pb-24 relative min-h-[calc(100vh-64px)]">
-
         <div id="view-home" class="view-section space-y-6 animate-fade-in">
             <div class="premium-gradient rounded-[2rem] p-8 text-white shadow-2xl relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl"></div>
                 <div class="absolute bottom-0 left-0 w-32 h-32 bg-black/10 rounded-full -ml-10 -mb-10 blur-2xl"></div>
-
                 <div class="relative z-10">
                     <h2 class="text-3xl font-extrabold mb-2 tracking-tight">活動報名系統</h2>
-                    <p class="text-green-50/90 text-sm font-medium mb-6">探索精彩活動，開啟您的報名流程</p>
-
-                    <button onclick="toggleHistoryView()" id="btn-history-toggle"
-                        class="glass-effect text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 hover:bg-white/20 transition-all font-semibold text-sm">
-                        <i data-lucide="history" class="w-4 h-4"></i>
-                        <span id="history-btn-text">查看歷史活動</span>
-                    </button>
+                    <p class="text-green-50/90 text-sm font-medium mb-6">探索精彩活動，開啟您的報名流程</p><button
+                        onclick="toggleHistoryView()" id="btn-history-toggle"
+                        class="glass-effect text-white px-5 py-2.5 rounded-2xl flex items-center gap-2 hover:bg-white/20 transition-all font-semibold text-sm"><i
+                            data-lucide="history" class="w-4 h-4"></i><span id="history-btn-text">查看歷史活動</span></button>
                 </div>
             </div>
-
             <div id="active-categories" class="grid grid-cols-1 gap-4">
                 <div onclick="enterCategory('general')"
                     class="premium-card p-6 flex items-center gap-5 cursor-pointer relative overflow-hidden group">
                     <div class="absolute left-0 top-0 bottom-0 w-2 bg-green-500"></div>
                     <div
                         class="bg-green-50 p-4 rounded-2xl text-green-600 group-hover:scale-110 transition-transform duration-300">
-                        <i data-lucide="users" class="w-8 h-8"></i>
-                    </div>
+                        <i data-lucide="users" class="w-8 h-8"></i></div>
                     <div class="flex-1">
                         <h3 class="text-xl font-bold text-gray-800">一般活動</h3>
                         <p class="text-sm text-gray-500 mt-1">月會、運動會、慶生會</p>
                     </div>
                     <div
                         class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-green-50 group-hover:text-green-500 transition-colors">
-                        <i data-lucide="chevron-right" class="w-6 h-6"></i>
-                    </div>
+                        <i data-lucide="chevron-right" class="w-6 h-6"></i></div>
                 </div>
-
                 <div onclick="enterCategory('banquet')"
                     class="premium-card p-6 flex items-center gap-5 cursor-pointer relative overflow-hidden group">
                     <div class="absolute left-0 top-0 bottom-0 w-2 bg-orange-500"></div>
                     <div
                         class="bg-orange-50 p-4 rounded-2xl text-orange-600 group-hover:scale-110 transition-transform duration-300">
-                        <i data-lucide="utensils" class="w-8 h-8"></i>
-                    </div>
+                        <i data-lucide="utensils" class="w-8 h-8"></i></div>
                     <div class="flex-1">
                         <h3 class="text-xl font-bold text-gray-800">大型餐會</h3>
                         <p class="text-sm text-gray-500 mt-1">春酒、尾牙、授證典禮</p>
                     </div>
                     <div
                         class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-orange-50 group-hover:text-orange-500 transition-colors">
-                        <i data-lucide="chevron-right" class="w-6 h-6"></i>
-                    </div>
+                        <i data-lucide="chevron-right" class="w-6 h-6"></i></div>
                 </div>
-
                 <div onclick="enterCategory('travel')"
                     class="premium-card p-6 flex items-center gap-5 cursor-pointer relative overflow-hidden group">
                     <div class="absolute left-0 top-0 bottom-0 w-2 bg-blue-500"></div>
                     <div
                         class="bg-blue-50 p-4 rounded-2xl text-blue-600 group-hover:scale-110 transition-transform duration-300">
-                        <i data-lucide="bus" class="w-8 h-8"></i>
-                    </div>
+                        <i data-lucide="bus" class="w-8 h-8"></i></div>
                     <div class="flex-1">
                         <h3 class="text-xl font-bold text-gray-800">旅遊活動</h3>
                         <p class="text-sm text-gray-500 mt-1">旅遊、家庭日、兩天一夜</p>
                     </div>
                     <div
                         class="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-blue-50 group-hover:text-blue-500 transition-colors">
-                        <i data-lucide="chevron-right" class="w-6 h-6"></i>
-                    </div>
+                        <i data-lucide="chevron-right" class="w-6 h-6"></i></div>
                 </div>
             </div>
-
             <div id="history-list" class="hidden space-y-4 animate-fade-in">
                 <div id="history-loading" class="hidden space-y-3">
                     <div class="h-20 bg-gray-200 rounded-xl skeleton"></div>
                     <div class="h-20 bg-gray-200 rounded-xl skeleton"></div>
                 </div>
                 <div id="history-items" class="space-y-3"></div>
-            </div>
-
-            <button onclick="showCreateView()" id="btn-create-event"
-                class="w-full premium-gradient text-white py-4 rounded-2xl shadow-lg flex justify-center items-center gap-3 hover:scale-[1.02] transition-all font-bold active:scale-95 mt-6">
-                <i data-lucide="plus-circle" class="w-6 h-6"></i>
-                <span class="text-lg">建立新活動</span>
-            </button>
+            </div><button onclick="showCreateView()" id="btn-create-event"
+                class="w-full premium-gradient text-white py-4 rounded-2xl shadow-lg flex justify-center items-center gap-3 hover:scale-[1.02] transition-all font-bold active:scale-95 mt-6"><i
+                    data-lucide="plus-circle" class="w-6 h-6"></i><span class="text-lg">建立新活動</span></button>
         </div>
-
         <div id="view-event-list" class="view-section hidden space-y-4">
             <div id="filter-container"
                 class="flex gap-2 overflow-x-auto hide-scrollbar pb-2 sticky top-[0px] pt-2 z-40 bg-gray-50/95 backdrop-blur-sm">
                 <button onclick="switchCategory('all')" id="tab-all"
-                    class="filter-tab px-4 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium whitespace-nowrap shadow-sm">全部</button>
-                <button onclick="switchCategory('general')" id="tab-general"
-                    class="filter-tab px-4 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium whitespace-nowrap shadow-sm">一般</button>
-                <button onclick="switchCategory('banquet')" id="tab-banquet"
-                    class="filter-tab px-4 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium whitespace-nowrap shadow-sm">餐會</button>
-                <button onclick="switchCategory('travel')" id="tab-travel"
+                    class="filter-tab px-4 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium whitespace-nowrap shadow-sm">全部</button><button
+                    onclick="switchCategory('general')" id="tab-general"
+                    class="filter-tab px-4 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium whitespace-nowrap shadow-sm">一般</button><button
+                    onclick="switchCategory('banquet')" id="tab-banquet"
+                    class="filter-tab px-4 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium whitespace-nowrap shadow-sm">餐會</button><button
+                    onclick="switchCategory('travel')" id="tab-travel"
                     class="filter-tab px-4 py-1.5 rounded-full border border-gray-200 bg-white text-gray-600 text-sm font-medium whitespace-nowrap shadow-sm">旅遊</button>
             </div>
             <div id="event-list-loading" class="hidden space-y-3">
@@ -287,16 +307,13 @@
                 <p class="text-xs text-gray-400 mt-1" id="debug-msg"></p>
             </div>
         </div>
-
         <div id="view-activity-detail" class="view-section hidden space-y-6 animate-fade-in">
             <div id="event-info-card" class="premium-card p-6 relative overflow-hidden">
                 <div class="absolute -right-12 -top-12 w-32 h-32 bg-green-50 rounded-full blur-2xl opacity-60"></div>
                 <div class="absolute top-0 right-0 p-3">
-                    <div id="manager-controls" class="hidden">
-                        <button onclick="toggleEventStatus()" id="btn-status-toggle"
-                            class="text-xs px-3 py-1.5 rounded-full font-bold border transition flex items-center gap-1">
-                            <span>載入中</span>
-                        </button>
+                    <div id="manager-controls" class="hidden"><button onclick="toggleEventStatus()"
+                            id="btn-status-toggle"
+                            class="text-xs px-3 py-1.5 rounded-full font-bold border transition flex items-center gap-1"><span>載入中</span></button>
                     </div>
                 </div>
                 <h2 id="display-name" class="text-xl font-bold text-gray-900 pr-20 leading-tight">活動名稱</h2>
@@ -326,8 +343,7 @@
                                 <div>
                                     <div id="display-location" class="font-bold text-gray-800">地點名稱</div>
                                     <div id="display-address" class="text-xs text-gray-500 mt-0.5">詳細地址</div>
-                                </div>
-                                <a id="map-link" href="#" target="_blank"
+                                </div><a id="map-link" href="#" target="_blank"
                                     class="text-blue-500 bg-blue-50 hover:bg-blue-100 p-2 rounded-lg transition active:scale-95"><i
                                         data-lucide="navigation" class="w-4 h-4"></i></a>
                             </div>
@@ -337,99 +353,78 @@
                 <div id="travel-itinerary-section" class="hidden mt-6 pt-5 border-t border-dashed border-gray-100">
                     <details
                         class="group main-itinerary bg-gray-50/50 rounded-2xl border border-gray-100 open:bg-white open:shadow-sm transition-all duration-300">
-                        <summary class="flex justify-between items-center p-4 cursor-pointer select-none">
-                            <span class="flex items-center gap-3 font-bold text-gray-700">
-                                <i data-lucide="map" class="w-5 h-5 text-green-600"></i> 查看完整行程
-                            </span>
-                            <div class="bg-white rounded-full p-1.5 shadow-sm border border-gray-100 arrow-icon">
-                                <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500"></i>
-                            </div>
+                        <summary class="flex justify-between items-center p-4 cursor-pointer select-none"><span
+                                class="flex items-center gap-3 font-bold text-gray-700"><i data-lucide="map"
+                                    class="w-5 h-5 text-green-600"></i>查看完整行程 </span>
+                            <div class="bg-white rounded-full p-1.5 shadow-sm border border-gray-100 arrow-icon"><i
+                                    data-lucide="chevron-down" class="w-4 h-4 text-gray-500"></i></div>
                         </summary>
                         <div id="itinerary-accordion-content" class="px-4 pb-4 pt-1 space-y-3"></div>
                     </details>
                 </div>
             </div>
-
             <form id="regForm" class="premium-card p-6 space-y-8 relative" onsubmit="handleSubmit(event)">
                 <div class="flex items-center gap-3 pb-4 border-b border-gray-100">
                     <div class="bg-primary-light p-2 rounded-xl"><i data-lucide="edit-3"
                             class="w-6 h-6 text-primary"></i></div>
                     <h2 class="text-xl font-bold text-gray-800" id="form-title">填寫報名資料</h2>
-                </div>
-                <input type="hidden" id="eventId" name="eventId">
-                <input type="hidden" id="eventType" name="eventType">
-                <input type="hidden" id="eventName" name="eventName">
-                <input type="hidden" id="formAction" value="register">
+                </div><input type="hidden" id="eventId" name="eventId"><input type="hidden" id="eventType"
+                    name="eventType"><input type="hidden" id="eventName" name="eventName"><input type="hidden"
+                    id="formAction" value="register">
                 <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">報名者</label>
-                        <div class="flex gap-4 items-center bg-gray-50/80 p-4 rounded-2xl border border-gray-100">
-                            <img id="user-picture" src="https://ui-avatars.com/api/?name=Guest"
+                    <div><label class="block text-sm font-semibold text-gray-700 mb-2">報名者</label>
+                        <div class="flex gap-4 items-center bg-gray-50/80 p-4 rounded-2xl border border-gray-100"><img
+                                id="user-picture" src="https://ui-avatars.com/api/?name=Guest"
                                 class="w-12 h-12 rounded-full bg-gray-200 object-cover border-2 border-white shadow-sm">
-                            <div class="flex-1 min-w-0">
-                                <input type="text" id="user-name"
+                            <div class="flex-1 min-w-0"><input type="text" id="user-name"
                                     class="w-full bg-transparent border-none p-0 text-gray-800 font-bold text-base focus:ring-0"
                                     readonly value="讀取中...">
                                 <div class="text-xs text-gray-400 mt-0.5">將以此身分進行報名</div>
                             </div>
-                        </div>
-                        <input type="hidden" id="user-id">
+                        </div><input type="hidden" id="user-id">
                     </div>
                     <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">眷屬 (人數)</label>
-                            <div class="relative">
-                                <i data-lucide="users" class="absolute left-3 top-2.5 w-4 h-4 text-gray-400"></i>
-                                <select id="family-count"
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">眷屬 (人數)</label>
+                            <div class="relative"><i data-lucide="users"
+                                    class="absolute left-3 top-2.5 w-4 h-4 text-gray-400"></i><select id="family-count"
                                     class="w-full border border-gray-300 rounded-lg pl-9 pr-3 py-2 bg-white text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none appearance-none">
                                     <option value="0">0 人</option>
-                                </select>
-                                <i data-lucide="chevron-down"
-                                    class="absolute right-3 top-3 w-3 h-3 text-gray-400 pointer-events-none"></i>
-                            </div>
+                                </select><i data-lucide="chevron-down"
+                                    class="absolute right-3 top-3 w-3 h-3 text-gray-400 pointer-events-none"></i></div>
                         </div>
                     </div>
                 </div>
                 <div id="dynamic-fields" class="space-y-4">
                     <div id="field-travel" class="hidden space-y-3 p-4 bg-blue-50/50 rounded-xl border border-blue-100">
                         <div class="text-sm font-bold text-blue-800 flex items-center gap-1.5 mb-2"><i data-lucide="bus"
-                                class="w-4 h-4"></i> 旅遊選項</div>
-                        <div>
-                            <label class="text-xs font-medium text-gray-600 block mb-1.5">上車地點</label>
+                                class="w-4 h-4"></i>旅遊選項</div>
+                        <div><label class="text-xs font-medium text-gray-600 block mb-1.5">上車地點</label>
                             <div class="flex gap-2">
-                                <div class="relative flex-1">
-                                    <select id="pickup-loc" onchange="updatePickupMap()"
+                                <div class="relative flex-1"><select id="pickup-loc" onchange="updatePickupMap()"
                                         class="w-full text-sm border-gray-300 rounded-lg py-2 pl-3 pr-8 bg-white appearance-none focus:ring-1 focus:ring-blue-500 outline-none">
                                         <option value="">請選擇...</option>
-                                    </select>
-                                    <i data-lucide="chevron-down"
+                                    </select><i data-lucide="chevron-down"
                                         class="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none"></i>
-                                </div>
-                                <a id="pickup-map-btn" href="#" target="_blank"
+                                </div><a id="pickup-map-btn" href="#" target="_blank"
                                     class="hidden bg-white px-3 border border-gray-200 rounded-lg text-blue-500 hover:bg-blue-50 flex items-center justify-center transition"
-                                    title="查看地圖">
-                                    <i data-lucide="map" class="w-4 h-4"></i>
-                                </a>
+                                    title="查看地圖"><i data-lucide="map" class="w-4 h-4"></i></a>
                             </div>
                         </div>
-                        <div>
-                            <label class="text-xs font-medium text-gray-600 block mb-1.5">房型需求 (已選 / 總量)</label>
-                            <div class="relative">
-                                <select id="room-type"
+                        <div><label class="text-xs font-medium text-gray-600 block mb-1.5">房型需求 (已選 / 總量)</label>
+                            <div class="relative"><select id="room-type"
                                     class="w-full text-sm border-gray-300 rounded-lg py-2 pl-3 pr-8 bg-white appearance-none focus:ring-1 focus:ring-blue-500 outline-none">
                                     <option value="">請選擇...</option>
-                                </select>
-                                <i data-lucide="chevron-down"
+                                </select><i data-lucide="chevron-down"
                                     class="absolute right-3 top-2.5 w-4 h-4 text-gray-400 pointer-events-none"></i>
                             </div>
                         </div>
                     </div>
                     <div id="field-banquet" class="hidden p-4 bg-red-50/50 rounded-xl border border-red-100">
-                        <div class="flex justify-between items-center">
-                            <label class="text-sm font-bold text-red-800 flex items-center gap-1.5"><i
-                                    data-lucide="monitor" class="w-4 h-4"></i> 認桌數量</label>
-                            <div class="flex items-center gap-2 bg-white rounded-lg border border-red-200 p-1">
-                                <select id="table-count"
+                        <div class="flex justify-between items-center"><label
+                                class="text-sm font-bold text-red-800 flex items-center gap-1.5"><i
+                                    data-lucide="monitor" class="w-4 h-4"></i>認桌數量</label>
+                            <div class="flex items-center gap-2 bg-white rounded-lg border border-red-200 p-1"><select
+                                    id="table-count"
                                     class="w-20 text-center border-none rounded bg-transparent text-sm focus:ring-0 font-medium text-red-600">
                                     <option value="0">0</option>
                                     <option value="1">1</option>
@@ -437,104 +432,77 @@
                                     <option value="3">3</option>
                                     <option value="4">4</option>
                                     <option value="5">5</option>
-                                </select>
-                                <span class="text-xs text-gray-500 pr-2">桌</span>
-                            </div>
+                                </select><span class="text-xs text-gray-500 pr-2">桌</span></div>
                         </div>
                     </div>
                 </div>
                 <div class="bg-orange-50/50 p-4 rounded-xl border border-orange-100">
-                    <div class="flex justify-between items-center mb-3">
-                        <label class="text-sm font-bold text-orange-800 flex items-center gap-1.5"><i
-                                data-lucide="user-plus" class="w-4 h-4"></i> 來賓</label>
-                        <span class="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">選填</span>
-                    </div>
+                    <div class="flex justify-between items-center mb-3"><label
+                            class="text-sm font-bold text-orange-800 flex items-center gap-1.5"><i
+                                data-lucide="user-plus" class="w-4 h-4"></i>來賓</label><span
+                            class="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">選填</span></div>
                     <div id="guest-list-container" class="space-y-2 mb-3 empty:hidden"></div>
                     <div class="bg-white p-3 rounded-lg border border-orange-200 shadow-sm space-y-2">
-                        <div class="flex gap-2">
-                            <input type="text" id="add-guest-name" placeholder="來賓姓名"
-                                class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-orange-500 outline-none">
-                            <select id="add-guest-count"
+                        <div class="flex gap-2"><input type="text" id="add-guest-name" placeholder="來賓姓名"
+                                class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-orange-500 outline-none"><select
+                                id="add-guest-count"
                                 class="w-24 border border-gray-300 rounded-lg px-2 py-2 text-sm bg-gray-50 text-center"></select>
                         </div>
-                        <div id="guest-travel-options" class="hidden grid grid-cols-2 gap-2">
-                            <select id="add-guest-pickup"
+                        <div id="guest-travel-options" class="hidden grid grid-cols-2 gap-2"><select
+                                id="add-guest-pickup"
                                 class="w-full border border-gray-300 rounded-lg px-2 py-2 text-sm bg-gray-50 text-gray-700">
                                 <option value="">上車地點</option>
-                            </select>
-                            <select id="add-guest-room"
+                            </select><select id="add-guest-room"
                                 class="w-full border border-gray-300 rounded-lg px-2 py-2 text-sm bg-gray-50 text-gray-700">
                                 <option value="">房型</option>
-                            </select>
-                        </div>
-                        <button type="button" onclick="addGuest()"
-                            class="w-full bg-orange-500 text-white py-2 rounded-lg text-sm font-medium hover:bg-orange-600 transition flex justify-center items-center gap-1 active:scale-95">
-                            <i data-lucide="plus" class="w-4 h-4"></i> 加入名單
-                        </button>
+                            </select></div><button type="button" onclick="addGuest()"
+                            class="w-full bg-orange-500 text-white py-2 rounded-lg text-sm font-medium hover:bg-orange-600 transition flex justify-center items-center gap-1 active:scale-95"><i
+                                data-lucide="plus" class="w-4 h-4"></i>加入名單 </button>
                         <p class="text-[10px] text-red-500 mt-1 font-medium text-center">※ 請務必點擊「加入名單」按鈕，資料才會增加。</p>
                     </div>
                 </div>
-
-                <div class="p-4 border border-gray-200 rounded-xl bg-gray-50/30">
-                    <label class="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-1.5"><i
-                            data-lucide="gift" class="w-4 h-4 text-purple-500"></i> 贊助項目</label>
+                <div class="p-4 border border-gray-200 rounded-xl bg-gray-50/30"><label
+                        class="block text-sm font-bold text-gray-800 mb-3 flex items-center gap-1.5"><i
+                            data-lucide="gift" class="w-4 h-4 text-purple-500"></i>贊助項目</label>
                     <div id="sponsor-list-container" class="space-y-2 mb-3 empty:hidden"></div>
                     <div class="space-y-3 bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
-                        <div class="flex gap-4 text-xs font-medium text-gray-600 pb-2 border-b border-gray-100">
-                            <label
+                        <div class="flex gap-4 text-xs font-medium text-gray-600 pb-2 border-b border-gray-100"><label
                                 class="cursor-pointer flex items-center gap-1.5 hover:text-green-600 transition"><input
                                     type="radio" name="addSponsorType" value="alcohol" checked
-                                    onclick="renderAddSponsorUI()" class="accent-green-500"> 酒類</label>
-                            <label class="cursor-pointer flex items-center gap-1.5 hover:text-red-600 transition"><input
+                                    onclick="renderAddSponsorUI()" class="accent-green-500">酒類</label><label
+                                class="cursor-pointer flex items-center gap-1.5 hover:text-red-600 transition"><input
                                     type="radio" name="addSponsorType" value="money" onclick="renderAddSponsorUI()"
-                                    class="accent-red-500"> 紅包</label>
-                            <label
+                                    class="accent-red-500">紅包</label><label
                                 class="cursor-pointer flex items-center gap-1.5 hover:text-blue-600 transition"><input
                                     type="radio" name="addSponsorType" value="other" onclick="renderAddSponsorUI()"
-                                    class="accent-blue-500"> 其他</label>
-                        </div>
+                                    class="accent-blue-500">其他</label></div>
                         <div id="sponsor-input-area" class="flex flex-wrap gap-2 items-center min-h-[36px]"></div>
                         <button type="button" onclick="addSponsor()"
-                            class="w-full bg-gray-800 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition flex justify-center items-center gap-1.5 active:scale-95">
-                            <i data-lucide="plus" class="w-3.5 h-3.5"></i> 新增贊助
-                        </button>
+                            class="w-full bg-gray-800 text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-gray-700 transition flex justify-center items-center gap-1.5 active:scale-95"><i
+                                data-lucide="plus" class="w-3.5 h-3.5"></i>新增贊助 </button>
                         <p class="text-[10px] text-red-500 mt-1 font-medium text-center">※ 請務必點擊「新增贊助」按鈕，資料才會增加。</p>
                     </div>
                 </div>
-
-                <div class="flex gap-3 pt-2">
-                    <button type="submit" id="submit-btn"
-                        class="flex-1 bg-[#06c755] text-white font-bold py-3.5 rounded-xl hover:bg-green-600 transition shadow-md active:scale-95 flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                        <span>確認報名</span><i data-lucide="send" class="w-4 h-4"></i>
-                    </button>
-                    <button type="button" id="cancel-reg-btn" onclick="handleCancel()"
-                        class="hidden bg-red-50 text-red-500 border border-red-200 font-bold py-3.5 px-4 rounded-xl hover:bg-red-100 transition shadow-sm active:scale-95">
-                        <i data-lucide="trash-2" class="w-5 h-5"></i>
-                    </button>
-                </div>
+                <div class="flex gap-3 pt-2"><button type="submit" id="submit-btn"
+                        class="flex-1 bg-[#06c755] text-white font-bold py-3.5 rounded-xl hover:bg-green-600 transition shadow-md active:scale-95 flex justify-center items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"><span>確認報名</span><i
+                            data-lucide="send" class="w-4 h-4"></i></button><button type="button" id="cancel-reg-btn"
+                        onclick="handleCancel()"
+                        class="hidden bg-red-50 text-red-500 border border-red-200 font-bold py-3.5 px-4 rounded-xl hover:bg-red-100 transition shadow-sm active:scale-95"><i
+                            data-lucide="trash-2" class="w-5 h-5"></i></button></div>
             </form>
-
             <div class="premium-gradient text-white rounded-[2rem] shadow-xl p-6 mb-12 relative overflow-hidden">
                 <div class="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
                 <div class="absolute -left-4 -bottom-4 w-24 h-24 bg-black/10 rounded-full blur-xl"></div>
-
                 <div class="flex justify-between items-center mb-6 relative z-10">
-                    <h2 class="text-base font-bold flex items-center gap-2">
-                        <i data-lucide="bar-chart-2" class="w-5 h-5 text-accent"></i>
-                        <span id="stat-title">活動即時統計</span>
-                    </h2>
-                    <div class="flex gap-3">
-                        <button onclick="openShareModal()"
-                            class="glass-effect text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all text-xs font-semibold hover:bg-white/20">
-                            <i data-lucide="share-2" class="w-3.5 h-3.5"></i> 分享
-                        </button>
-                        <button onclick="fetchStats(true)"
-                            class="glass-effect text-white p-1.5 rounded-xl transition-all hover:bg-white/20">
-                            <i data-lucide="refresh-cw" class="w-4 h-4"></i>
-                        </button>
-                    </div>
+                    <h2 class="text-base font-bold flex items-center gap-2"><i data-lucide="bar-chart-2"
+                            class="w-5 h-5 text-accent"></i><span id="stat-title">活動即時統計</span></h2>
+                    <div class="flex gap-3"><button onclick="openShareModal()"
+                            class="glass-effect text-white px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition-all text-xs font-semibold hover:bg-white/20"><i
+                                data-lucide="share-2" class="w-3.5 h-3.5"></i>分享 </button><button
+                            onclick="fetchStats(true)"
+                            class="glass-effect text-white p-1.5 rounded-xl transition-all hover:bg-white/20"><i
+                                data-lucide="refresh-cw" class="w-4 h-4"></i></button></div>
                 </div>
-
                 <div class="grid grid-cols-2 gap-4 relative z-10">
                     <div onclick="openDetailsModal('people')"
                         class="glass-effect p-5 rounded-2xl hover:bg-white/20 transition-all border-white/10 text-center cursor-pointer active:scale-95">
@@ -549,97 +517,66 @@
                 </div>
             </div>
         </div>
-
         <div id="view-create" class="view-section hidden space-y-5 animate-fade-in">
             <div class="bg-white rounded-2xl shadow-sm p-6 border border-gray-200">
                 <h2 class="text-xl font-bold text-gray-800 mb-5 flex items-center gap-2"><i data-lucide="plus-square"
-                        class="w-6 h-6 text-gray-900"></i> 建立新活動</h2>
+                        class="w-6 h-6 text-gray-900"></i>建立新活動</h2>
                 <form onsubmit="handleCreateEvent(event)" class="space-y-5">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1.5">活動類型</label>
-                        <select id="new-type" onchange="toggleCreateFields()"
+                    <div><label class="block text-sm font-bold text-gray-700 mb-1.5">活動類型</label><select id="new-type"
+                            onchange="toggleCreateFields()"
                             class="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-black/10 outline-none transition">
                             <option value="general">一般活動</option>
                             <option value="banquet">大型餐會</option>
                             <option value="travel">旅遊活動</option>
-                        </select>
-                    </div>
-
+                        </select></div>
                     <div id="travel-notice"
                         class="hidden p-3 bg-yellow-50 text-yellow-700 text-sm rounded-lg border border-yellow-200 flex gap-2 items-start">
-                        <i data-lucide="alert-circle" class="w-5 h-5 shrink-0 mt-0.5"></i>
-                        <span>上車地點及房型、房型價格請通知管理員由管理員填寫</span>
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">活動名稱</label>
-                        <input type="text" id="new-name" required
+                        <i data-lucide="alert-circle"
+                            class="w-5 h-5 shrink-0 mt-0.5"></i><span>上車地點及房型、房型價格請通知管理員由管理員填寫</span></div>
+                    <div><label class="block text-sm font-medium text-gray-700 mb-1.5">活動名稱</label><input type="text"
+                            id="new-name" required
                             class="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-black/10 outline-none"
-                            placeholder="例如：五月慶生會">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">主辦人</label>
-                        <input type="text" id="new-organizer" readonly
+                            placeholder="例如：五月慶生會"></div>
+                    <div><label class="block text-sm font-medium text-gray-700 mb-1.5">主辦人</label><input type="text"
+                            id="new-organizer" readonly
                             class="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-gray-100 text-gray-500 cursor-not-allowed">
                     </div>
-
-                    <div id="new-field-time-single">
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">活動時間</label>
-                        <input type="datetime-local" id="new-time-single"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2.5">
-                    </div>
-
+                    <div id="new-field-time-single"><label
+                            class="block text-sm font-medium text-gray-700 mb-1.5">活動時間</label><input
+                            type="datetime-local" id="new-time-single"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2.5"></div>
                     <div id="new-field-time-range" class="hidden grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">出發日期</label>
-                            <input type="date" id="new-date-start"
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2.5">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-1.5">回程日期</label>
-                            <input type="date" id="new-date-end"
-                                class="w-full border border-gray-300 rounded-lg px-3 py-2.5">
-                        </div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">出發日期</label><input
+                                type="date" id="new-date-start"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2.5"></div>
+                        <div><label class="block text-sm font-medium text-gray-700 mb-1.5">回程日期</label><input
+                                type="date" id="new-date-end"
+                                class="w-full border border-gray-300 rounded-lg px-3 py-2.5"></div>
                     </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">報名截止時間 <span
-                                class="text-gray-400 font-normal text-xs">(選填)</span></label>
-                        <input type="datetime-local" id="new-deadline"
-                            class="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-gray-50">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">地點名稱</label>
-                        <input type="text" id="new-location"
+                    <div><label class="block text-sm font-medium text-gray-700 mb-1.5">報名截止時間 <span
+                                class="text-gray-400 font-normal text-xs">(選填)</span></label><input
+                            type="datetime-local" id="new-deadline"
+                            class="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-gray-50"></div>
+                    <div><label class="block text-sm font-medium text-gray-700 mb-1.5">地點名稱</label><input type="text"
+                            id="new-location"
                             class="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-black/10 outline-none"
-                            placeholder="請輸入地點">
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">詳細地址</label>
-                        <input type="text" id="new-address"
+                            placeholder="請輸入地點"></div>
+                    <div><label class="block text-sm font-medium text-gray-700 mb-1.5">詳細地址</label><input type="text"
+                            id="new-address"
                             class="w-full border border-gray-300 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-black/10 outline-none"
-                            placeholder="請輸入地址">
-                    </div>
-
-                    <div id="new-field-itinerary" class="hidden">
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">行程內容 (格式：D1: 標題|內容)</label>
-                        <textarea id="new-itinerary" rows="4"
+                            placeholder="請輸入地址"></div>
+                    <div id="new-field-itinerary" class="hidden"><label
+                            class="block text-sm font-medium text-gray-700 mb-1.5">行程內容 (格式：D1: 標題|內容)</label><textarea
+                            id="new-itinerary" rows="4"
                             class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm font-mono"
-                            placeholder="D1: 集合|08:00 車站集合;D2: 景點|10:00 抵達..."></textarea>
-                    </div>
-
-                    <button type="submit" id="create-btn"
-                        class="w-full bg-gray-900 text-white font-bold py-3.5 rounded-xl hover:bg-gray-800 transition shadow-lg flex justify-center items-center gap-2 mt-2">
-                        <span>確認建立</span><i data-lucide="check-square" class="w-4 h-4"></i>
-                    </button>
+                            placeholder="D1: 集合|08:00 車站集合;D2: 景點|10:00 抵達..."></textarea></div><button type="submit"
+                        id="create-btn"
+                        class="w-full bg-gray-900 text-white font-bold py-3.5 rounded-xl hover:bg-gray-800 transition shadow-lg flex justify-center items-center gap-2 mt-2"><span>確認建立</span><i
+                            data-lucide="check-square" class="w-4 h-4"></i></button>
                 </form>
             </div>
         </div>
     </div>
-
     <div id="details-modal"
         class="hidden fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
         <div class="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-sm max-h-[85vh] flex flex-col relative transform translate-y-full sm:translate-y-10 opacity-0 transition-all duration-300"
@@ -647,124 +584,90 @@
             <div
                 class="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/80 rounded-t-2xl backdrop-blur-md sticky top-0 z-10">
                 <h3 class="font-bold text-gray-800 flex items-center gap-2"><i data-lucide="list"
-                        class="w-5 h-5 text-gray-600"></i> 詳細名單</h3>
-                <button onclick="closeDetailsModal()"
+                        class="w-5 h-5 text-gray-600"></i>詳細名單</h3><button onclick="closeDetailsModal()"
                     class="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center transition text-gray-600"><i
                         data-lucide="x" class="w-5 h-5"></i></button>
             </div>
-
             <div id="modal-summary"
                 class="bg-blue-50/50 p-3 text-xs text-gray-700 border-b border-blue-100/50 grid grid-cols-2 gap-2">
             </div>
-
             <div class="p-0 overflow-y-auto flex-1 overscroll-contain">
-                <div id="modal-loading" class="flex flex-col items-center py-12">
-                    <i data-lucide="loader-2" class="w-8 h-8 animate-spin text-green-500 mb-2"></i>
-                    <span class="text-xs text-gray-400">正在讀取最新資料...</span>
-                </div>
-
+                <div id="modal-loading" class="flex flex-col items-center py-12"><i data-lucide="loader-2"
+                        class="w-8 h-8 animate-spin text-green-500 mb-2"></i><span
+                        class="text-xs text-gray-400">正在讀取最新資料...</span></div>
                 <div id="details-lists-container" class="hidden pb-4">
                     <div class="px-4 py-2 bg-gray-100 text-xs font-bold text-gray-500 sticky top-0">人員名單</div>
                     <ul id="details-list-people" class="divide-y divide-gray-100"></ul>
-
                     <div id="travel-separator"
                         class="hidden px-4 py-2 bg-gray-100 text-xs font-bold text-gray-500 sticky top-0 mt-2">住宿與交通
                     </div>
                     <ul id="details-list-travel" class="hidden divide-y divide-gray-100"></ul>
-
                     <div id="details-separator"
                         class="hidden px-4 py-2 bg-gray-100 text-xs font-bold text-gray-500 sticky top-0 mt-2">贊助與認桌
                     </div>
                     <ul id="details-list-items" class="divide-y divide-gray-100"></ul>
                 </div>
-
-                <div id="modal-empty" class="hidden flex flex-col items-center justify-center py-12 text-gray-400">
-                    <i data-lucide="clipboard-x" class="w-10 h-10 mb-2 opacity-50"></i>
+                <div id="modal-empty" class="hidden flex flex-col items-center justify-center py-12 text-gray-400"><i
+                        data-lucide="clipboard-x" class="w-10 h-10 mb-2 opacity-50"></i>
                     <p class="text-sm">目前尚未有人報名</p>
                 </div>
             </div>
-
-            <div class="p-4 border-t border-gray-100 bg-white pb-safe">
-                <button onclick="copyDetailsToClipboard()" id="btn-copy-list"
-                    class="w-full bg-gray-900 text-white py-3 rounded-xl text-sm font-bold hover:bg-gray-800 transition flex justify-center items-center gap-2 active:scale-95 shadow-lg">
-                    <i data-lucide="copy" class="w-4 h-4"></i> 複製名單分享
-                </button>
-            </div>
+            <div class="p-4 border-t border-gray-100 bg-white pb-safe"><button onclick="copyDetailsToClipboard()"
+                    id="btn-copy-list"
+                    class="w-full bg-gray-900 text-white py-3 rounded-xl text-sm font-bold hover:bg-gray-800 transition flex justify-center items-center gap-2 active:scale-95 shadow-lg"><i
+                        data-lucide="copy" class="w-4 h-4"></i>複製名單分享 </button></div>
         </div>
     </div>
-
     <div id="confirm-modal"
         class="hidden fixed inset-0 z-[80] flex items-center justify-center bg-black/60 backdrop-blur-sm p-6 animate-fade-in">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xs p-6 transform scale-100 transition-all">
             <h3 class="text-lg font-bold text-gray-900 mb-2">確認動作</h3>
             <p id="confirm-msg" class="text-gray-600 mb-6 text-sm leading-relaxed">確定要執行此操作嗎？</p>
-            <div class="flex gap-3">
-                <button id="confirm-no"
-                    class="flex-1 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">取消</button>
-                <button id="confirm-yes"
+            <div class="flex gap-3"><button id="confirm-no"
+                    class="flex-1 py-2.5 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">取消</button><button
+                    id="confirm-yes"
                     class="flex-1 py-2.5 rounded-xl bg-red-500 text-white font-medium hover:bg-red-600 shadow-md transition">確定</button>
             </div>
         </div>
     </div>
-
     <div id="toast"
         class="fixed top-6 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white px-5 py-3 rounded-full shadow-2xl opacity-0 transition-all duration-300 pointer-events-none z-[100] text-sm flex items-center gap-2.5 backdrop-blur-md">
-        <div class="bg-green-500 rounded-full p-0.5"><i data-lucide="check" class="w-3 h-3 text-white"></i></div>
-        <span id="toast-msg" class="font-medium tracking-wide">操作成功</span>
+        <div class="bg-green-500 rounded-full p-0.5"><i data-lucide="check" class="w-3 h-3 text-white"></i></div><span
+            id="toast-msg" class="font-medium tracking-wide">操作成功</span>
     </div>
-
     <div id="share-modal"
         class="hidden fixed inset-0 z-[90] flex items-center justify-center bg-black/60 backdrop-blur-sm p-6 animate-fade-in">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xs p-5 transform transition-all scale-100">
-            <h3 class="text-lg font-bold text-gray-900 mb-4 border-b border-gray-100 pb-2 flex items-center gap-2">
-                <i data-lucide="share-2" class="w-5 h-5 text-gray-700"></i> 分享選項
-            </h3>
-
+            <h3 class="text-lg font-bold text-gray-900 mb-4 border-b border-gray-100 pb-2 flex items-center gap-2"><i
+                    data-lucide="share-2" class="w-5 h-5 text-gray-700"></i>分享選項 </h3>
             <p class="text-xs text-gray-500 mb-3">請勾選要包含在複製內容中的資訊：</p>
-
-            <div class="space-y-3 mb-6">
-                <label
+            <div class="space-y-3 mb-6"><label
                     class="hidden flex items-center gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition border border-gray-100"
                     id="opt-container-sponsor">
-                    <div class="relative flex items-center">
-                        <input type="checkbox" id="share-opt-sponsor" checked
-                            class="peer w-5 h-5 rounded text-green-500 focus:ring-green-500 border-gray-300">
-                        <i data-lucide="check"
+                    <div class="relative flex items-center"><input type="checkbox" id="share-opt-sponsor" checked
+                            class="peer w-5 h-5 rounded text-green-500 focus:ring-green-500 border-gray-300"><i
+                            data-lucide="check"
                             class="absolute w-3.5 h-3.5 text-white pointer-events-none opacity-0 peer-checked:opacity-100 left-0.5 top-0.5"></i>
-                    </div>
-                    <span class="text-sm font-medium text-gray-700">贊助 / 認桌資訊</span>
-                </label>
-
-                <label
+                    </div><span class="text-sm font-medium text-gray-700">贊助 / 認桌資訊</span>
+                </label><label
                     class="hidden flex items-center gap-3 p-3 bg-gray-50 rounded-xl cursor-pointer hover:bg-gray-100 transition border border-gray-100"
                     id="opt-container-travel">
-                    <div class="relative flex items-center">
-                        <input type="checkbox" id="share-opt-travel" checked
-                            class="peer w-5 h-5 rounded text-green-500 focus:ring-green-500 border-gray-300">
-                        <i data-lucide="check"
+                    <div class="relative flex items-center"><input type="checkbox" id="share-opt-travel" checked
+                            class="peer w-5 h-5 rounded text-green-500 focus:ring-green-500 border-gray-300"><i
+                            data-lucide="check"
                             class="absolute w-3.5 h-3.5 text-white pointer-events-none opacity-0 peer-checked:opacity-100 left-0.5 top-0.5"></i>
-                    </div>
-                    <span class="text-sm font-medium text-gray-700">上車地點 / 房型</span>
+                    </div><span class="text-sm font-medium text-gray-700">上車地點 / 房型</span>
                 </label>
-
-                <div id="share-no-opts" class="hidden text-center text-sm text-gray-400 py-2">
-                    無額外資訊可選，將複製基本名單
-                </div>
+                <div id="share-no-opts" class="hidden text-center text-sm text-gray-400 py-2">無額外資訊可選，將複製基本名單 </div>
             </div>
-
-            <div class="flex gap-3">
-                <button onclick="document.getElementById('share-modal').classList.add('hidden')"
-                    class="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-bold text-sm hover:bg-gray-50 transition">取消</button>
-                <button onclick="confirmShareCopy()"
-                    class="flex-1 py-2.5 rounded-xl bg-gray-900 text-white font-bold text-sm hover:bg-gray-800 shadow-lg flex justify-center items-center gap-2 transition active:scale-95">
-                    <i data-lucide="copy" class="w-4 h-4"></i> 確認複製
-                </button>
-            </div>
+            <div class="flex gap-3"><button onclick="document.getElementById('share-modal').classList.add('hidden')"
+                    class="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-bold text-sm hover:bg-gray-50 transition">取消</button><button
+                    onclick="confirmShareCopy()"
+                    class="flex-1 py-2.5 rounded-xl bg-gray-900 text-white font-bold text-sm hover:bg-gray-800 shadow-lg flex justify-center items-center gap-2 transition active:scale-95"><i
+                        data-lucide="copy" class="w-4 h-4"></i>確認複製 </button></div>
         </div>
     </div>
-
-    <script>
-        // ==========================================
+    <script> // ==========================================
         // 1. CONFIGURATION & STATE
         // ==========================================
 
@@ -776,18 +679,31 @@
 
         // State Variables
         let appState = {
+
             events: [],
-            settings: { organizers: [], locations: [] },
-            user: { userId: '', displayName: '訪客', pictureUrl: '' },
+            settings: {
+                organizers: [], locations: []
+            }
+
+            ,
+            user: {
+                userId: '', displayName: '訪客', pictureUrl: ''
+            }
+
+            ,
             currentCategory: 'all',
             currentEvent: null,
-            currentStats: {},
+            currentStats: {}
+
+            ,
             historyStack: ['home'],
             guestList: [],
             sponsorList: [],
             isDataLoaded: false,
             myRegistrations: [] // Store IDs of registered events
-        };
+        }
+
+            ;
 
         // ==========================================
         // 2. INITIALIZATION (初始化)
@@ -804,7 +720,9 @@
             // ★ 修改處：LIFF 初始化與強制登入邏輯
             if (LIFF_ID && LIFF_ID !== "YOUR_LIFF_ID") {
                 try {
-                    await liff.init({ liffId: LIFF_ID });
+                    await liff.init({
+                        liffId: LIFF_ID
+                    });
 
                     // 1. 檢查是否已登入
                     if (!liff.isLoggedIn()) {
@@ -812,18 +730,25 @@
                         // redirectUri 是登入後要回來的網址，通常不填會自動回到當前頁面
                         liff.login();
                         return; // 登入會跳轉，中斷後續執行
-                    } else {
+                    }
+
+                    else {
                         // 2. 若已登入，取得使用者資料
                         const profile = await liff.getProfile();
+
                         appState.user = {
                             userId: profile.userId,
                             displayName: profile.displayName,
                             pictureUrl: profile.pictureUrl
-                        };
+                        }
+
+                            ;
                         // 取得使用者 Email (選填，需在 Console 開權限)
                         // const userEmail = liff.getDecodedIDToken().email; 
                     }
-                } catch (e) {
+                }
+
+                catch (e) {
                     console.error("LIFF Init failed", e);
                     // 只有在 LIFF 初始化失敗(例如 ID 錯誤或環境不對)時才會維持訪客
                     showToast("LINE 登入失敗，目前為訪客模式");
@@ -838,6 +763,7 @@
             appState.isDataLoaded = true;
 
             const listView = document.getElementById('view-event-list');
+
             if (!listView.classList.contains('hidden')) {
                 // 使用者正在列表頁等待，立刻渲染卡片
                 renderEventGrid(appState.currentCategory);
@@ -845,7 +771,9 @@
 
             // Remove initial skeleton loaders if on home
             document.getElementById('history-loading').classList.add('hidden');
-        };
+        }
+
+            ;
 
         function updateUserProfileUI() {
             document.getElementById('header-username').innerText = appState.user.displayName;
@@ -869,33 +797,59 @@
         // ==========================================
         async function fetchEvents() {
             if (!GAS_URL) return;
+
             try {
-                const res = await fetch(`${GAS_URL}?action=getEvents`);
+                const res = await fetch(`$ {
+                        GAS_URL
+                    }
+
+                    ?action=getEvents`);
                 appState.events = await res.json();
-            } catch (e) {
+            }
+
+            catch (e) {
                 console.warn("API Error (getEvents)", e);
             }
         }
 
         async function fetchSettings() {
             if (!GAS_URL) return;
+
             try {
-                const res = await fetch(`${GAS_URL}?action=getSettings`);
+                const res = await fetch(`$ {
+                        GAS_URL
+                    }
+
+                    ?action=getSettings`);
                 appState.settings = await res.json();
                 // Removed dropdown population as fields are now manual
-            } catch (e) {
+            }
+
+            catch (e) {
                 console.warn("API Error (getSettings)", e);
             }
         }
 
         async function fetchMyRegistrations() {
             if (!appState.user.userId || !GAS_URL) return;
+
             try {
+
                 // Try to fetch registrations.
-                const res = await fetch(`${GAS_URL}?action=getMyRegistrations&userId=${appState.user.userId}`);
+                const res = await fetch(`$ {
+                        GAS_URL
+                    }
+
+                    ?action=getMyRegistrations&userId=$ {
+                        appState.user.userId
+                    }
+
+                    `);
                 const data = await res.json();
                 appState.myRegistrations = Array.isArray(data) ? data : [];
-            } catch (e) {
+            }
+
+            catch (e) {
                 console.warn("Fetch Registrations Failed", e);
             }
         }
@@ -914,8 +868,21 @@
             }
 
             try {
+
                 // ★ 修改 2：這裡改用變數 e 來取得 id
-                const res = await fetch(`${GAS_URL}?action=stats&eventId=${e.id}&_=${Date.now()}`);
+                const res = await fetch(`$ {
+                        GAS_URL
+                    }
+
+                    ?action=stats&eventId=$ {
+                        e.id
+                    }
+
+                    &_=$ {
+                        Date.now()
+                    }
+
+                    `);
                 appState.currentStats = await res.json();
 
                 // Update UI numbers
@@ -927,31 +894,55 @@
                 // ★ 修改 3：這裡改用變數 e 來判斷 type，確保不會因為 currentEvent 變成 null 而報錯
                 if (e.type === 'travel') {
                     secValue = appState.currentStats.totalRooms || 0;
-                } else if (e.type === 'banquet') {
+                }
+
+                else if (e.type === 'banquet') {
                     secValue = appState.currentStats.tableCount || 0;
-                } else {
+                }
+
+                else {
                     secValue = appState.currentStats.secondary || 0;
                 }
 
                 animateValue(secEl, 0, secValue, 500);
-            } catch (err) {
+            }
+
+            catch (err) {
                 console.warn("Fetch Stats Failed", err);
             }
         }
 
         async function fetchDetails() {
             if (!GAS_URL) return [];
+
             try {
-                const res = await fetch(`${GAS_URL}?action=getDetails&eventId=${appState.currentEvent.id}`);
+                const res = await fetch(`$ {
+                        GAS_URL
+                    }
+
+                    ?action=getDetails&eventId=$ {
+                        appState.currentEvent.id
+                    }
+
+                    `);
                 return await res.json();
-            } catch (e) { return []; }
+            }
+
+            catch (e) {
+                return [];
+            }
         }
 
         async function apiSubmit(data) {
             if (GAS_URL) {
                 await fetch(GAS_URL, {
+
                     method: 'POST',
-                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    headers: {
+                        "Content-Type": "text/plain;charset=utf-8"
+                    }
+
+                    ,
                     body: JSON.stringify(data)
                 });
             }
@@ -968,8 +959,11 @@
             showToast("正在讀取活動詳情...");
 
             appState.currentEvent = event;
+
             // Clear stats immediately to prevent old data showing
-            appState.currentStats = {};
+            appState.currentStats = {}
+
+                ;
             document.getElementById('stat-total').innerText = "-";
             document.getElementById('stat-sec-val').innerText = "-";
 
@@ -984,12 +978,15 @@
             // 3. Render Static Info (Initial)
             renderEventStaticInfo();
 
+            renderEventStaticInfo();
+
+            // 6. Render Itinerary
+            renderItinerary(event.itinerary);
+
             // 4. Parallel Fetch for Speed
             // Use Promise.all to fetch stats and registration check concurrently
-            await Promise.all([
-                fetchStats(),
-                checkMyRegistration()
-            ]);
+            await Promise.all([fetchStats(),
+            checkMyRegistration()]);
 
             // 5. Re-render to update dropdown stats
             renderEventStaticInfo();
@@ -1005,7 +1002,11 @@
                 if (myRecord) {
                     fillFormWithRecord(myRecord);
                 }
-            } catch (e) { console.error(e); }
+            }
+
+            catch (e) {
+                console.error(e);
+            }
         }
 
         function fillFormWithRecord(record) {
@@ -1020,7 +1021,9 @@
                 btn.classList.replace('hover:bg-green-600', 'hover:bg-blue-700');
                 btn.disabled = false;
                 document.getElementById('cancel-reg-btn').classList.remove('hidden');
-            } else {
+            }
+
+            else {
                 btn.innerText = "已報名 (活動已結束)";
                 btn.className = "flex-1 bg-gray-400 text-white font-bold py-3.5 rounded-xl cursor-not-allowed flex justify-center items-center gap-2";
                 btn.disabled = true;
@@ -1057,6 +1060,7 @@
             if (guestJson && guestJson !== '[]') {
                 try {
                     const guests = (typeof guestJson === 'string') ? JSON.parse(guestJson) : guestJson;
+
                     if (Array.isArray(guests)) {
                         appState.guestList = guests.map(g => ({
                             ...g,
@@ -1065,7 +1069,9 @@
                         renderGuestList();
                         guestsLoaded = appState.guestList.length > 0;
                     }
-                } catch (e) { }
+                }
+
+                catch (e) { }
             }
 
             // 2. Try Name String
@@ -1078,8 +1084,16 @@
             if (!guestsLoaded && guestCount > 0) {
                 for (let i = 0; i < guestCount; i++) {
                     const id = 'g_' + Date.now() + Math.random().toString(36).substr(2, 5) + i;
-                    appState.guestList.push({ id, name: `來賓 ${i + 1}`, count: 1, pickup: '', room: '' });
+
+                    appState.guestList.push({
+                        id, name: `來賓 $ {
+                        i + 1
+                    }
+
+                    `, count: 1, pickup: '', room: ''
+                    });
                 }
+
                 renderGuestList();
             }
 
@@ -1115,22 +1129,30 @@
                 roomType: document.getElementById('room-type').value,
                 pickupLoc: document.getElementById('pickup-loc').value,
                 tableCount: document.getElementById('table-count').value
-            };
+            }
+
+                ;
 
             try {
                 await apiSubmit(formData);
                 showToast(formData.action === 'update' ? "更新成功！" : "報名成功！");
+
                 // Update local registration state
                 if (!appState.myRegistrations.includes(appState.currentEvent.id)) {
                     appState.myRegistrations.push(appState.currentEvent.id);
                 }
+
                 await fetchStats();
                 await checkMyRegistration();
                 // Re-render dropdown stats
                 renderEventStaticInfo();
-            } catch (err) {
+            }
+
+            catch (err) {
                 showToast("發生錯誤，請重試");
-            } finally {
+            }
+
+            finally {
                 btn.disabled = false;
                 btn.innerHTML = originalContent;
                 refreshIcons();
@@ -1161,9 +1183,13 @@
                 await fetchStats();
                 renderEventStaticInfo(); // Update dropdowns
 
-            } catch (err) {
+            }
+
+            catch (err) {
                 showToast("取消失敗");
-            } finally {
+            }
+
+            finally {
                 btn.innerHTML = '<i data-lucide="trash-2" class="w-5 h-5"></i>';
                 lucide.createIcons();
             }
@@ -1207,20 +1233,34 @@
             document.getElementById('display-organizer').innerText = e.organizer;
             document.getElementById('display-location').innerText = e.location;
             document.getElementById('display-address').innerText = e.address;
-            document.getElementById('map-link').href = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.address)}`;
+            document.getElementById('map-link').href = `https: //www.google.com/maps/search/?api=1&query=${encodeURIComponent(e.address)}`;
 
             // Time Display
             const timeDiv = document.getElementById('display-time-container');
+
             if (e.type === 'travel' && e.time.includes('~')) {
-                const [start, end] = e.time.split('~');
+                const [start,
+                    end] = e.time.split('~');
+
                 // Use formatDateOnly instead of formatDate for travel
-                timeDiv.innerHTML = `<div class="flex flex-col text-sm"><span class="text-green-700 font-bold">起：${formatDateOnly(start)}</span><span class="text-red-700 font-bold">止：${formatDateOnly(end)}</span></div>`;
-            } else {
+                timeDiv.innerHTML = `<div class="flex flex-col text-sm"><span class="text-green-700 font-bold">起：$ {
+                    formatDateOnly(start)
+                }
+
+                </span><span class="text-red-700 font-bold">止：$ {
+                    formatDateOnly(end)
+                }
+
+                </span></div>`;
+            }
+
+            else {
                 timeDiv.innerText = formatDate(e.time);
             }
 
             // Check if Closed -> Disable Form
             const isOpen = isEventOpen(e);
+
             if (!isOpen) {
                 // Disable all inputs in form
                 const formInputs = document.querySelectorAll('#regForm input, #regForm select, #regForm button');
@@ -1236,9 +1276,15 @@
             if (e.deadline) {
                 const isExpired = new Date() > new Date(e.deadline);
                 const color = isExpired ? "text-red-500 font-bold" : "text-gray-400";
-                timeDiv.innerHTML += `<div class="mt-1 pt-1 border-t border-gray-100 text-xs ${color} flex items-center gap-1"><i data-lucide="hourglass" class="w-3 h-3"></i> 截止：${formatDate(e.deadline)}</div>`;
 
-                if (isExpired && isOpen) { // Only show expired if event is technically still "open" but past deadline
+                timeDiv.innerHTML += `<div class="mt-1 pt-1 border-t border-gray-100 text-xs ${color} flex items-center gap-1"><i data-lucide="hourglass" class="w-3 h-3"></i>截止：$ {
+                    formatDate(e.deadline)
+                }
+
+                </div>`;
+
+                if (isExpired && isOpen) {
+                    // Only show expired if event is technically still "open" but past deadline
                     const btn = document.getElementById('submit-btn');
                     btn.disabled = true;
                     btn.innerText = "報名已截止";
@@ -1249,14 +1295,22 @@
 
             // Status Toggle Button - Permission Check
             const managerControls = document.getElementById('manager-controls');
+
             if (appState.user.userId && e.creatorId && appState.user.userId === e.creatorId) {
                 managerControls.classList.remove('hidden');
-            } else {
+            }
+
+            else {
                 managerControls.classList.add('hidden');
             }
 
             const statusBtn = document.getElementById('btn-status-toggle');
-            statusBtn.className = `text-xs px-3 py-1.5 rounded-full font-bold border transition flex items-center gap-1 ${isOpen ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100' : 'bg-green-50 text-green-600 border-green-200 hover:bg-green-100'}`;
+
+            statusBtn.className = `text-xs px-3 py-1.5 rounded-full font-bold border transition flex items-center gap-1 $ {
+                isOpen ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100': 'bg-green-50 text-green-600 border-green-200 hover:bg-green-100'
+            }
+
+            `;
             statusBtn.innerHTML = isOpen ? '<i data-lucide="stop-circle" class="w-3 h-3"></i> 關閉活動' : '<i data-lucide="play-circle" class="w-3 h-3"></i> 開啟活動';
 
             // Fields Visibility
@@ -1265,20 +1319,25 @@
                 banquet: document.getElementById('field-banquet'),
                 itinerary: document.getElementById('travel-itinerary-section'),
                 guestTravel: document.getElementById('guest-travel-options')
-            };
+            }
+
+                ;
 
             // Reset
             Object.values(fields).forEach(el => el.classList.add('hidden'));
             // ★ 修改這裡：預設標籤
-            document.getElementById('stat-sec-label').innerText = "贊助筆數";;
+            document.getElementById('stat-sec-label').innerText = "贊助筆數";
+            ;
 
             if (e.type === 'travel') {
                 fields.travel.classList.remove('hidden');
                 fields.guestTravel.classList.remove('hidden');
+
                 if (e.itinerary) {
                     fields.itinerary.classList.remove('hidden');
                     renderItinerary(e.itinerary);
                 }
+
                 // ★ 修改這裡：如果是旅遊，標籤顯示「已訂房數」
                 document.getElementById('stat-sec-label').innerText = "已訂房數";
 
@@ -1288,7 +1347,9 @@
                 populateRoomOptions('room-type', e.roomOpts);
                 populateRoomOptions('add-guest-room', e.roomOpts);
 
-            } else if (e.type === 'banquet') {
+            }
+
+            else if (e.type === 'banquet') {
                 fields.banquet.classList.remove('hidden');
                 document.getElementById('stat-sec-label').innerText = "預訂桌數";
             }
@@ -1300,25 +1361,32 @@
         function renderGuestList() {
             const container = document.getElementById('guest-list-container');
             container.innerHTML = '';
+
             appState.guestList.forEach((g, i) => {
                 let details = [];
-                if (g.count > 1) details.push(`${g.count}人`);
+
+                if (g.count > 1) details.push(`$ {
+                            g.count
+                        }
+
+                        人`);
                 if (g.pickup) details.push(g.pickup);
                 if (g.room) details.push(g.room);
-                const subtext = details.length > 0 ? `<span class="text-xs text-gray-400 ml-1">(${details.join(', ')})</span>` : '';
+
+                const subtext = details.length > 0 ? `<span class="text-xs text-gray-400 ml-1" >($ {
+                            details.join(', ')
+                        })</span>` : '';
 
                 // Use g.id for removal
-                container.innerHTML += `
-                    <div class="flex justify-between items-center bg-white border border-gray-200 pl-3 pr-2 py-2 rounded-lg text-sm shadow-sm animate-fade-in">
-                        <div class="flex items-center gap-2">
-                            <div class="w-1.5 h-1.5 rounded-full bg-orange-400"></div>
-                            <span class="font-medium text-gray-700">${g.name} ${subtext}</span>
-                        </div>
-                        <div class="flex gap-2 items-center">
-                            <i data-lucide="edit-2" class="w-4 h-4 tag-action tag-edit" onclick="editGuest(${i})"></i>
-                            <i data-lucide="x" class="w-4 h-4 tag-action tag-remove" onclick="removeGuest('${g.id}')"></i>
-                        </div>
-                    </div>`;
+                container.innerHTML += ` <div class="flex justify-between items-center bg-white border border-gray-200 pl-3 pr-2 py-2 rounded-lg text-sm shadow-sm animate-fade-in" > <div class="flex items-center gap-2" > <div class="w-1.5 h-1.5 rounded-full bg-orange-400" ></div> <span class="font-medium text-gray-700" >$ {
+                        g.name
+                    }
+
+                    $ {
+                        subtext
+                    }
+
+                    </span> </div> <div class="flex gap-2 items-center" > <i data-lucide="edit-2" class="w-4 h-4 tag-action tag-edit" onclick="editGuest(${i})" ></i> <i data-lucide="x" class="w-4 h-4 tag-action tag-remove" onclick="removeGuest('${g.id}')" ></i> </div> </div>`;
             });
             refreshIcons();
         }
@@ -1326,18 +1394,13 @@
         function renderSponsorList() {
             const container = document.getElementById('sponsor-list-container');
             container.innerHTML = '';
+
             appState.sponsorList.forEach((s, i) => {
-                container.innerHTML += `
-                    <div class="flex justify-between items-center bg-white border border-gray-200 pl-3 pr-2 py-2 rounded-lg text-sm shadow-sm animate-fade-in">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="gift" class="w-3.5 h-3.5 text-purple-500"></i>
-                            <span class="font-medium text-gray-700">${s}</span>
-                        </div>
-                        <div class="flex gap-2 items-center">
-                            <i data-lucide="edit-2" class="w-4 h-4 tag-action tag-edit" onclick="editSponsor(${i})"></i>
-                            <i data-lucide="x" class="w-4 h-4 tag-action tag-remove" onclick="removeSponsor(${i})"></i>
-                        </div>
-                    </div>`;
+                container.innerHTML += ` <div class="flex justify-between items-center bg-white border border-gray-200 pl-3 pr-2 py-2 rounded-lg text-sm shadow-sm animate-fade-in" > <div class="flex items-center gap-2" > <i data-lucide="gift" class="w-3.5 h-3.5 text-purple-500" ></i> <span class="font-medium text-gray-700" >$ {
+                        s
+                    }
+
+                    </span> </div> <div class="flex gap-2 items-center" > <i data-lucide="edit-2" class="w-4 h-4 tag-action tag-edit" onclick="editSponsor(${i})" ></i> <i data-lucide="x" class="w-4 h-4 tag-action tag-remove" onclick="removeSponsor(${i})" ></i> </div> </div>`;
             });
             refreshIcons();
         }
@@ -1371,14 +1434,18 @@
                 document.getElementById('sp-qty').value = qty;
                 document.getElementById('sp-unit').value = unit;
 
-            } else if (s.startsWith("紅包:")) {
+            }
+
+            else if (s.startsWith("紅包:")) {
                 document.querySelector('input[name="addSponsorType"][value="money"]').checked = true;
                 renderAddSponsorUI();
                 // "紅包: 1000元"
                 const money = parseInt(s.match(/\d+/)[0]);
                 document.getElementById('sp-money').value = money;
 
-            } else {
+            }
+
+            else {
                 // "其他: ..."
                 document.querySelector('input[name="addSponsorType"][value="other"]').checked = true;
                 renderAddSponsorUI();
@@ -1411,14 +1478,18 @@
 
             if (filtered.length === 0) {
                 document.getElementById('no-events-msg').classList.remove('hidden');
-            } else {
+            }
+
+            else {
                 document.getElementById('no-events-msg').classList.add('hidden');
+
                 filtered.forEach(e => {
                     const card = document.createElement('div');
                     card.className = "bg-white p-4 rounded-2xl shadow-sm border border-gray-100 card-hover cursor-pointer flex items-center gap-4 relative overflow-hidden group";
                     card.onclick = () => enterEventDetail(e.id);
 
                     let icon, colorClass, bgClass;
+
                     switch (normalizeType(e.type)) {
                         case 'banquet': icon = 'utensils'; colorClass = 'text-orange-600'; bgClass = 'bg-orange-50'; break;
                         case 'travel': icon = 'bus'; colorClass = 'text-blue-600'; bgClass = 'bg-blue-50'; break;
@@ -1427,28 +1498,37 @@
 
                     // Deadline Warning / Registered Badge Logic
                     let badge = '';
+
                     // 優先顯示已報名，即使已截止
                     if (appState.myRegistrations.includes(e.id)) {
                         badge = '<span class="absolute top-0 right-0 bg-green-500 text-white text-[10px] px-2 py-0.5 rounded-bl-lg font-bold">已報名</span>';
-                    } else if (e.deadline && new Date() > new Date(e.deadline)) {
+                    }
+
+                    else if (e.deadline && new Date() > new Date(e.deadline)) {
                         badge = '<span class="absolute top-0 right-0 bg-red-500 text-white text-[10px] px-2 py-0.5 rounded-bl-lg font-bold">已截止</span>';
                     }
 
-                    card.innerHTML = `
-                        ${badge}
-                        <div class="${bgClass} w-12 h-12 rounded-2xl flex items-center justify-center ${colorClass} shrink-0 group-hover:scale-110 transition-transform">
-                            <i data-lucide="${icon}" class="w-6 h-6"></i>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <h3 class="font-bold text-gray-800 text-lg mb-1 leading-snug">${e.name}</h3>
-                            <div class="text-xs text-gray-500 mb-2 break-words">主辦: ${e.organizer}</div>
-                            <div class="flex items-center gap-3 text-xs text-gray-500">
-                                <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> ${formatDateShort(e.time)}</span>
-                                <span class="flex items-center gap-1"><i data-lucide="map-pin" class="w-3 h-3"></i> ${e.location}</span>
-                            </div>
-                        </div>
-                        <i data-lucide="chevron-right" class="w-5 h-5 text-gray-300"></i>
-                    `;
+                    card.innerHTML = ` $ {
+                            badge
+                        }
+
+                        <div class="${bgClass} w-12 h-12 rounded-2xl flex items-center justify-center ${colorClass} shrink-0 group-hover:scale-110 transition-transform" > <i data-lucide="${icon}" class="w-6 h-6" ></i> </div> <div class="flex-1 min-w-0" > <h3 class="font-bold text-gray-800 text-lg mb-1 leading-snug" >$ {
+                            e.name
+                        }
+
+                        </h3> <div class="text-xs text-gray-500 mb-2 break-words" >主辦: $ {
+                            e.organizer
+                        }
+
+                        </div> <div class="flex items-center gap-3 text-xs text-gray-500" > <span class="flex items-center gap-1" ><i data-lucide="clock" class="w-3 h-3" ></i> $ {
+                            formatDateShort(e.time)
+                        }
+
+                        </span> <span class="flex items-center gap-1" ><i data-lucide="map-pin" class="w-3 h-3" ></i> $ {
+                            e.location
+                        }
+
+                        </span> </div> </div> <i data-lucide="chevron-right" class="w-5 h-5 text-gray-300" ></i> `;
                     container.appendChild(card);
                 });
                 refreshIcons();
@@ -1462,37 +1542,89 @@
             const content = document.getElementById('modal-content');
 
             modal.classList.remove('hidden');
+
             setTimeout(() => {
                 content.classList.remove('translate-y-full', 'opacity-0');
                 content.classList.add('translate-y-10', 'sm:translate-y-0', 'opacity-100');
-            }, 10);
+            }
+
+                , 10);
 
             // 動態修改標題
             const titleEl = document.querySelector('#details-modal h3');
+
             if (filterType === 'people') {
                 titleEl.innerHTML = '<i data-lucide="users" class="w-5 h-5 text-gray-600"></i> 人員名單';
-            } else if (filterType === 'secondary') {
+            }
+
+            else if (filterType === 'secondary') {
                 const type = appState.currentEvent.type;
                 const icon = type === 'travel' ? 'bus' : 'gift';
                 const text = type === 'travel' ? '住宿與交通' : '贊助與認桌';
-                titleEl.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5 text-gray-600"></i> ${text}明細`;
-            } else {
+
+                titleEl.innerHTML = `<i data-lucide="${icon}" class="w-5 h-5 text-gray-600"></i>$ {
+                    text
+                }
+
+                明細`;
+            }
+
+            else {
                 titleEl.innerHTML = '<i data-lucide="list" class="w-5 h-5 text-gray-600"></i> 詳細名單';
             }
+
             if (typeof lucide !== 'undefined') lucide.createIcons();
 
             // Populate Summary
             const sumDiv = document.getElementById('modal-summary');
             sumDiv.innerHTML = '';
+
             if (appState.currentEvent.type === 'travel') {
-                const pMap = appState.currentStats.pickupCounts || {};
-                const rMap = appState.currentStats.roomCounts || {};
+                const pMap = appState.currentStats.pickupCounts || {}
+
+                    ;
+
+                const rMap = appState.currentStats.roomCounts || {}
+
+                    ;
                 let html = '';
-                if (Object.keys(pMap).length) html += `<div class="bg-white rounded p-1.5"><div class="font-bold mb-1 text-gray-500">📍 上車地點</div>${Object.entries(pMap).map(([k, v]) => `<span class="inline-block bg-gray-100 px-1.5 rounded text-[10px] mr-1 mb-1">${k}:${v}</span>`).join('')}</div>`;
-                if (Object.keys(rMap).length) html += `<div class="bg-white rounded p-1.5"><div class="font-bold mb-1 text-gray-500">🛏 房型統計</div>${Object.entries(rMap).map(([k, v]) => `<span class="inline-block bg-gray-100 px-1.5 rounded text-[10px] mr-1 mb-1">${k}:${v}</span>`).join('')}</div>`;
+
+                if (Object.keys(pMap).length) html += `<div class="bg-white rounded p-1.5"><div class="font-bold mb-1 text-gray-500">📍 上車地點</div>$ {
+                    Object.entries(pMap).map(([k, v])=> `< span class="inline-block bg-gray-100 px-1.5 rounded text-[10px] mr-1 mb-1" > $ {
+                    k
+                }
+
+                        :$ {
+                    v
+                }
+
+                        </span > `).join('')
+                }
+
+                </div>`;
+
+                if (Object.keys(rMap).length) html += `<div class="bg-white rounded p-1.5"><div class="font-bold mb-1 text-gray-500">🛏 房型統計</div>$ {
+                    Object.entries(rMap).map(([k, v])=> `< span class="inline-block bg-gray-100 px-1.5 rounded text-[10px] mr-1 mb-1" > $ {
+                    k
+                }
+
+                        :$ {
+                    v
+                }
+
+                        </span > `).join('')
+                }
+
+                </div>`;
                 sumDiv.innerHTML = html;
-            } else if (appState.currentEvent.type === 'banquet') {
-                sumDiv.innerHTML = `<div class="col-span-2 bg-white rounded p-2 text-center font-bold text-red-500">總計預訂: ${appState.currentStats.tableCount} 桌</div>`;
+            }
+
+            else if (appState.currentEvent.type === 'banquet') {
+                sumDiv.innerHTML = `<div class="col-span-2 bg-white rounded p-2 text-center font-bold text-red-500">總計預訂: $ {
+                    appState.currentStats.tableCount
+                }
+
+                桌</div>`;
             }
 
             const listContainer = document.getElementById('details-lists-container');
@@ -1529,16 +1661,21 @@
                 if (labelI) labelI.classList.add('hidden');
                 listP.classList.remove('hidden');
                 labelP.classList.remove('hidden');
-            } else if (filterType === 'secondary') {
+            }
+
+            else if (filterType === 'secondary') {
                 listP.classList.add('hidden');
                 labelP.classList.add('hidden');
                 const evtType = appState.currentEvent.type;
+
                 if (evtType === 'travel') {
                     if (listT) listT.classList.remove('hidden');
                     if (labelT) labelT.classList.remove('hidden');
                     if (listI) listI.classList.add('hidden');
                     if (labelI) labelI.classList.add('hidden');
-                } else {
+                }
+
+                else {
                     if (listI) listI.classList.remove('hidden');
                     if (labelI) labelI.classList.remove('hidden');
                     if (listT) listT.classList.add('hidden');
@@ -1552,7 +1689,9 @@
             const listT = document.getElementById('details-list-travel');
             const listI = document.getElementById('details-list-items');
 
-            listP.innerHTML = ''; listT.innerHTML = ''; listI.innerHTML = '';
+            listP.innerHTML = '';
+            listT.innerHTML = '';
+            listI.innerHTML = '';
             document.getElementById('travel-separator').classList.add('hidden');
             listT.classList.add('hidden');
             document.getElementById('details-separator').classList.add('hidden');
@@ -1583,6 +1722,7 @@
                 if (guestJson && guestJson !== '[]') {
                     try {
                         const parsed = (typeof guestJson === 'string') ? JSON.parse(guestJson) : guestJson;
+
                         if (Array.isArray(parsed)) {
                             guestData = parsed.map(g => ({
                                 name: g.name,
@@ -1591,13 +1731,18 @@
                                 room: g.room
                             }));
                         }
-                    } catch (e) { console.warn("Guest JSON parse error", e); }
+                    }
+
+                    catch (e) {
+                        console.warn("Guest JSON parse error", e);
+                    }
                 }
 
                 // Fallback: Parse String if JSON failed or empty, but string exists
                 if (guestData.length === 0 && guestNameStr && guestNameStr !== '無') {
                     // Split by comma or Chinese comma
-                    const guestEntries = guestNameStr.split(/[,、]\s*/);
+                    const guestEntries = guestNameStr.split(/[, 、]\s*/);
+
                     guestEntries.forEach(g => {
                         if (!g.trim()) return;
 
@@ -1609,6 +1754,7 @@
                         let count = 1;
 
                         const match = part0.match(/(.*?)\((\d+)\)/);
+
                         if (match) {
                             displayName = match[1].trim();
                             count = parseInt(match[2]);
@@ -1629,28 +1775,62 @@
                 const total = 1 + family + finalGuestCount;
 
                 let badge = '';
-                if (total > 1) badge = `<span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs font-bold">+${total - 1}</span>`;
+
+                if (total > 1) badge = `<span class="bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded text-xs font-bold" >+$ {
+                total - 1
+            }
+
+            </span>`;
 
                 // Build Guest Sub-HTML
                 let subHtml = '';
+
                 if (guestData.length > 0) {
                     let guestTexts = [];
+
                     guestData.forEach(g => {
                         let str = g.name;
-                        if (g.count > 1) str += ` (${g.count}人)`;
+
+                        if (g.count > 1) str += ` ($ {
+                                g.count
+                            }
+
+                            人)`;
 
                         let extras = [];
                         if (g.pickup) extras.push(g.pickup);
                         if (g.room) extras.push(g.room);
-                        if (extras.length) str += ` [${extras.join('/')}]`;
+
+                        if (extras.length) str += ` [$ {
+                            extras.join('/')
+                        }
+
+                        ]`;
 
                         guestTexts.push(str);
                     });
-                    subHtml = `<div class="text-xs text-gray-500 mt-0.5 pl-6">賓: ${guestTexts.join('、')}</div>`;
-                } else if (guestNameStr && guestNameStr !== '無') {
-                    subHtml = `<div class="text-xs text-gray-500 mt-0.5 pl-6">賓: ${guestNameStr}</div>`;
-                } else if (finalGuestCount > 0) {
-                    subHtml = `<div class="text-xs text-gray-500 mt-0.5 pl-6">賓: ${finalGuestCount} 人</div>`;
+
+                    subHtml = `<div class="text-xs text-gray-500 mt-0.5 pl-6" >賓: $ {
+                    guestTexts.join('、')
+                }
+
+                </div>`;
+                }
+
+                else if (guestNameStr && guestNameStr !== '無') {
+                    subHtml = `<div class="text-xs text-gray-500 mt-0.5 pl-6" >賓: $ {
+                    guestNameStr
+                }
+
+                </div>`;
+                }
+
+                else if (finalGuestCount > 0) {
+                    subHtml = `<div class="text-xs text-gray-500 mt-0.5 pl-6" >賓: $ {
+                    finalGuestCount
+                }
+
+                人</div>`;
                 }
 
                 // Re-extract main person travel info for the list
@@ -1663,50 +1843,90 @@
                 // Sponsor: Try Sponsorship, Sponsor, 贊助項目, 贊助
                 const sponsor = row.sponsorList || row.sponsor || row.Sponsorship || row.Sponsor || row['Sponsorship'] || row['贊助項目'] || row['贊助'];
 
-                listP.innerHTML += `
-                    <li class="px-4 py-3 hover:bg-gray-50 transition">
-                        <div class="flex justify-between items-center">
-                            <div class="flex items-center gap-3">
-                                <span class="text-xs text-gray-300 font-mono w-4">${idx + 1}</span>
-                                <span class="font-bold text-gray-800">${name}</span>
-                                ${badge}
-                            </div>
-                        </div>
-                        ${subHtml}
-                    </li>`;
+                listP.innerHTML += ` <li class="px-4 py-3 hover:bg-gray-50 transition" > <div class="flex justify-between items-center" > <div class="flex items-center gap-3" > <span class="text-xs text-gray-300 font-mono w-4" >$ {
+                idx + 1
+            }
+
+            </span> <span class="font-bold text-gray-800" >$ {
+                name
+            }
+
+            </span> $ {
+                badge
+            }
+
+            </div> </div> $ {
+                subHtml
+            }
+
+            </li>`;
 
                 if (appState.currentEvent.type === 'travel') {
+
                     // Check main person
                     if ((pickup && pickup !== '無') || (room && room !== '無')) {
                         hasTravel = true;
-                        listT.innerHTML += `
-                            <li class="px-4 py-2 flex justify-between items-center hover:bg-gray-50 text-sm">
-                                <span class="font-medium text-gray-700">${name}</span>
-                                <div class="text-right text-xs text-gray-500">
-                                    ${pickup && pickup !== '無' ? `<div class="text-blue-600">${pickup}</div>` : ''}
-                                    ${room && room !== '無' ? `<div class="text-orange-600">${room}</div>` : ''}
-                                </div>
-                            </li>`;
+
+                        listT.innerHTML += ` <li class="px-4 py-2 flex justify-between items-center hover:bg-gray-50 text-sm" > <span class="font-medium text-gray-700" >$ {
+                        name
+                    }
+
+                    </span> <div class="text-right text-xs text-gray-500" > $ {
+                        pickup && pickup !=='無' ? `< div class="text-blue-600" > $ {
+                            pickup
+                        }
+
+                        </div > ` : ''
+                    }
+
+                    $ {
+                        room && room !=='無' ? `< div class="text-orange-600" > $ {
+                            room
+                        }
+
+                        </div > ` : ''
+                    }
+
+                    </div> </li>`;
                     }
 
                     // Check guests
                     guestData.forEach(g => {
                         if ((g.pickup && g.pickup !== '無') || (g.room && g.room !== '無')) {
                             hasTravel = true;
-                            listT.innerHTML += `
-                                <li class="px-4 py-2 flex justify-between items-center hover:bg-gray-50 text-sm">
-                                    <span class="font-medium text-gray-700"><span class="text-xs text-gray-400 mr-1">賓</span>${g.name}</span>
-                                    <div class="text-right text-xs text-gray-500">
-                                        ${g.pickup && g.pickup !== '無' ? `<div class="text-blue-600">${g.pickup}</div>` : ''}
-                                        ${g.room && g.room !== '無' ? `<div class="text-orange-600">${g.room}</div>` : ''}
-                                    </div>
-                                </li>`;
+
+                            listT.innerHTML += ` <li class="px-4 py-2 flex justify-between items-center hover:bg-gray-50 text-sm" > <span class="font-medium text-gray-700" ><span class="text-xs text-gray-400 mr-1" >賓</span>$ {
+                                g.name
+                            }
+
+                            </span> <div class="text-right text-xs text-gray-500" > $ {
+                                g.pickup && g.pickup !=='無' ? `< div class="text-blue-600" > $ {
+                                g.pickup
+                            }
+
+                                </div > ` : ''
+                            }
+
+                            $ {
+                                g.room && g.room !=='無' ? `< div class="text-orange-600" > $ {
+                                g.room
+                            }
+
+                                </div > ` : ''
+                            }
+
+                            </div> </li>`;
                         }
                     });
                 }
 
                 const items = [];
-                if (tableCount > 0) items.push(`認桌 ${tableCount} 桌`);
+
+                if (tableCount > 0) items.push(`認桌 $ {
+                    tableCount
+                }
+
+                桌`);
 
                 // Sponsor: Robust Parsing (JSON Array vs String)
                 if (sponsor && sponsor !== '無') {
@@ -1716,15 +1936,20 @@
                     // Try JSON parse first
                     try {
                         const json = (typeof sponsor === 'string' && (sponsor.startsWith('[') || sponsor.startsWith('{'))) ? JSON.parse(sponsor) : sponsor;
+
                         if (Array.isArray(json)) {
                             spList = json;
                             parsed = true;
                         }
-                    } catch (e) { /* Not JSON, fallback to string split */ }
+                    }
+
+                    catch (e) {
+                        /* Not JSON, fallback to string split */
+                    }
 
                     if (!parsed) {
                         // Fallback: Split by comma/semicolon/Chinese comma
-                        spList = sponsor.split(/[,、;]\s*/);
+                        spList = sponsor.split(/[, 、; ]\s*/);
                     }
 
                     spList.forEach(s => {
@@ -1736,15 +1961,20 @@
 
                 if (items.length > 0) {
                     hasItems = true;
-                    listI.innerHTML += `
-                        <li class="px-4 py-3 hover:bg-gray-50">
-                            <div class="flex justify-between items-start">
-                                <span class="font-medium text-gray-800 text-sm">${name}</span>
-                                <div class="text-right flex-1 pl-4">
-                                    ${items.map(i => `<div class="text-xs text-purple-600 bg-purple-50 inline-block px-2 py-1 rounded mb-1 ml-1">${i}</div>`).join('')}
-                                </div>
-                            </div>
-                        </li>`;
+
+                    listI.innerHTML += ` <li class="px-4 py-3 hover:bg-gray-50" > <div class="flex justify-between items-start" > <span class="font-medium text-gray-800 text-sm" >$ {
+                    name
+                }
+
+                </span> <div class="text-right flex-1 pl-4" > $ {
+                    items.map(i=> `< div class="text-xs text-purple-600 bg-purple-50 inline-block px-2 py-1 rounded mb-1 ml-1" > $ {
+                        i
+                    }
+
+                        </div > `).join('')
+                }
+
+                </div> </div> </li>`;
                 }
             });
 
@@ -1752,6 +1982,7 @@
                 document.getElementById('travel-separator').classList.remove('hidden');
                 listT.classList.remove('hidden');
             }
+
             if (hasItems) {
                 document.getElementById('details-separator').classList.remove('hidden');
                 listI.classList.remove('hidden');
@@ -1772,12 +2003,16 @@
             document.getElementById(viewId).classList.remove('hidden');
 
             const backBtn = document.getElementById('btn-back');
+
             if (viewId === 'view-home') {
                 backBtn.classList.add('hidden');
                 appState.historyStack = ['home'];
-            } else {
+            }
+
+            else {
                 backBtn.classList.remove('hidden');
             }
+
             window.scrollTo(0, 0);
         }
 
@@ -1790,7 +2025,9 @@
                 switchView('view-home');
                 appState.historyStack = ['home'];
                 appState.currentEvent = null;
-            } else if (prev === 'list') {
+            }
+
+            else if (prev === 'list') {
                 switchView('view-event-list');
                 document.getElementById('header-title').innerText = getCategoryTitle(appState.currentCategory);
                 appState.currentEvent = null;
@@ -1820,19 +2057,24 @@
 
                 if (history.length === 0) {
                     list.innerHTML = '<div class="text-center text-gray-400 text-sm py-4">無歷史紀錄</div>';
-                } else {
+                }
+
+                else {
                     history.forEach(e => {
-                        list.innerHTML += `
-                            <div onclick="enterEventDetail('${e.id}')" class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex justify-between items-center cursor-pointer hover:bg-gray-50">
-                                <div>
-                                    <h4 class="font-bold text-gray-700">${e.name}</h4>
-                                    <div class="text-xs text-gray-400 mt-1">${formatDateShort(e.time)}</div>
-                                </div>
-                                <span class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">已結束</span>
-                            </div>`;
+                        list.innerHTML += ` <div onclick="enterEventDetail('${e.id}')" class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex justify-between items-center cursor-pointer hover:bg-gray-50" > <div> <h4 class="font-bold text-gray-700" >$ {
+                                e.name
+                            }
+
+                            </h4> <div class="text-xs text-gray-400 mt-1" >$ {
+                                formatDateShort(e.time)
+                            }
+
+                            </div> </div> <span class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full" >已結束</span> </div>`;
                     });
                 }
-            } else {
+            }
+
+            else {
                 // 切換回首頁模式
                 activeCats.classList.remove('hidden');
                 createBtn.classList.remove('hidden');
@@ -1852,12 +2094,21 @@
         function switchCategory(type) {
             appState.currentCategory = type;
             document.querySelectorAll('.filter-tab').forEach(btn => btn.classList.remove('active'));
-            document.getElementById(`tab-${type}`).classList.add('active');
+
+            document.getElementById(`tab-$ {
+                    type
+                }
+
+                `).classList.add('active');
             renderEventGrid(type);
         }
 
         function getCategoryTitle(t) {
-            const map = { 'general': '一般活動', 'banquet': '大型餐會', 'travel': '旅遊活動', 'all': '所有活動' };
+            const map = {
+                'general': '一般活動', 'banquet': '大型餐會', 'travel': '旅遊活動', 'all': '所有活動'
+            }
+
+                ;
             return map[t] || '活動列表';
         }
 
@@ -1870,7 +2121,9 @@
             setTimeout(() => {
                 toast.classList.remove('top-20', 'opacity-100');
                 toast.classList.add('opacity-0', 'pointer-events-none', 'top-6');
-            }, 2500);
+            }
+
+                , 2500);
         }
 
         function showConfirm(msg) {
@@ -1883,10 +2136,21 @@
                     modal.classList.add('hidden');
                     document.getElementById('confirm-yes').onclick = null;
                     document.getElementById('confirm-no').onclick = null;
-                };
+                }
 
-                document.getElementById('confirm-yes').onclick = () => { cleanup(); resolve(true); };
-                document.getElementById('confirm-no').onclick = () => { cleanup(); resolve(false); };
+                    ;
+
+                document.getElementById('confirm-yes').onclick = () => {
+                    cleanup(); resolve(true);
+                }
+
+                    ;
+
+                document.getElementById('confirm-no').onclick = () => {
+                    cleanup(); resolve(false);
+                }
+
+                    ;
             });
         }
 
@@ -1901,16 +2165,16 @@
         function renderAddSponsorUI() {
             const type = document.querySelector('input[name="addSponsorType"]:checked').value;
             const area = document.getElementById('sponsor-input-area');
+
             if (type === 'alcohol') {
-                area.innerHTML = `
-                    <input id="sp-qty" type="number" class="w-20 border border-gray-300 rounded px-2 py-1 text-sm" placeholder="數量" min="1">
-                    <select id="sp-unit" class="border border-gray-300 rounded px-2 py-1 text-sm bg-white">
-                        <option value="瓶">瓶</option>
-                        <option value="箱">箱</option>
-                    </select>`;
-            } else if (type === 'money') {
+                area.innerHTML = ` <input id="sp-qty" type="number" class="w-20 border border-gray-300 rounded px-2 py-1 text-sm" placeholder="數量" min="1"><select id="sp-unit" class="border border-gray-300 rounded px-2 py-1 text-sm bg-white"><option value="瓶">瓶</option><option value="箱">箱</option></select>`;
+            }
+
+            else if (type === 'money') {
                 area.innerHTML = `<input id="sp-money" type="number" class="w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="金額 (100為單位)" min="100" step="100">`;
-            } else {
+            }
+
+            else {
                 area.innerHTML = `<input id="sp-other" type="text" class="w-full border border-gray-300 rounded px-2 py-1 text-sm" placeholder="贊助內容">`;
             }
         }
@@ -1923,26 +2187,54 @@
                 const qty = document.getElementById('sp-qty').value;
                 const unit = document.getElementById('sp-unit').value;
                 if (!qty || parseInt(qty) <= 0) return showToast("請輸入有效數量");
-                res = `酒類: ${qty}${unit}`;
-            } else if (type === 'money') {
+
+                res = `酒類: $ {
+                    qty
+                }
+
+                $ {
+                    unit
+                }
+
+                `;
+            }
+
+            else if (type === 'money') {
                 const val = document.getElementById('sp-money').value;
                 const num = parseInt(val);
                 if (!num || num <= 0) return showToast("金額不能為負數或零");
                 if (num % 100 !== 0) return showToast("金額須為 100 的倍數");
-                res = `紅包: ${num}元`;
-            } else {
+
+                res = `紅包: $ {
+                    num
+                }
+
+                元`;
+            }
+
+            else {
                 const val = document.getElementById('sp-other').value.trim();
                 if (!val) return showToast("請輸入內容");
-                res = `其他: ${val}`;
+
+                res = `其他: $ {
+                    val
+                }
+
+                `;
             }
+
             appState.sponsorList.push(res);
             renderSponsorList();
         }
 
-        function removeSponsor(i) { appState.sponsorList.splice(i, 1); renderSponsorList(); }
+        function removeSponsor(i) {
+            appState.sponsorList.splice(i, 1);
+            renderSponsorList();
+        }
 
         function restoreSponsorList(str) {
             appState.sponsorList = [];
+
             if (str && str !== '無') {
                 appState.sponsorList.push(str);
                 renderSponsorList();
@@ -1955,6 +2247,7 @@
             if (!el) return;
             const val = el.value; // Preserve value
             el.innerHTML = '<option value="">請選擇...</option>';
+
             if (items) items.forEach(i => {
                 const v = i.includes('|') ? i.split('|')[0] : i; // Handle "Label|Url" format
                 // Ensure text does not contain URL if it is Name|Url
@@ -1973,6 +2266,7 @@
             opts.forEach(opt => {
                 let name = opt;
                 let limit = null;
+
                 // Parse "Double:10"
                 if (opt.includes(':')) {
                     const parts = opt.split(':');
@@ -1984,11 +2278,23 @@
                 const current = (appState.currentStats.roomCounts && appState.currentStats.roomCounts[name]) || 0;
 
                 let label = name;
+
                 if (limit) {
-                    label += ` (已訂:${current}/${limit})`;
-                } else {
-                    label += ` (已訂:${current})`;
+                    label += ` (已訂:$ {
+                                current
+                            }
+
+                            /$ {
+                                limit
+                            })`;
                 }
+
+                else {
+                    label += ` (已訂:$ {
+                                current
+                            })`;
+                }
+
                 el.add(new Option(label, name));
             });
             el.value = currentVal;
@@ -1997,22 +2303,35 @@
         function populateCountOptions() {
             const f = document.getElementById('family-count');
             const g = document.getElementById('add-guest-count');
+
             for (let i = 1; i <= 10; i++) {
-                f.add(new Option(`${i} 人`, i));
-                g.add(new Option(`${i} 人`, i));
+                f.add(new Option(`$ {
+                            i
+                        }
+
+                        人`, i));
+
+                g.add(new Option(`$ {
+                            i
+                        }
+
+                        人`, i));
             }
         }
+
         function populateCreateDropdowns() {
             populateSelect('new-organizer-select', appState.settings.organizers);
             const locEl = document.getElementById('new-location-select');
             locEl.innerHTML = '<option value="">請選擇</option>';
             appState.settings.locations.forEach(l => locEl.add(new Option(l.name, l.name)));
         }
+
         function onLocationChange() {
             const val = document.getElementById('new-location-select').value;
             const loc = appState.settings.locations.find(l => l.name === val);
             document.getElementById('new-address').value = loc ? loc.address : '';
         }
+
         function updatePickupMap() {
             const val = document.getElementById('pickup-loc').value;
             const btn = document.getElementById('pickup-map-btn');
@@ -2022,10 +2341,13 @@
             if (opt && opt.includes('|')) {
                 btn.classList.remove('hidden');
                 btn.href = opt.split('|')[1];
-            } else {
+            }
+
+            else {
                 btn.classList.add('hidden');
             }
         }
+
         function toggleCreateFields() {
             const type = document.getElementById('new-type').value;
             const isTravel = type === 'travel';
@@ -2035,33 +2357,196 @@
 
             // 顯示/隱藏旅遊活動的提示訊息
             const travelNotice = document.getElementById('travel-notice');
+
             if (travelNotice) {
                 if (isTravel) {
                     travelNotice.classList.remove('hidden');
-                } else {
+                }
+
+                else {
                     travelNotice.classList.add('hidden');
                 }
             }
         }
 
         function renderItinerary(str) {
+            const section = document.getElementById('travel-itinerary-section');
             const container = document.getElementById('itinerary-accordion-content');
+
+            if (!str || !str.trim()) {
+                if (section) section.classList.add('hidden');
+                container.innerHTML = '';
+                return;
+            }
+
+            if (section) section.classList.remove('hidden');
             container.innerHTML = '';
-            if (!str) return;
 
-            str.split(';').forEach(dayStr => {
-                if (!dayStr.trim()) return;
-                const [day, content] = dayStr.includes(':') ? dayStr.split(':') : ['行程', dayStr];
-                const [title, desc] = content.includes('|') ? content.split('|') : [content, ''];
+            // Parsing Logic
+            const days = [];
 
-                container.innerHTML += `
-                    <div class="relative pl-4 border-l-2 border-green-200 ml-1 py-1">
-                        <div class="absolute -left-[5px] top-2 w-2.5 h-2.5 bg-white border-2 border-green-400 rounded-full"></div>
-                        <div class="text-xs font-bold text-green-700 mb-0.5">${day}</div>
-                        <div class="text-sm font-bold text-gray-800">${title}</div>
-                        ${desc ? `<div class="text-xs text-gray-500 mt-1 bg-gray-50 p-1.5 rounded">${desc}</div>` : ''}
-                    </div>`;
+            let currentDay = {
+                title: "第 1 天", items: []
+            }
+
+                ;
+
+            // Clean up string and split
+            const lines = str.split(/\r?\n|; /); // Support newlines or semicolons
+
+            lines.forEach(line => {
+                line = line.trim();
+                if (!line || line === '－') return;
+
+                if (line.match(/^第\s*\d+\s*天/)) {
+                    if (currentDay.items.length > 0) {
+                        days.push(currentDay);
+                    }
+
+                    currentDay = {
+                        title: line, items: []
+                    }
+
+                        ;
+                    return;
+                }
+
+                // Detect Day via "D1:" or "D2:" if used in simpler format
+                if (line.match(/^D\d+:/)) {
+                    const parts = line.split(':');
+
+                    if (currentDay.items.length > 0) {
+                        days.push(currentDay);
+                    }
+
+                    currentDay = {
+                        title: parts[0], items: []
+                    }
+
+                        ;
+                    // Treat the rest as content if needed, but for now specific parsing:
+                    // The user format seems to be just lines of text often or tab separated
+                }
+
+                // Try to parse time-location pairs (specific user format)
+                // Format: Time Loc Time Loc (Tab or space separated)
+                const parts = line.split(/\t+|\s {
+                            2,
+                        }
+
+                        /);
+
+            if (parts.length >= 2 && parts[0].match(/\d {
+                                1, 2
+                            }
+
+                            : \d {
+            2
+        }
+
+                            /)) {
+            // Assuming pairs of Time + Location
+            for (let i = 0; i < parts.length; i += 2) {
+                if (i + 1 < parts.length) {
+                    const time = parts[i].trim();
+                    const loc = parts[i + 1].trim();
+
+                    if (time.match(/\d {
+                                            1, 2
+                                        }
+
+                                        : \d {
+                    2
+                }
+
+                                        /)) {
+                    currentDay.items.push({
+                        time, loc
+                    });
+                }
+            }
+        }
+                }
+
+                else {
+            // Fallback for simple text lines (legacy format)
+            const [p1, p2] = line.includes('|') ? line.split('|') : [line, ''];
+            if (p1.match(/^D\d+/)) return; // Skip day header if handled
+
+            // If simply text
+            if (line.includes(':')) {
+                const [lKey, lVal] = line.split(':');
+
+                currentDay.items.push({
+                    time: lKey.trim(), loc: lVal.trim()
+                });
+            }
+
+            else {
+                currentDay.items.push({
+                    time: '', loc: line
+                });
+            }
+        }
+        });
+        if (currentDay.items.length > 0) days.push(currentDay);
+
+        // Rendering Logic (Nested Accordions)
+        days.forEach((day, index) => {
+            // If only 1 day, maybe just show items? 
+            // But consistent design is better.
+            const isOpen = index === 0;
+
+            const details = document.createElement('details');
+            details.className = "group bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-2";
+            if (isOpen) details.setAttribute('open', '');
+
+            const summary = document.createElement('summary');
+            summary.className = "flex justify-between items-center p-3 cursor-pointer select-none bg-gray-50/50 hover:bg-gray-50 transition";
+
+            summary.innerHTML = ` <span class="flex items-center gap-2 font-bold text-gray-800" > <span class="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-lg" >$ {
+                    day.title
+                }
+
+                </span> </span> <div class="bg-white rounded-full p-1 shadow-sm border border-gray-100 arrow-icon transition-transform duration-300 group-open:rotate-180" > <i data-lucide="chevron-down" class="w-3 h-3 text-gray-500" ></i> </div> `;
+
+            const content = document.createElement('div');
+            content.className = "p-4 pt-2";
+
+            let timelineHtml = '<div class="mt-2 space-y-0">';
+
+            day.items.forEach(item => {
+                if (item.time) {
+                    timelineHtml += ` <div class="itinerary-timeline-item" > <div class="itinerary-timeline-line" ></div> <div class="itinerary-dot" ></div> <div class="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-4" > <div class="itinerary-time text-sm text-green-700 w-12 shrink-0" >$ {
+                                item.time
+                            }
+
+                            </div> <div class="text-gray-700 font-medium text-sm" >$ {
+                                item.loc
+                            }
+
+                            </div> </div> </div> `;
+                }
+
+                else {
+
+                    // Simple text item
+                    timelineHtml += ` <div class="itinerary-timeline-item" > <div class="itinerary-timeline-line" ></div> <div class="itinerary-dot bg-gray-300" ></div> <div class="text-gray-600 text-sm" >$ {
+                                item.loc
+                            }
+
+                            </div> </div> `;
+                }
             });
+            timelineHtml += '</div>';
+
+            content.innerHTML = timelineHtml;
+            details.appendChild(summary);
+            details.appendChild(content);
+            container.appendChild(details);
+        });
+
+        if (typeof lucide !== 'undefined') lucide.createIcons();
         }
 
         function showCreateView() {
@@ -2112,16 +2597,33 @@
             if (type === 'travel') {
                 const start = document.getElementById('new-date-start').value;
                 const end = document.getElementById('new-date-end').value;
+
                 if (!start || !end) {
                     alert("旅遊活動請填寫出發與回程日期");
-                    btn.disabled = false; btn.innerHTML = originalBtnHTML; return;
+                    btn.disabled = false;
+                    btn.innerHTML = originalBtnHTML;
+                    return;
                 }
-                timeVal = `${start}~${end}`;
-            } else {
+
+                timeVal = `$ {
+                    start
+                }
+
+                ~$ {
+                    end
+                }
+
+                `;
+            }
+
+            else {
                 timeVal = document.getElementById('new-time-single').value;
+
                 if (!timeVal) {
                     alert("請填寫活動時間");
-                    btn.disabled = false; btn.innerHTML = originalBtnHTML; return;
+                    btn.disabled = false;
+                    btn.innerHTML = originalBtnHTML;
+                    return;
                 }
             }
 
@@ -2137,7 +2639,9 @@
                 deadline: document.getElementById('new-deadline').value,
                 time: timeVal,
                 itinerary: document.getElementById('new-itinerary').value // 旅遊行程
-            };
+            }
+
+                ;
 
             try {
                 // 4. 發送至後端
@@ -2150,10 +2654,14 @@
                 appState.historyStack = ['home'];
                 handleBackNav();
 
-            } catch (err) {
+            }
+
+            catch (err) {
                 console.error(err);
                 showToast("建立失敗，請檢查網路或稍後再試");
-            } finally {
+            }
+
+            finally {
                 // 6. 復原按鈕狀態
                 btn.disabled = false;
                 btn.innerHTML = originalBtnHTML;
@@ -2178,6 +2686,7 @@
             const newStatus = currentStatus ? "close" : "open";
 
             try {
+
                 // 3. 發送請求給 GAS
                 await apiSubmit({
                     action: 'toggleStatus',
@@ -2191,10 +2700,14 @@
                 renderEventStaticInfo();
                 showToast(newStatus === "open" ? "活動已重新開放" : "活動已關閉");
 
-            } catch (err) {
+            }
+
+            catch (err) {
                 console.error(err);
                 showToast("狀態更新失敗，請檢查網路");
-            } finally {
+            }
+
+            finally {
                 // 5. 恢復按鈕
                 btn.disabled = false;
                 // renderEventStaticInfo 會自動更新按鈕文字，所以這裡不需要還原 originalHTML
@@ -2202,7 +2715,10 @@
         }
 
         // Utils
-        function isEventOpen(e) { return e.isActive === true || e.isActive === '開放' || e.isActive === 'open'; }
+        function isEventOpen(e) {
+            return e.isActive === true || e.isActive === '開放' || e.isActive === 'open';
+        }
+
         function normalizeType(t) {
             t = t.toLowerCase();
             if (t.includes('一般')) return 'general';
@@ -2226,18 +2742,24 @@
             const hasSponsor = hasTable || (e.type !== 'travel' && s.secondary > 0);
 
             const sponsorEl = document.getElementById('opt-container-sponsor');
+
             if (hasSponsor) {
                 sponsorEl.classList.remove('hidden');
-            } else {
+            }
+
+            else {
                 sponsorEl.classList.add('hidden');
             }
 
             // 判斷是否顯示「上車/房型」選項
             const isTravel = e.type === 'travel';
             const travelEl = document.getElementById('opt-container-travel');
+
             if (isTravel) {
                 travelEl.classList.remove('hidden');
-            } else {
+            }
+
+            else {
                 travelEl.classList.add('hidden');
             }
 
@@ -2246,15 +2768,20 @@
             const showTravel = !travelEl.classList.contains('hidden');
 
             if (!showSponsor && !showTravel) {
-                performCopy({ includeSponsor: false, includeTravel: false });
+                performCopy({
+                    includeSponsor: false, includeTravel: false
+                });
                 return;
             }
 
             // 如果都沒有選項顯示但不是全空 (例如只隱藏了部分)
             const noOptsEl = document.getElementById('share-no-opts');
+
             if (!showSponsor && !showTravel) {
                 noOptsEl.classList.remove('hidden');
-            } else {
+            }
+
+            else {
                 noOptsEl.classList.add('hidden');
             }
 
@@ -2271,16 +2798,23 @@
             document.getElementById('share-modal').classList.add('hidden');
 
             // 執行複製，傳入參數
-            performCopy({ includeSponsor, includeTravel });
+            performCopy({
+                includeSponsor, includeTravel
+            });
         }
 
         // 舊按鈕 (名單視窗下方) 呼叫此函式：預設複製全部
         function copyDetailsToClipboard() {
-            performCopy({ includeSponsor: true, includeTravel: true });
+            performCopy({
+                includeSponsor: true, includeTravel: true
+            });
         }
 
         // 核心複製邏輯：支援參數與格式化
-        function performCopy(options = { includeSponsor: true, includeTravel: true }) {
+        function performCopy(options = {
+            includeSponsor: true, includeTravel: true
+
+        }) {
             showToast("正在讀取並產生名單...");
 
             fetchDetails().then(data => {
@@ -2289,23 +2823,53 @@
                 const e = appState.currentEvent;
 
                 // 1. 標頭
-                let text = `🤵：${e.organizer}\n`;
-                text += `📋 ${e.name}\n`;
-                text += `📅 ${formatDateShort(e.time)} ${new Date(e.time).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false })}\n`;
-                text += `📍 ${e.location}\n`;
+                let text = `🤵：$ {
+                        e.organizer
+                    }
+
+                    \n`;
+
+                text += `📋 $ {
+                        e.name
+                    }
+
+                    \n`;
+
+                text += `📅 $ {
+                        formatDateShort(e.time)
+                    }
+
+                    $ {
+                        new Date(e.time).toLocaleTimeString('zh-TW', {
+                            hour: '2-digit', minute: '2-digit', hour12: false
+                        })
+                }
+
+                \n`;
+
+                text += `📍 $ {
+                    e.location
+                }
+
+                \n`;
                 text += `──────────────\n`;
 
                 // 2. 名單
                 let count = 0;
+
                 data.forEach((p, i) => {
                     count++;
                     // 計算人數
                     let guestTotal = 0;
+
                     if (p.guestList && Array.isArray(p.guestList)) {
                         guestTotal = p.guestList.reduce((acc, g) => acc + (parseInt(g.count) || 1), 0);
-                    } else {
+                    }
+
+                    else {
                         guestTotal = parseInt(p.guestCount) || 0;
                     }
+
                     const total = 1 + (parseInt(p.family) || 0) + guestTotal;
 
                     // 編號. (補零)
@@ -2317,60 +2881,138 @@
 
                     // 組合: 01. !姓名 *2
                     // 注意：序號後有一個空格
-                    text += `${num}. ${prefix}${p.name}`;
-                    if (total > 1) text += ` *${total}`;
+                    text += `$ {
+                            num
+                        }
+
+                        . $ {
+                            prefix
+                        }
+
+                        $ {
+                            p.name
+                        }
+
+                        `;
+
+                    if (total > 1) text += ` *$ {
+                            total
+                        }
+
+                        `;
                     text += `\n`;
 
                     // 來賓 (縮排 6 空格)
                     if (p.guestList && Array.isArray(p.guestList) && p.guestList.length > 0) {
                         p.guestList.forEach(g => {
-                            text += `      來賓：${g.name}`;
+                            text += ` 來賓：$ {
+                                        g.name
+                                    }
+
+                                    `;
+
                             // if (g.count > 1) text += ` (+${g.count - 1})`; // 根據範例，來賓行似乎只顯示姓名，但若有需顯示人數可保留
                             // 參考範例 "來賓：蔡嘟嘟" 為單純姓名，這裡先只顯示姓名，若有複數來賓再另外處理
-                            if (g.count > 1) text += ` *${g.count}`;
+                            if (g.count > 1) text += ` *$ {
+                                        g.count
+                                    }
+
+                                    `;
                             text += `\n`;
                         });
-                    } else if (p.guestName && p.guestName !== '無') {
+                    }
+
+                    else if (p.guestName && p.guestName !== '無') {
+
                         // 舊版資料格式相容
-                        text += `      來賓：${p.guestName}\n`;
+                        text += ` 來賓：$ {
+                                p.guestName
+                            }
+
+                            \n`;
                     }
 
                     // --- 區塊 1: 贊助與認桌 (縮排顯示) ---
                     if (options.includeSponsor) {
                         let moneyLines = [];
-                        if (p.tableCount > 0) moneyLines.push(`認桌: ${p.tableCount}桌`);
+
+                        if (p.tableCount > 0) moneyLines.push(`認桌: $ {
+                                    p.tableCount
+                                }
+
+                                桌`);
+
                         if (p.sponsorList && Array.isArray(p.sponsorList) && p.sponsorList.length > 0) {
-                            p.sponsorList.forEach(s => moneyLines.push(`贊助: ${s}`));
-                        } else if (p.sponsor && p.sponsor !== '無') {
-                            moneyLines.push(`贊助: ${p.sponsor}`);
+                            p.sponsorList.forEach(s => moneyLines.push(`贊助: $ {
+                                            s
+                                        }
+
+                                        `));
+                        }
+
+                        else if (p.sponsor && p.sponsor !== '無') {
+                            moneyLines.push(`贊助: $ {
+                                        p.sponsor
+                                    }
+
+                                    `);
                         }
 
                         if (moneyLines.length > 0) {
+
                             // text += `   ------------------\n`;
-                            moneyLines.forEach(l => text += `      ${l}\n`);
+                            moneyLines.forEach(l => text += ` $ {
+                                        l
+                                    }
+
+                                    \n`);
                         }
                     }
 
                     // --- 區塊 2: 交通與住宿 (縮排顯示) ---
                     if (options.includeTravel) {
                         let travelLines = [];
-                        if (p.pickup && p.pickup !== '無') travelLines.push(`[主]車: ${p.pickup}`);
-                        if (p.room && p.room !== '無') travelLines.push(`[主]房: ${p.room}`);
+
+                        if (p.pickup && p.pickup !== '無') travelLines.push(`[主]車: $ {
+                                    p.pickup
+                                }
+
+                                `);
+
+                        if (p.room && p.room !== '無') travelLines.push(`[主]房: $ {
+                                    p.room
+                                }
+
+                                `);
 
                         if (p.guestList && Array.isArray(p.guestList)) {
                             p.guestList.forEach(g => {
                                 let extras = [];
                                 if (g.pickup) extras.push(g.pickup);
                                 if (g.room) extras.push(g.room);
+
                                 if (extras.length > 0) {
-                                    travelLines.push(`[賓]${g.name}: ${extras.join('/')}`);
+                                    travelLines.push(`[賓]$ {
+                                                    g.name
+                                                }
+
+                                                : $ {
+                                                    extras.join('/')
+                                                }
+
+                                                `);
                                 }
                             });
                         }
 
                         if (travelLines.length > 0) {
+
                             // text += `   ------------------\n`;
-                            travelLines.forEach(l => text += `      ${l}\n`);
+                            travelLines.forEach(l => text += ` $ {
+                                        l
+                                    }
+
+                                    \n`);
                         }
                     }
 
@@ -2383,14 +3025,21 @@
 
                 // 3. 結尾
                 text += `──────────────\n`;
-                text += `共 ${appState.currentStats.totalPeople || 0} 人報名\n`;
+
+                text += `共 $ {
+                    appState.currentStats.totalPeople || 0
+                }
+
+                人報名\n`;
                 text += `🔗 報名連結：\n`;
-                text += `https://liff.line.me/${LIFF_ID}\n`;
+                text += `https: //liff.line.me/${LIFF_ID}\n`;
 
                 // 4. 執行複製
                 window.focus();
+
                 navigator.clipboard.writeText(text).then(() => {
                     showToast("已複製名單到剪貼簿");
+
                 }).catch(err => {
                     console.error(err);
                     showToast("複製失敗，請手動複製");
@@ -2408,42 +3057,125 @@
                 const d = new Date(start);
                 // 如果日期無效，回傳原始字串
                 if (isNaN(d.getTime())) return start;
-                return `${d.getMonth() + 1}/${d.getDate()}...`;
+
+                return `$ {
+                    d.getMonth()+1
+                }
+
+                /$ {
+                    d.getDate()
+                }
+
+                ...`;
             }
 
             const d = new Date(isoStr);
             // 如果日期無效，回傳原始字串
             if (isNaN(d.getTime())) return isoStr;
 
-            const week = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
+            const week = ['日',
+                '一',
+                '二',
+                '三',
+                '四',
+                '五',
+                '六'][d.getDay()];
+
             // 回傳格式: 月/日 (星期)
-            return `${d.getMonth() + 1}/${d.getDate()} (${week})`;
+            return `$ {
+                d.getMonth()+1
+            }
+
+            /$ {
+                d.getDate()
+            }
+
+            ($ {
+                    week
+                })`;
         }
 
         function formatDate(isoStr) {
             if (!isoStr) return '';
             const d = new Date(isoStr);
             if (isNaN(d.getTime())) return isoStr;
-            const week = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
-            return `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')} (${week}) ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+            const week = ['日',
+                '一',
+                '二',
+                '三',
+                '四',
+                '五',
+                '六'][d.getDay()];
+
+            return `$ {
+                d.getFullYear()
+            }
+
+            /$ {
+                (d.getMonth() + 1).toString().padStart(2, '0')
+            }
+
+            /$ {
+                d.getDate().toString().padStart(2, '0')
+            }
+
+            ($ {
+                    week
+
+                }) $ {
+                d.getHours().toString().padStart(2, '0')
+            }
+
+            :$ {
+                d.getMinutes().toString().padStart(2, '0')
+            }
+
+            `;
         }
 
         function formatDateOnly(isoStr) {
             if (!isoStr) return '';
             const d = new Date(isoStr);
             if (isNaN(d.getTime())) return isoStr;
-            const week = ['日', '一', '二', '三', '四', '五', '六'][d.getDay()];
-            return `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')} (${week})`;
+            const week = ['日',
+                '一',
+                '二',
+                '三',
+                '四',
+                '五',
+                '六'][d.getDay()];
+
+            return `$ {
+                d.getFullYear()
+            }
+
+            /$ {
+                (d.getMonth() + 1).toString().padStart(2, '0')
+            }
+
+            /$ {
+                d.getDate().toString().padStart(2, '0')
+            }
+
+            ($ {
+                    week
+                })`;
         }
 
         function animateValue(obj, start, end, duration) {
             let startTimestamp = null;
+
             const step = (timestamp) => {
                 if (!startTimestamp) startTimestamp = timestamp;
                 const progress = Math.min((timestamp - startTimestamp) / duration, 1);
                 obj.innerHTML = Math.floor(progress * (end - start) + start);
-                if (progress < 1) { window.requestAnimationFrame(step); }
-            };
+
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            }
+
+                ;
             window.requestAnimationFrame(step);
         }
 
@@ -2464,10 +3196,13 @@
             // Generate simple temp ID
             const id = 'g_' + Date.now() + Math.random().toString(36).substr(2, 5);
 
-            appState.guestList.push({ id, name, count, pickup, room });
+            appState.guestList.push({
+                id, name, count, pickup, room
+            });
             document.getElementById('add-guest-name').value = '';
             renderGuestList();
         }
+
         function removeGuest(id) {
             appState.guestList = appState.guestList.filter(g => g.id !== id);
             renderGuestList();
@@ -2475,6 +3210,7 @@
 
         function restoreSponsorList(str) {
             appState.sponsorList = [];
+
             if (!str || str === '無') {
                 renderSponsorList();
                 return;
@@ -2483,17 +3219,22 @@
             // Try JSON first
             try {
                 const json = (typeof str === 'string' && (str.startsWith('[') || str.startsWith('{'))) ? JSON.parse(str) : str;
+
                 if (Array.isArray(json)) {
                     appState.sponsorList = json;
                     renderSponsorList();
                     return;
                 }
-            } catch (e) { }
+            }
+
+            catch (e) { }
 
             // Fallback: Split by comma/semicolon/Chinese comma
-            const items = str.split(/[,、;]\s*/);
+            const items = str.split(/[, 、; ]\s*/);
+
             items.forEach(item => {
                 const cleanItem = item.trim();
+
                 if (cleanItem && cleanItem !== '無') {
                     appState.sponsorList.push(cleanItem);
                 }
@@ -2503,13 +3244,14 @@
 
         function restoreGuestList(str) {
             appState.guestList = [];
+
             if (!str || str === '無') {
                 renderGuestList();
                 return;
             }
 
             // Split by comma or Chinese comma
-            const entries = str.split(/[,、]\s*/);
+            const entries = str.split(/[, 、]\s*/);
 
             entries.forEach(s => {
                 if (!s.trim()) return;
@@ -2528,6 +3270,7 @@
 
                 // 2. 再從姓名部分解析人數 (Count)
                 const match = namePart.match(/(.*?)\((\d+)\)/);
+
                 if (match) {
                     displayName = match[1].trim();
                     count = parseInt(match[2]);
@@ -2539,10 +3282,14 @@
                 }
 
                 const id = 'g_' + Date.now() + Math.random().toString(36).substr(2, 5);
-                appState.guestList.push({ id, name: displayName, count, pickup, room });
+
+                appState.guestList.push({
+                    id, name: displayName, count, pickup, room
+                });
             });
             renderGuestList();
         }
+
     </script>
 </body>
 
