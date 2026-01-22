@@ -2132,8 +2132,8 @@ function renderItinerary(str, timeStr) {
             sortedDayNums.forEach((dayNum, idx) => {
                 const group = groupedDays.get(dayNum);
 
-                // 計算日期標籤
-                let dayLabel = `第 ${dayNum} 天`;
+                // 計算日期標籤 (顯示在綠色小框框)
+                let dayLabel = `D${dayNum}`; // 預設顯示 D1, D2
                 if (startDate) {
                     const currentDay = new Date(startDate);
                     currentDay.setDate(startDate.getDate() + (dayNum - 1)); 
@@ -2143,7 +2143,9 @@ function renderItinerary(str, timeStr) {
                     dayLabel = `${m}/${d} (${w})`;
                 }
 
-                let mainTitle = ""; // 用於手風琴標題
+                // ★ 修改點：主標題直接設定為 "第 X 天行程"
+                const accordionMainTitle = `第 ${dayNum} 天行程`;
+
                 let allContentHtml = '<div class="space-y-4 relative pl-2 pt-2 pb-2">';
                 allContentHtml += '<div class="absolute left-[5px] top-4 bottom-2 w-0.5 bg-gray-100"></div>';
 
@@ -2159,44 +2161,35 @@ function renderItinerary(str, timeStr) {
                     if (text.includes('|')) {
                         const parts = text.split('|');
                         itemTitle = parts[0].trim();
-                        itemDesc = parts.slice(1).join('|').trim(); // 剩下的都當描述
+                        itemDesc = parts.slice(1).join('|').trim(); 
                         
-                        // 檢查最後一個欄位是否為 URL (如果是第三欄)
+                        // 檢查最後一個欄位是否為 URL
                         if (parts.length >= 3) {
                             const lastPart = parts[parts.length - 1].trim();
                             if (lastPart.startsWith('http')) {
                                 itemUrl = lastPart;
-                                // 重組描述，排除最後一個 URL 欄位
                                 itemDesc = parts.slice(1, parts.length - 1).join('|').trim();
                             }
                         }
                     }
 
-                    // 2. 智慧提取 URL (如果上面沒抓到，或者 URL 混在文字裡)
+                    // 2. 智慧提取 URL
                     const urlRegex = /([（\(【\[\{])?(https?:\/\/[^\s\)]+)([）\)】\]\}])?/;
-                    
-                    // 先檢查描述裡有沒有 URL
                     if (!itemUrl && itemDesc && urlRegex.test(itemDesc)) {
                         const match = itemDesc.match(urlRegex);
-                        itemUrl = match[2]; // 抓取 URL 本體
-                        // 從描述中移除 URL
+                        itemUrl = match[2]; 
                         itemDesc = itemDesc.replace(match[0], '').trim();
                     }
-                    
-                    // 再檢查標題裡有沒有 URL
                     if (!itemUrl && itemTitle && urlRegex.test(itemTitle)) {
                         const match = itemTitle.match(urlRegex);
                         itemUrl = match[2];
-                        // 從標題中移除 URL
                         itemTitle = itemTitle.replace(match[0], '').trim();
                     }
 
-                    // 3. 清理殘留符號 (冒號、括號)
-                    itemTitle = itemTitle.replace(/^[：:\s]+/, '') // 移除開頭冒號
-                                         .replace(/\(\s*\)$/, '') // 移除空括號
-                                         .trim();
+                    // 3. 清理殘留符號
+                    itemTitle = itemTitle.replace(/^[：:\s]+/, '').replace(/\(\s*\)$/, '').trim();
                     
-                    // 4. 處理標題內的日期 (2023-10-10 -> 10/10)
+                    // 4. 處理標題內的日期
                     itemTitle = itemTitle.replace(/\d{4}[-/](\d{1,2})[-/](\d{1,2})/, '$1/$2').replace(/\b0(\d):\b/g, '$1:');
 
                     // 5. 提取時間 (HH:mm)
@@ -2206,22 +2199,16 @@ function renderItinerary(str, timeStr) {
                         let rawTime = timeMatch[1];
                         if (rawTime.startsWith('0')) rawTime = rawTime.substring(1);
                         timeDisplay = rawTime;
-                        itemTitle = timeMatch[2].replace(/^[：:\s]+/, ''); // 移除時間後剩下的標題文字
+                        itemTitle = timeMatch[2].replace(/^[：:\s]+/, ''); 
                     }
 
-                    // 設定手風琴的主標題 (只抓第一個遇到的標題)
-                    if (!mainTitle) mainTitle = itemTitle;
-
                     // --- HTML 生成區塊 ---
-                    
-                    // 產生圖標按鈕
                     const mapIconHtml = itemUrl ? 
                         `<a href="${itemUrl}" target="_blank" class="inline-flex items-center justify-center w-6 h-6 bg-blue-50 text-blue-500 rounded-full hover:bg-blue-100 transition ml-2 shrink-0 self-center" title="導航" onclick="event.stopPropagation()">
                             <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
                          </a>` : '';
 
                     if (timeDisplay) {
-                        // 有時間的項目
                         allContentHtml += `
                             <div class="relative flex gap-3 items-start pl-4 group/item">
                                 <div class="absolute left-0 top-1.5 w-3 h-3 bg-white border-[3px] border-green-500 rounded-full z-10 shadow-sm"></div>
@@ -2229,19 +2216,20 @@ function renderItinerary(str, timeStr) {
                                 <div class="flex-1 min-w-0 pt-0.5">
                                     <div class="flex items-center flex-wrap">
                                         <span class="text-gray-800 font-bold leading-tight">${itemTitle}</span>
-                                        ${mapIconHtml} </div>
+                                        ${mapIconHtml}
+                                    </div>
                                     ${itemDesc ? `<p class="text-xs text-gray-500 mt-1 leading-relaxed">${itemDesc}</p>` : ''}
                                 </div>
                             </div>`;
                     } else {
-                        // 純文字項目 (無時間)
                         allContentHtml += `
                             <div class="relative flex gap-3 items-start pl-4">
                                 <div class="absolute left-1 top-2.5 w-1.5 h-1.5 bg-gray-300 rounded-full z-10"></div>
                                 <div class="flex-1 min-w-0">
                                     <div class="flex items-center flex-wrap">
                                         <span class="text-gray-700 font-medium leading-tight">${itemTitle}</span>
-                                        ${mapIconHtml} </div>
+                                        ${mapIconHtml}
+                                    </div>
                                     ${itemDesc ? `<p class="text-xs text-gray-500 mt-1 leading-relaxed">${itemDesc}</p>` : ''}
                                 </div>
                             </div>`;
@@ -2260,13 +2248,10 @@ function renderItinerary(str, timeStr) {
                 const summary = document.createElement('summary');
                 summary.className = "flex justify-between items-center p-4 cursor-pointer select-none bg-white hover:bg-gray-50 transition list-none relative";
 
-                // 清理主標題顯示 (過濾 HTML 標籤)
-                const cleanMainTitle = mainTitle.replace(/<[^>]*>?/gm, '').replace(/^[：:\s]+/, '');
-
                 summary.innerHTML = `
                     <div class="flex items-center gap-3 overflow-hidden">
                         <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-lg shrink-0 whitespace-nowrap">${dayLabel}</span>
-                        <span class="font-bold text-gray-800 text-base truncate">${cleanMainTitle || '行程內容'}</span>
+                        <span class="font-bold text-gray-800 text-base truncate">${accordionMainTitle}</span>
                     </div>
                     <div class="w-6 h-6 flex items-center justify-center rounded-full border border-gray-200 bg-gray-50 text-gray-400 font-bold shrink-0 ml-2">
                         <span class="icon-plus">+</span>
