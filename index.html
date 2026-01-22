@@ -1869,34 +1869,7 @@
                 btnText.innerText = "查看歷史活動";
             }
         }
-
-       // --- 補回遺失的分類切換函式 ---
-
-        function enterCategory(type) {
-            appState.currentCategory = type;
-            appState.historyStack.push('list');
-            switchView('view-event-list');
-            document.getElementById('header-title').innerText = getCategoryTitle(type);
-            switchCategory(type);
-        }
-
-        function switchCategory(type) {
-            appState.currentCategory = type;
-            // 移除所有 Tab 的 active 樣式
-            document.querySelectorAll('.filter-tab').forEach(btn => btn.classList.remove('active'));
-            // 加上當前 Tab 的 active 樣式
-            const tab = document.getElementById(`tab-${type}`);
-            if (tab) tab.classList.add('active');
-            
-            renderEventGrid(type);
-        }
-
-        // 確保這個函式也存在 (通常是用來顯示標題文字)
-        function getCategoryTitle(t) {
-            const map = { 'general': '一般活動', 'banquet': '大型餐會', 'travel': '旅遊活動', 'all': '所有活動' };
-            return map[t] || '活動列表';
-        }
-
+      
         function showToast(msg) {
             const toast = document.getElementById('toast');
             document.getElementById('toast-msg').innerText = msg;
@@ -2128,7 +2101,6 @@ function renderItinerary(str) {
                 }
 
                 // --- 3. ★ 需求2：強力移除內容中可能手打的日期 (如 2023/10/10 或 10/10) ---
-                // 避免使用者在標題重複打了日期，導致顯示很亂
                 // Regex 邏輯：抓取 "4碼年/1-2碼月/1-2碼日" 或 "1-2碼月/1-2碼日"
                 const datePattern = /(\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}|\d{1,2}[\/\-]\d{1,2})/;
                 rawStr = rawStr.replace(datePattern, '').trim();
@@ -2231,7 +2203,7 @@ function renderItinerary(str) {
             if (typeof lucide !== 'undefined') {
                 lucide.createIcons();
             }
-        }}
+        }
        
 // --- 補回遺失的分類切換函式 ---
 
