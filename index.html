@@ -2057,106 +2057,91 @@ function renderItinerary(str) {
             container.innerHTML = '';
             if (!str) return;
 
-            // ==========================================
-            // ★ 新增邏輯：取得活動出發日期，用於計算 D1, D2 的實際日期
-            // ==========================================
+            // --- 取得活動出發日期 (用於計算 D1 日期) ---
             let startDateObj = null;
             if (appState.currentEvent && appState.currentEvent.time) {
-                // 假設格式為 "2023-10-10~2023-10-12" 或單一時間 "2023-10-10T09:00"
                 const timeStr = appState.currentEvent.time.split('~')[0];
                 const d = new Date(timeStr);
-                if (!isNaN(d.getTime())) {
-                    startDateObj = d;
-                }
+                if (!isNaN(d.getTime())) startDateObj = d;
             }
 
-            // 用 Map 來依據天數分組
             const groups = new Map();
-            
-            // 記憶目前跑到第幾天 (預設 D1)
             let currentDayKey = 'D1'; 
 
-            // 以分號切分每一筆行程
+            // --- 解析每一行行程 ---
             str.split(';').forEach(itemStr => {
                 if (!itemStr.trim()) return;
 
                 let rawStr = itemStr.trim();
                 
-                // --- 1. 抓取並移除天數 (D1, Day1) ---
+                // 1. 處理天數 (D1)
                 const dayMatch = rawStr.match(/^(D\d+|Day\d+)/i);
                 if (dayMatch) {
-                    currentDayKey = dayMatch[0].toUpperCase().replace('DAY', 'D'); // 統一轉為 D1 格式
+                    currentDayKey = dayMatch[0].toUpperCase().replace('DAY', 'D');
                     rawStr = rawStr.replace(dayMatch[0], '').trim();
                 }
 
-                // --- 2. 抓取並移除時間 (HH:mm) ---
+                // 2. 處理時間 (HH:mm)
                 let timeDisplay = '--:--';
                 const timeMatch = rawStr.match(/(\d{1,2}:\d{2})/);
                 if (timeMatch) {
                     const rawTime = timeMatch[0];
-                    timeDisplay = rawTime.replace(/^0/, ''); // 移除開頭 0
-                    // 從字串中移除時間
+                    timeDisplay = rawTime.replace(/^0/, '');
                     rawStr = rawStr.replace(rawTime, '').trim();
                 }
 
-                // --- 3. ★ 需求2：強力移除內容中可能手打的日期 (如 2023/10/10 或 10/10) ---
-                // Regex 邏輯：抓取 "4碼年/1-2碼月/1-2碼日" 或 "1-2碼月/1-2碼日"
+                // 3. 清除多餘日期文字 & 符號
                 const datePattern = /(\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}|\d{1,2}[\/\-]\d{1,2})/;
                 rawStr = rawStr.replace(datePattern, '').trim();
+                rawStr = rawStr.replace(/^[:\s]+/, '');
 
-                // --- 4. 清理開頭殘留符號 ---
-                rawStr = rawStr.replace(/^[:\s]+/, ''); // 移除開頭的冒號或空白
+                // 4. ★ 修改重點：分割 標題 | 描述 | 地圖連結
+                // 使用 split 切割，最多切成 3 份
+                const parts = rawStr.split('|');
+                const title = (parts[0] || '').trim();
+                const desc = (parts[1] || '').trim();
+                const mapUrl = (parts[2] || '').trim(); // 取得第三個欄位作為網址
 
-                // 分割標題與描述
-                const [title, desc] = rawStr.split('|');
-
-                // 存入 Map
                 if (!groups.has(currentDayKey)) {
                     groups.set(currentDayKey, []);
                 }
                 groups.get(currentDayKey).push({
                     time: timeDisplay,
-                    title: (title || '').trim(),
-                    desc: (desc || '').trim()
+                    title: title,
+                    desc: desc,
+                    mapUrl: mapUrl // 存入物件
                 });
             });
 
-            // ==========================================
-            // 渲染 HTML
-            // ==========================================
+            // --- 渲染 HTML ---
             let index = 0;
             groups.forEach((events, dayKey) => {
                 const openAttr = index === 0 ? 'open' : '';
-                
-                // 視覺顏色切換
                 const borderColor = index % 2 === 0 ? 'border-green-500' : 'border-blue-500';
                 const badgeColor = index % 2 === 0 ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700';
 
-                // ★ 需求1：將 D1, D2 轉換為 月/日
-                let displayLabel = dayKey; // 預設顯示 D1
-                
-                // 如果有抓到出發日期，且 dayKey 是 D 開頭的數字 (如 D1)
+                // 計算顯示日期 (例如 5/20)
+                let displayLabel = dayKey;
                 if (startDateObj && /^D\d+$/.test(dayKey)) {
-                    const dayNum = parseInt(dayKey.replace('D', '')); // 取出 1
+                    const dayNum = parseInt(dayKey.replace('D', ''));
                     if (!isNaN(dayNum) && dayNum > 0) {
-                        // 複製日期物件以免汙染原始變數
                         const targetDate = new Date(startDateObj);
-                        // 日期加法： D1 就是 +0天, D2 就是 +1天
                         targetDate.setDate(startDateObj.getDate() + (dayNum - 1));
-                        
-                        // 格式化為 M/D
                         const mm = targetDate.getMonth() + 1;
                         const dd = targetDate.getDate();
                         const week = ['日', '一', '二', '三', '四', '五', '六'][targetDate.getDay()];
-                        
-                        // 最終顯示格式： "5/20 (一)"
                         displayLabel = `${mm}/${dd} (${week})`;
                     }
                 }
 
-                // 產生該天數下的行程細項
                 let eventsHtml = '';
                 events.forEach(evt => {
+                    // ★ 判斷是否有地圖連結，有的話顯示圖標
+                    const mapIconHtml = evt.mapUrl ? 
+                        `<a href="${evt.mapUrl}" target="_blank" class="inline-flex items-center justify-center ml-2 text-blue-500 bg-blue-50 hover:bg-blue-100 p-1 rounded-full transition active:scale-90" onclick="event.stopPropagation()">
+                            <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
+                         </a>` : '';
+
                     eventsHtml += `
                         <div class="flex gap-3 mb-4 relative last:mb-0">
                             <div class="w-12 text-right shrink-0 pt-0.5">
@@ -2167,7 +2152,9 @@ function renderItinerary(str) {
                                 <div class="w-0.5 flex-1 bg-gray-100 absolute top-3 bottom-[-16px]"></div>
                             </div>
                             <div class="flex-1 pb-2">
-                                <h4 class="text-sm font-bold text-gray-800 leading-tight">${evt.title}</h4>
+                                <div class="flex items-center flex-wrap">
+                                    <h4 class="text-sm font-bold text-gray-800 leading-tight">${evt.title}</h4>
+                                    ${mapIconHtml} </div>
                                 ${evt.desc ? `<p class="text-xs text-gray-500 mt-1 bg-gray-50 p-2 rounded-lg border border-gray-100">${evt.desc}</p>` : ''}
                             </div>
                         </div>
@@ -2188,13 +2175,11 @@ function renderItinerary(str) {
                                 <i data-lucide="minus" class="w-5 h-5 icon-minus transition-transform group-hover:scale-110"></i>
                             </div>
                         </summary>
-                        
                         <div class="group-content p-4 pt-5 bg-white">
                             ${eventsHtml}
                         </div>
                     </details>
                 `;
-
                 container.innerHTML += groupHtml;
                 index++;
             });
