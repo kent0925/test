@@ -2207,38 +2207,6 @@
             return map[t] || '活動列表';
         }
 
-/* 隱藏預設的三角形 */
-.itinerary-group summary::-webkit-details-marker {
-    display: none;
-}
-.itinerary-group summary {
-    list-style: none;
-}
-
-/* 控制 + 和 - 圖示的切換 */
-/* 預設顯示 Plus (+), 隱藏 Minus (-) */
-.itinerary-group summary .icon-plus { display: block; }
-.itinerary-group summary .icon-minus { display: none; }
-
-/* 當 details 被打開 (open) 時，隱藏 Plus，顯示 Minus */
-.itinerary-group[open] summary .icon-plus { display: none; }
-.itinerary-group[open] summary .icon-minus { display: block; }
-
-/* 內容展開動畫 */
-.itinerary-group[open] .group-content {
-    animation: slideDown 0.3s ease-out;
-}
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-5px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-    // 重新繪製圖示
-    if (typeof lucide !== 'undefined') {
-        lucide.createIcons();
-    }
-}
-
         function showCreateView() {
             // 1. 切換歷史堆疊
             appState.historyStack.push('create');
