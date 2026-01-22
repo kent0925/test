@@ -2050,19 +2050,20 @@
             if (!str) return;
 
             // Split by semicolon for days
-            const days = str.split(';');
+            const days = str.split(/;|；/); // Support fullwidth semicolon
 
             days.forEach((dayStr, index) => {
                 if (!dayStr.trim()) return;
 
-                // Parse Day vs Content (D1: Title|Desc)
                 let dayLabel = `第 ${index + 1} 天`;
                 let contentAll = dayStr;
 
-                if (dayStr.includes(':')) {
-                    const parts = dayStr.split(':');
-                    dayLabel = parts[0].trim();
-                    contentAll = parts.slice(1).join(':').trim();
+                // Smart Day Parsing: Only split if it looks like a day label
+                // Matches: D1:, Day 1:, 第1天: (and fullwidth colon)
+                const dayMatch = dayStr.match(/^(D\d+|Day\s*\d+|第\s*\d+\s*天)\s*[:：](.*)/i);
+                if (dayMatch) {
+                    dayLabel = dayMatch[1].trim();
+                    contentAll = dayMatch[2].trim();
                 }
 
                 // Parse Title vs Description
@@ -2075,7 +2076,7 @@
                 }
 
                 // HTML Construction
-                const isOpen = index === 0; // Open first day by default
+                const isOpen = index === 0;
 
                 const details = document.createElement('details');
                 details.className = "group border border-gray-200 rounded-xl bg-white mb-3 overflow-hidden shadow-sm transition-all";
@@ -2097,38 +2098,54 @@
                 const contentDiv = document.createElement('div');
                 contentDiv.className = "p-4 bg-white border-t border-gray-100 text-sm text-gray-600 leading-relaxed space-y-2";
 
-                // Process Description Lines
                 if (desc) {
-                    // Try to parse timeline items (Time anything)
                     const lines = desc.split(/\r?\n/);
                     let timelineHtml = '<div class="space-y-3 relative pl-2">';
-
-                    // Add a vertical line guide
                     timelineHtml += '<div class="absolute left-[5px] top-2 bottom-2 w-0.5 bg-gray-100"></div>';
 
                     lines.forEach(line => {
-                        const l = line.trim();
+                        let l = line.trim();
                         if (!l) return;
 
-                        // Match Time HH:MM (simple check)
-                        // Regex: Start with digit(s):digit(s)
-                        const timeMatch = l.match(/^(\d{1,2}:\d{2})\s*(.*)/);
+                        // 1. Map URL to Icon
+                        // Regex looks for http/https links
+                        l = l.replace(/(https?:\/\/[^\s]+)/g, (url) => {
+                            return `<a href="${url}" target="_blank" class="inline-flex items-center justify-center w-5 h-5 bg-blue-100 text-blue-600 rounded-full hover:bg-blue-200 transition ml-1 align-sub" title="查看地圖"><i data-lucide="map-pin" class="w-3 h-3"></i></a>`;
+                        });
+
+                        // 2. Extract Time (HH:MM) - Ignore Date/Year/Seconds
+                        // Look for pattern like 09:00, 9:00, 2023/01/01 09:00:00
+                        let timeDisplay = '';
+
+                        // Strict HH:MM matcher (capture group 1)
+                        // Allows optional date prefix, matches HH:MM, ignores :SS
+                        const timeMatch = l.match(/(?:[\d\/\-]+\s+)?(\d{1,2}:\d{2})(?::\d{2})?\s*(.*)/);
 
                         if (timeMatch) {
-                            const time = timeMatch[1];
-                            const text = timeMatch[2];
+                            timeDisplay = timeMatch[1];
+                            const remainingText = timeMatch[2];
+
+                            // Reconstruct line without the time prefix for the text part
+                            // We use the already processed 'l' (with URL replaced) but assume URL is usually at end or distinct
+
+                            let textContent = l;
+                            const startMatch = l.match(/^(?:[\d\/\-]+\s+)?(\d{1,2}:\d{2})(?::\d{2})?\s*/);
+                            if (startMatch) {
+                                textContent = l.substring(startMatch[0].length);
+                            }
+
                             timelineHtml += `
                                 <div class="relative flex gap-4 items-start pl-4 group/item">
                                     <div class="absolute left-0 top-1.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white shadow-sm z-10"></div>
-                                    <div class="font-mono font-bold text-green-700 shrink-0 pt-0.5">${time}</div>
-                                    <div class="text-gray-700 pt-0.5">${text}</div>
+                                    <div class="font-mono font-bold text-green-700 shrink-0 pt-0.5">${timeDisplay}</div>
+                                    <div class="text-gray-700 pt-0.5 flex-1 break-words">${textContent}</div>
                                 </div>`;
                         } else {
-                            // Normal text line
+                            // No time found, just text
                             timelineHtml += `
                                 <div class="relative flex gap-4 items-start pl-4">
                                      <div class="absolute left-0.5 top-2 w-2 h-2 bg-gray-300 rounded-full z-10"></div>
-                                     <div class="text-gray-600">${l}</div>
+                                     <div class="text-gray-600 flex-1 break-words">${l}</div>
                                 </div>`;
                         }
                     });
