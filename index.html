@@ -1585,6 +1585,26 @@
             }
         }
 
+        // Helper to find value case-insensitively (Move to top level or reuse)
+        function findCaseInsensitiveValue(row, candidates) {
+            if (!row) return undefined;
+            // 1. Direct match (Fast)
+            for (const key of candidates) {
+                if (row[key] !== undefined && row[key] !== '') return row[key];
+            }
+            // 2. Case-insensitive Scan (Slow path)
+            const keys = Object.keys(row);
+            for (const c of candidates) {
+                const lowerC = c.toLowerCase().replace(/\s/g, '');
+                for (const k of keys) {
+                    if (k.toLowerCase().replace(/\s/g, '') === lowerC) {
+                        return row[k];
+                    }
+                }
+            }
+            return undefined;
+        }
+
         function renderDetailLists(data) {
             const listP = document.getElementById('details-list-people');
             const listT = document.getElementById('details-list-travel');
@@ -1609,14 +1629,15 @@
             data.forEach((row, idx) => {
 
                 // Comprehensive Key Mapping
-                const name = row.name || row.Name || row['姓名'];
-                const family = parseInt(row.family || row.Family || row['眷屬'] || row['眷屬人數']) || 0;
+                // ★ 新增 UserName 支援
+                const name = findCaseInsensitiveValue(row, ['name', 'Name', '姓名', 'UserName', 'username']) || 'Unknown';
+                const family = parseInt(row.family || row.Family || row['眷屬'] || row['眷屬人數'] || row['FamilyCount']) || 0;
 
                 // Guest Handling: Prioritize JSON, fallback to String
                 // ★ 使用統一函式解析來賓，確保萬無一失 ★
                 const guestData = parseGuestData(row);
                 // 處理舊版 guestCount 備用
-                const guestCountFallback = parseInt(row.guestCount || row.GuestCount || row['GuestCount'] || row['來賓人數']) || 0;
+                const guestCountFallback = parseInt(row.guestCount || row.GuestCount || row['GuestCount'] || row['來賓人數'] || row['GuestCount']) || 0;
 
                 const guestTotalCount = guestData.reduce((acc, g) => acc + g.count, 0);
                 const finalGuestCount = guestTotalCount > 0 ? guestTotalCount : guestCountFallback;
@@ -1639,7 +1660,7 @@
                 }
                 // 其次嘗試顯示舊版純文字來賓
                 else {
-                    const guestNameStr = row.guestName || row.GuestName || row['GuestName'] || row['Guest Name'] || row['來賓姓名'] || row['來賓'];
+                    const guestNameStr = findCaseInsensitiveValue(row, ['guestName', 'GuestName', 'Guest Name', '來賓姓名', '來賓']);
                     if (guestNameStr && guestNameStr !== '無') {
                         subHtml = `<div class="pl-8 text-gray-600 text-sm mt-0.5">來賓：${guestNameStr}</div>`;
                     }
@@ -1741,13 +1762,36 @@
          * 統一解析來賓資料，解決後端回傳格式不一致的問題
          * 無論是 JSON、Array 還是 String，統一轉為標準格式 Array
          */
+        // Helper to find value case-insensitively
+        function findCaseInsensitiveValue(row, candidates) {
+            // 1. Direct match (Fast)
+            for (const key of candidates) {
+                if (row[key] !== undefined && row[key] !== '') return row[key];
+            }
+            // 2. Case-insensitive Scan (Slow path)
+            const keys = Object.keys(row);
+            for (const c of candidates) {
+                const lowerC = c.toLowerCase().replace(/\s/g, ''); // ignore spaces in scan
+                for (const k of keys) {
+                    if (k.toLowerCase().replace(/\s/g, '') === lowerC) {
+                        return row[k];
+                    }
+                }
+            }
+            return undefined;
+        }
+
         function parseGuestData(row) {
             let guestData = [];
             if (!row || typeof row !== 'object') return guestData;
 
-            // 嘗試讀取所有可能的 Key
-            const guestJson = row.guestList || row.guestJson || row.GuestJson || row['GuestJson'] || row['來賓資料JSON'];
-            const guestNameStr = row.guestName || row.GuestName || row['GuestName'] || row['Guest Name'] || row['來賓姓名'] || row['來賓'];
+            // Define candidates
+            const jsonKeys = ['guestList', 'guestJson', 'GuestJson', '來賓資料JSON'];
+            const nameKeys = ['guestName', 'GuestName', 'Guest Name', '來賓姓名', '來賓'];
+
+            // Fetch values using robust helper
+            let guestJson = findCaseInsensitiveValue(row, jsonKeys);
+            let guestNameStr = findCaseInsensitiveValue(row, nameKeys);
 
             // 1. 嘗試解析 JSON
             if (guestJson && guestJson !== '[]') {
@@ -1773,7 +1817,7 @@
                 }
             }
 
-            // 2. 如果 JSON 無資料，嘗試解析舊版 String (例如: "王小明|台北車站|雙人房, 李大華")
+            // 2. Fallback strategy
             // 若 JSON 解析失敗或為空，且 guestName 為空，嘗試使用 guestJson 當作字串 (若是純字串填入 guestList 欄位的情況)
             let sourceStr = guestNameStr;
             if ((!sourceStr || sourceStr === '無') && guestJson && typeof guestJson === 'string' && !guestJson.startsWith('[') && !guestJson.startsWith('{')) {
@@ -1781,6 +1825,9 @@
             }
 
             if (guestData.length === 0 && sourceStr && sourceStr !== '無') {
+                // Ensure string
+                sourceStr = String(sourceStr);
+
                 const guestEntries = sourceStr.split(/[,、]\s*/);
                 guestEntries.forEach(g => {
                     if (!g.trim()) return;
