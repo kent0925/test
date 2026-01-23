@@ -2574,15 +2574,8 @@ function performCopy(options = { includeSponsor: true, includeTravel: true }) {
                 text += `🔗 報名連結：\n`;
                 text += `https://liff.line.me/${LIFF_ID}\n`;
 
-                // 4. 執行複製
-                window.focus();
-                navigator.clipboard.writeText(text).then(() => {
-                    showToast("已複製名單到剪貼簿");
-                }).catch(err => {
-                    console.error(err);
-                    showToast("複製失敗，請手動複製");
-                });
-            });
+                // 4. 執行複製 (改用相容性函式)
+                copyTextToClipboard(text);
         }
         // --- ★★★ 這裡就是修正的關鍵，原本遺失的函式 ★★★ ---
         function formatDateShort(isoStr) {
@@ -2728,6 +2721,49 @@ function performCopy(options = { includeSponsor: true, includeTravel: true }) {
                 appState.guestList.push({ id, name: displayName, count, pickup, room });
             });
             renderGuestList();
+        }
+        // --- Clipboard Helper Functions (解決 LIFF/手機焦點問題) ---
+        function copyTextToClipboard(text) {
+            if (!navigator.clipboard) {
+                fallbackCopyTextToClipboard(text);
+                return;
+            }
+            navigator.clipboard.writeText(text).then(function() {
+                showToast("已複製名單到剪貼簿");
+            }, function(err) {
+                // 如果因為焦點問題失敗，自動切換到 Fallback 方案
+                console.warn('Async writeText failed, trying fallback:', err);
+                fallbackCopyTextToClipboard(text);
+            });
+        }
+
+        function fallbackCopyTextToClipboard(text) {
+            var textArea = document.createElement("textarea");
+            textArea.value = text;
+            
+            // 避免手機上跳出鍵盤或畫面跳動
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+            textArea.style.opacity = "0";
+
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                var successful = document.execCommand('copy');
+                if(successful) {
+                    showToast("已複製名單到剪貼簿");
+                } else {
+                    showToast("複製失敗，請手動選取複製");
+                }
+            } catch (err) {
+                console.error('Fallback copy failed', err);
+                showToast("複製失敗，請手動複製");
+            }
+
+            document.body.removeChild(textArea);
         }
     </script>
 </body>
