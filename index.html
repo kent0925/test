@@ -2246,7 +2246,7 @@
                 if (!data.length) return showToast("無資料可複製");
 
                 const e = appState.currentEvent;
-                let text = `🤵：${e.organizer}\n`;
+                let text = `🤵 ${e.organizer}\n`;
                 text += `📋 ${e.name}\n`;
                 text += `📅 ${formatDateShort(e.time)} ${new Date(e.time).toLocaleTimeString('zh-TW', { hour: '2-digit', minute: '2-digit', hour12: false })}\n`;
                 text += `📍 ${e.location}\n`;
