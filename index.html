@@ -1786,15 +1786,15 @@
             if (!row || typeof row !== 'object') return guestData;
 
             // Define candidates
-            const jsonKeys = ['guestList', 'guestJson', 'GuestJson', '來賓資料JSON'];
-            const nameKeys = ['guestName', 'GuestName', 'Guest Name', '來賓姓名', '來賓'];
+            const jsonKeys = ['guestList', 'guestJson', 'GuestJson', 'GuestList', 'guest_json', 'guest_list', '來賓資料JSON', '來賓資料', 'json'];
+            const nameKeys = ['guestName', 'GuestName', 'Guest Name', 'guest_name', 'Guest Names', '來賓姓名', '來賓'];
 
             // Fetch values using robust helper
             let guestJson = findCaseInsensitiveValue(row, jsonKeys);
             let guestNameStr = findCaseInsensitiveValue(row, nameKeys);
 
             // 1. 嘗試解析 JSON
-            if (guestJson && guestJson !== '[]') {
+            if (guestJson && guestJson !== '[]' && guestJson !== '無') {
                 try {
                     const parsed = (typeof guestJson === 'string') ? JSON.parse(guestJson) : guestJson;
                     if (Array.isArray(parsed)) {
@@ -1820,7 +1820,8 @@
             // 2. Fallback strategy
             // 若 JSON 解析失敗或為空，且 guestName 為空，嘗試使用 guestJson 當作字串 (若是純字串填入 guestList 欄位的情況)
             let sourceStr = guestNameStr;
-            if ((!sourceStr || sourceStr === '無') && guestJson && typeof guestJson === 'string' && !guestJson.startsWith('[') && !guestJson.startsWith('{')) {
+            // 只有當 guestJson 看起來不像 JSON (不以 [ 或 { 開頭) 時，才把它當作普通字串處理
+            if ((!sourceStr || sourceStr === '無') && guestJson && typeof guestJson === 'string' && !guestJson.trim().startsWith('[') && !guestJson.trim().startsWith('{')) {
                 sourceStr = guestJson;
             }
 
@@ -2864,57 +2865,56 @@
             }
         }
 
-        function copyTextToClipboard(text) {
-            window.focus(); // Ensure window has focus for async clipboard operations
-            if (!navigator.clipboard) {
-                // If API not supported, use fallback (which might also fail if not focused, but worth a try)
-                // Actually, let's go straight to modal if we can't guarantee success, 
-                // but let's try the silent fallback first.
-                try {
-                    fallbackCopyTextToClipboard(text);
-                } catch (e) {
-                    ensureManualCopyModalExists();
-                    document.getElementById('manual-copy-area').value = text;
-                    document.getElementById('manual-copy-modal').classList.remove('hidden');
-                }
+       function copyTextToClipboard(text) {
+            // 嘗試重新聚焦視窗 (針對部分瀏覽器有效)
+            try { window.focus(); } catch (e) {}
+
+            // 如果瀏覽器不支援 Clipboard API，直接呼叫手動視窗
+            if (!navigator.clipboard || !navigator.clipboard.writeText) {
+                openManualCopyModal(text);
                 return;
             }
-            navigator.clipboard.writeText(text).then(function () {
-                showToast("已複製名單到剪貼簿");
-            }, function (err) {
-                console.error('Async: Could not copy text: ', err);
-                // On failure (likely focus issue), show the modal
-                ensureManualCopyModalExists();
-                document.getElementById('manual-copy-area').value = text;
-                document.getElementById('manual-copy-modal').classList.remove('hidden');
-                if (typeof lucide !== 'undefined') lucide.createIcons();
-            });
+
+            // 嘗試寫入剪貼簿
+            navigator.clipboard.writeText(text)
+                .then(function () {
+                    // 成功
+                    showToast("已複製名單到剪貼簿");
+                })
+                .catch(function (err) {
+                    // 失敗 (包含 NotAllowedError: Document is not focused)
+                    // 這裡不拋出紅字錯誤，而是印出警告並開啟手動視窗
+                    console.warn('自動複製失敗 (可能因失去焦點或非同步延遲)，切換至手動模式:', err);
+                    openManualCopyModal(text);
+                });
         }
 
-        function fallbackCopyTextToClipboard(text) {
-            var textArea = document.createElement("textarea");
-            textArea.value = text;
-
-            // Avoid scrolling to bottom
-            textArea.style.top = "0";
-            textArea.style.left = "0";
-            textArea.style.position = "fixed";
-
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-
-            try {
-                var successful = document.execCommand('copy');
-                var msg = successful ? 'successful' : 'unsuccessful';
-                if (successful) showToast("已複製名單到剪貼簿");
-                else showToast("複製失敗，請手動複製");
-            } catch (err) {
-                console.error('Fallback: Oops, unable to copy', err);
-                showToast("複製失敗，請手動複製");
+        // 為了程式碼整潔，將開啟手動視窗的邏輯獨立出來 (請將此函式加在 copyTextToClipboard 下方)
+        function openManualCopyModal(text) {
+            ensureManualCopyModalExists();
+            const area = document.getElementById('manual-copy-area');
+            // 確保元素存在再賦值
+            if (area) {
+                area.value = text;
+                // 針對 iOS Safari 的特殊處理，防止鍵盤彈出但能選取
+                area.contentEditable = true;
+                area.readOnly = false; 
             }
-
-            document.body.removeChild(textArea);
+            
+            const modal = document.getElementById('manual-copy-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+            }
+            
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+            
+            // 嘗試選取文字，方便使用者直接複製
+            if (area) {
+                setTimeout(() => {
+                    area.select();
+                    area.setSelectionRange(0, 99999); // For mobile devices
+                }, 100);
+            }
         }
     </script>
 </body>
