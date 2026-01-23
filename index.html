@@ -1743,6 +1743,8 @@
          */
         function parseGuestData(row) {
             let guestData = [];
+            if (!row || typeof row !== 'object') return guestData;
+
             // 嘗試讀取所有可能的 Key
             const guestJson = row.guestList || row.guestJson || row.GuestJson || row['GuestJson'] || row['來賓資料JSON'];
             const guestNameStr = row.guestName || row.GuestName || row['GuestName'] || row['Guest Name'] || row['來賓姓名'] || row['來賓'];
@@ -1752,12 +1754,19 @@
                 try {
                     const parsed = (typeof guestJson === 'string') ? JSON.parse(guestJson) : guestJson;
                     if (Array.isArray(parsed)) {
-                        guestData = parsed.map(g => ({
-                            name: g.name,
-                            count: parseInt(g.count) || 1,
-                            pickup: g.pickup || '',
-                            room: g.room || ''
-                        }));
+                        guestData = parsed.map(g => {
+                            // 若 g 是字串 (例如 ["Guest A", "Guest B"])
+                            if (typeof g === 'string') {
+                                return { name: g, count: 1, pickup: '', room: '' };
+                            }
+                            // 若 g 是物件
+                            return {
+                                name: g.name || g.Name || g['姓名'] || '',
+                                count: parseInt(g.count || g.Count || g['人數']) || 1,
+                                pickup: g.pickup || g.Pickup || '',
+                                room: g.room || g.Room || ''
+                            };
+                        }).filter(g => g.name); // 過濾掉沒有名字的項目
                     }
                 } catch (e) {
                     // JSON 解析失敗，忽略
@@ -2731,6 +2740,45 @@
                 appState.guestList.push({ id, name: displayName, count, pickup, room });
             });
             renderGuestList();
+        }
+
+        function copyTextToClipboard(text) {
+            if (!navigator.clipboard) {
+                fallbackCopyTextToClipboard(text);
+                return;
+            }
+            navigator.clipboard.writeText(text).then(function () {
+                showToast("已複製名單到剪貼簿");
+            }, function (err) {
+                console.error('Async: Could not copy text: ', err);
+                fallbackCopyTextToClipboard(text);
+            });
+        }
+
+        function fallbackCopyTextToClipboard(text) {
+            var textArea = document.createElement("textarea");
+            textArea.value = text;
+
+            // Avoid scrolling to bottom
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                var successful = document.execCommand('copy');
+                var msg = successful ? 'successful' : 'unsuccessful';
+                if (successful) showToast("已複製名單到剪貼簿");
+                else showToast("複製失敗，請手動複製");
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+                showToast("複製失敗，請手動複製");
+            }
+
+            document.body.removeChild(textArea);
         }
     </script>
 </body>
