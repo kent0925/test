@@ -1774,8 +1774,14 @@
             }
 
             // 2. 如果 JSON 無資料，嘗試解析舊版 String (例如: "王小明|台北車站|雙人房, 李大華")
-            if (guestData.length === 0 && guestNameStr && guestNameStr !== '無') {
-                const guestEntries = guestNameStr.split(/[,、]\s*/);
+            // 若 JSON 解析失敗或為空，且 guestName 為空，嘗試使用 guestJson 當作字串 (若是純字串填入 guestList 欄位的情況)
+            let sourceStr = guestNameStr;
+            if ((!sourceStr || sourceStr === '無') && guestJson && typeof guestJson === 'string' && !guestJson.startsWith('[') && !guestJson.startsWith('{')) {
+                sourceStr = guestJson;
+            }
+
+            if (guestData.length === 0 && sourceStr && sourceStr !== '無') {
+                const guestEntries = sourceStr.split(/[,、]\s*/);
                 guestEntries.forEach(g => {
                     if (!g.trim()) return;
                     let parts = g.split('|');
