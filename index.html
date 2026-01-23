@@ -1100,11 +1100,10 @@
             appState.guestList = [];
 
             // Comprehensive parsing using helper
+            // Comprehensive parsing using helper
             // Priority: JSON > Name String > Count Fallback
-            let parsedGuests = parseGuestData(guestJson);
-            if (parsedGuests.length === 0) {
-                parsedGuests = parseGuestData(guestName);
-            }
+            // ★ 修改：直接傳入整個 record 讓 parseGuestData 統一處理
+            const parsedGuests = parseGuestData(record);
 
             if (parsedGuests.length > 0) {
                 // Add IDs for local state
