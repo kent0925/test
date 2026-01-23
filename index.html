@@ -2602,6 +2602,14 @@
 
                 let text = ``;
 
+                // DEBUG: Inject available keys for the first item to help identify missing GuestName field
+                if (data.length > 0) {
+                    const firstKeys = Object.keys(data[0]).join(', ');
+                    console.log("Debug Keys:", firstKeys);
+                    // 暫時將 Key 列表加入到複製內容的最上方，方便使用者透過複製結果回報
+                    text += `[系統除錯用 - 欄位列表: ${firstKeys}]\n\n`;
+                }
+
                 let count = 0;
                 data.forEach((p, i) => {
                     count++;
@@ -2631,9 +2639,13 @@
                             text += `\n`;
                         });
                     } else {
-                        const guestNameStr = p.guestName || p.GuestName || p['GuestName'] || p['Guest Name'] || p['來賓姓名'] || p['來賓'];
+                        // 強制檢查所有可能欄位
+                        const guestNameStr = findCaseInsensitiveValue(p, ['guestName', 'GuestName', 'Guest Name', 'guest_name', 'Guest Names', '來賓姓名', '來賓', 'Guest', 'guest', 'memo', 'Memo', '備註']);
                         if (guestNameStr && guestNameStr !== '無') {
                             text += `      來賓：${guestNameStr}\n`;
+                        } else {
+                            // 若真的找不到，且總人數暗示有來賓，嘗試列印出所有欄位值供 debug (只針對第一筆或異常筆)
+                            // if (finalGuestCount > 0) { text += `      [Debug: 無法解析來賓資料]\n`; }
                         }
                     }
 
