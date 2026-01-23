@@ -1785,9 +1785,9 @@
             let guestData = [];
             if (!row || typeof row !== 'object') return guestData;
 
-            // Define candidates
-            const jsonKeys = ['guestList', 'guestJson', 'GuestJson', 'GuestList', 'guest_json', 'guest_list', '來賓資料JSON', '來賓資料', 'json'];
-            const nameKeys = ['guestName', 'GuestName', 'Guest Name', 'guest_name', 'Guest Names', '來賓姓名', '來賓'];
+            // Define candidates (Added more variations)
+            const jsonKeys = ['guestList', 'guestJson', 'GuestJson', 'GuestList', 'guest_json', 'guest_list', '來賓資料JSON', '來賓資料', 'json', 'JSON', 'guests', 'Guests', 'extraData'];
+            const nameKeys = ['guestName', 'GuestName', 'Guest Name', 'guest_name', 'Guest Names', '來賓姓名', '來賓', 'Guest', 'guest', 'memo', 'Memo', '備註'];
 
             // Fetch values using robust helper
             let guestJson = findCaseInsensitiveValue(row, jsonKeys);
@@ -1829,7 +1829,8 @@
                 // Ensure string
                 sourceStr = String(sourceStr);
 
-                const guestEntries = sourceStr.split(/[,、]\s*/);
+                // Added newline \n support
+                const guestEntries = sourceStr.split(/[,、;\n]\s*/);
                 guestEntries.forEach(g => {
                     if (!g.trim()) return;
                     let parts = g.split('|');
@@ -2818,7 +2819,11 @@
                 <i data-lucide="info" class="w-4 h-4 mt-0.5 shrink-0"></i>
                 <div>因瀏覽器安全性限制，請點擊下方按鈕或手動複製內容。</div>
             </div>
-            <textarea id="manual-copy-area" class="w-full h-48 border border-gray-200 rounded-xl p-3 text-sm font-mono bg-gray-50 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none resize-none text-gray-700" readonly onclick="this.select()"></textarea>
+            <!-- iOS Fix: Remove readonly, use inputmode="none", contenteditable -->
+            <textarea id="manual-copy-area" 
+                class="w-full h-48 border border-gray-200 rounded-xl p-3 text-sm font-mono bg-gray-50 focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none resize-none text-gray-700" 
+                inputmode="none"
+                onclick="this.select(); this.setSelectionRange(0, 99999);"></textarea>
             <div class="flex gap-3 shrink-0">
                  <button onclick="document.getElementById('manual-copy-modal').classList.add('hidden')" class="flex-1 py-3 rounded-xl font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 transition">關閉</button>
                  <button onclick="retryCopy()" class="flex-1 py-3 rounded-xl font-bold text-white bg-[#06c755] hover:bg-green-600 shadow-md active:scale-95 transition flex justify-center items-center gap-2">
@@ -2833,7 +2838,8 @@
         }
 
         function retryCopy() {
-            const text = document.getElementById('manual-copy-area').value;
+            const area = document.getElementById('manual-copy-area');
+            const text = area.value;
             // Try Async API first (now likely inside user gesture)
             if (navigator.clipboard && navigator.clipboard.writeText) {
                 navigator.clipboard.writeText(text).then(() => {
@@ -2852,6 +2858,8 @@
             const area = document.getElementById('manual-copy-area');
             area.focus();
             area.select();
+            // iOS Fix
+            area.setSelectionRange(0, 99999);
             try {
                 const successful = document.execCommand('copy');
                 if (successful) {
@@ -2865,9 +2873,9 @@
             }
         }
 
-       function copyTextToClipboard(text) {
+        function copyTextToClipboard(text) {
             // 嘗試重新聚焦視窗 (針對部分瀏覽器有效)
-            try { window.focus(); } catch (e) {}
+            try { window.focus(); } catch (e) { }
 
             // 如果瀏覽器不支援 Clipboard API，直接呼叫手動視窗
             if (!navigator.clipboard || !navigator.clipboard.writeText) {
@@ -2898,16 +2906,16 @@
                 area.value = text;
                 // 針對 iOS Safari 的特殊處理，防止鍵盤彈出但能選取
                 area.contentEditable = true;
-                area.readOnly = false; 
+                area.readOnly = false;
             }
-            
+
             const modal = document.getElementById('manual-copy-modal');
             if (modal) {
                 modal.classList.remove('hidden');
             }
-            
+
             if (typeof lucide !== 'undefined') lucide.createIcons();
-            
+
             // 嘗試選取文字，方便使用者直接複製
             if (area) {
                 setTimeout(() => {
