@@ -1155,10 +1155,6 @@
                 tableCount: document.getElementById('table-count').value
             };
 
-            // DEBUG: Verify guest list before submit
-            // alert(`Debug: Sending ${appState.guestList.length} guests: ` + JSON.stringify(appState.guestList));
-            console.log('Sending formData:', formData);
-
             try {
                 await apiSubmit(formData);
                 showToast(formData.action === 'update' ? "更新成功！" : "報名成功！");
@@ -2607,17 +2603,7 @@
 
                 let text = ``;
 
-                // DEBUG: Inject FULL JSON for the first item that seems to have guests
-                const sample = data.find(d => (d.guestList && d.guestList.length > 0) || d.guestCount > 0 || d.family > 0 || d.guestName);
-                if (sample) {
-                    const debugStr = JSON.stringify(sample, null, 2);
-                    console.log("Debug Record:", debugStr);
-                    text += `[系統除錯用 - 完整資料範例]\n${debugStr}\n----------------------------------\n\n`;
-                } else if (data.length > 0) {
-                    // If no guests found at all, dump the first item anyway to see structure
-                    const debugStr = JSON.stringify(data[0], null, 2);
-                    text += `[系統除錯用 - 第一筆資料 (無來賓)]\n${debugStr}\n----------------------------------\n\n`;
-                }
+
 
                 let count = 0;
                 data.forEach((p, i) => {
@@ -2920,7 +2906,6 @@
 
         // 為了程式碼整潔，將開啟手動視窗的邏輯獨立出來 (請將此函式加在 copyTextToClipboard 下方)
         function openManualCopyModal(text) {
-            console.log("Opening Manual Copy Modal...");
             ensureManualCopyModalExists();
             const area = document.getElementById('manual-copy-area');
             // 確保元素存在再賦值
