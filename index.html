@@ -2743,6 +2743,7 @@
         }
 
         function copyTextToClipboard(text) {
+            window.focus(); // Ensure window has focus for async clipboard operations
             if (!navigator.clipboard) {
                 fallbackCopyTextToClipboard(text);
                 return;
