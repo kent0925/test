@@ -1839,11 +1839,11 @@
                     let displayName = namePart;
                     let count = 1;
 
-                    // 解析 "名字(2)" 這種格式
-                    const match = namePart.match(/(.*?)\((\d+)\)/);
+                    // 解析 "名字(2)" 或 "名字(+2)" 這種格式
+                    const match = namePart.match(/(.*?)\((\+)?(\d+)\)/);
                     if (match) {
                         displayName = match[1].trim();
-                        count = parseInt(match[2]);
+                        count = parseInt(match[3]); // match[3] is the number
                     }
 
                     guestData.push({
@@ -2648,20 +2648,17 @@
                     if (total > 1) text += ` *${total}`;
                     text += `\n`;
 
+                    // ★ 修改：來賓名單整合為單行，顯示在下方 ★
                     if (guestData.length > 0) {
-                        guestData.forEach(g => {
-                            text += `      來賓：${g.name}`;
-                            // if (g.count > 1) text += ` *${g.count}`;
-                            text += `\n`;
+                        const guestParts = guestData.map(g => {
+                            return g.count > 1 ? `${g.name}*${g.count}` : g.name;
                         });
+                        text += `      來賓：${guestParts.join('、')}\n`;
                     } else {
                         // 強制檢查所有可能欄位
                         const guestNameStr = findCaseInsensitiveValue(p, ['guestName', 'GuestName', 'Guest Name', 'guest_name', 'Guest Names', '來賓姓名', '來賓', 'Guest', 'guest', 'memo', 'Memo', '備註']);
                         if (guestNameStr && guestNameStr !== '無') {
                             text += `      來賓：${guestNameStr}\n`;
-                        } else {
-                            // 若真的找不到，且總人數暗示有來賓，嘗試列印出所有欄位值供 debug (只針對第一筆或異常筆)
-                            // if (finalGuestCount > 0) { text += `      [Debug: 無法解析來賓資料]\n`; }
                         }
                     }
 
