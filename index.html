@@ -2881,27 +2881,43 @@
         }
 
         function copyTextToClipboard(text) {
-            // 嘗試重新聚焦視窗 (針對部分瀏覽器有效)
-            try { window.focus(); } catch (e) { }
+            const fallbackCopy = (txt) => {
+                const textArea = document.createElement("textarea");
+                textArea.value = txt;
+                textArea.style.position = "fixed";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    if (navigator.vibrate) navigator.vibrate(50);
+                    showToast("名單已複製！");
+                } catch (err) {
+                    showToast("❌ 複製失敗");
+                }
+                document.body.removeChild(textArea);
+            };
 
-            // 如果瀏覽器不支援 Clipboard API，直接呼叫手動視窗
-            if (!navigator.clipboard || !navigator.clipboard.writeText) {
-                openManualCopyModal(text);
-                return;
+            const directCopy = (txt) => {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(txt).then(() => {
+                        if (navigator.vibrate) navigator.vibrate(50);
+                        showToast("名單已複製！");
+                    }).catch(() => fallbackCopy(txt));
+                } else {
+                    fallbackCopy(txt);
+                }
+            };
+
+            if (typeof liff !== 'undefined' && liff.isApiAvailable('shareTargetPicker')) {
+                liff.shareTargetPicker([{ type: "text", text: text }])
+                    .then((res) => {
+                        if (!res) directCopy(text);
+                    })
+                    .catch(() => directCopy(text));
+            } else {
+                directCopy(text);
             }
-
-            // 嘗試寫入剪貼簿
-            navigator.clipboard.writeText(text)
-                .then(function () {
-                    // 成功
-                    showToast("已複製名單到剪貼簿");
-                })
-                .catch(function (err) {
-                    // 失敗 (包含 NotAllowedError: Document is not focused)
-                    // 這裡不拋出紅字錯誤，而是印出警告並開啟手動視窗
-                    console.warn('自動複製失敗 (可能因失去焦點或非同步延遲)，切換至手動模式:', err);
-                    openManualCopyModal(text);
-                });
         }
 
         // 為了程式碼整潔，將開啟手動視窗的邏輯獨立出來 (請將此函式加在 copyTextToClipboard 下方)
