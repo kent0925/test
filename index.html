@@ -1542,6 +1542,7 @@
             empty.classList.add('hidden');
 
             const data = await fetchDetails();
+            appState.cachedDetails = data; // ★ CACHE DATA FOR SYNC COPY
             loading.classList.add('hidden');
 
             if (!data || data.length === 0) {
@@ -2594,10 +2595,18 @@
 
         // 核心複製邏輯：支援參數與格式化
         function performCopy(options = { includeSponsor: true, includeTravel: true }) {
-            showToast("正在讀取並產生名單...");
+            // ★ 修改為同步讀取快取資料
+            const data = appState.cachedDetails || [];
 
-            fetchDetails().then(data => {
-                if (!data.length) return showToast("無資料可複製");
+            if (!data || data.length === 0) {
+                // Try to fetch if cache is empty (though unlikely if modal is open)
+                // But fetching async here will break mobile copy. 
+                // So we just warn.
+                return showToast("資料讀取中或無資料，請稍後再試");
+            }
+
+            // Sync execution continues...
+            { // Block to keep variable scope clean equivalent to previous .then callback
 
                 const e = appState.currentEvent;
 
@@ -2708,7 +2717,7 @@
                 text += `https://liff.line.me/${LIFF_ID}\n`;
 
                 copyTextToClipboard(text);
-            });
+            }
         }
 
         // --- ★★★ 這裡就是修正的關鍵，原本遺失的函式 ★★★ ---
@@ -2896,43 +2905,52 @@
         function copyTextToClipboard(text) {
             const manualFallback = () => openManualCopyModal(text);
 
-            // Helper to try clipboard logic
-            const tryClipboard = () => {
+            // 1. First Fallback: Textarea (works on some mobile browsers if sync)
+            const fallbackCopy = (txt) => {
+                const textArea = document.createElement("textarea");
+                textArea.value = txt;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px"; // Avoid visual glitch
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    const successful = document.execCommand('copy');
+                    if (successful) {
+                        if (navigator.vibrate) navigator.vibrate(50);
+                        showToast("名單已複製！");
+                    } else {
+                        throw new Error("execCommand failed");
+                    }
+                } catch (err) {
+                    console.warn("Textarea fallback failed, opening manual modal", err);
+                    manualFallback();
+                }
+                document.body.removeChild(textArea);
+            };
+
+            const directCopy = (txt) => {
                 if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(text).then(() => {
+                    navigator.clipboard.writeText(txt).then(() => {
                         if (navigator.vibrate) navigator.vibrate(50);
                         showToast("名單已複製！");
                     }).catch((err) => {
-                        console.warn("Clipboard API failed, using fallback", err);
-                        manualFallback();
+                        console.warn("Clipboard API failed", err);
+                        fallbackCopy(txt);
                     });
                 } else {
-                    manualFallback();
+                    fallbackCopy(txt);
                 }
             };
 
-            // 1. Try LIFF Share first (Best for LINE environment)
             if (typeof liff !== 'undefined' && liff.isApiAvailable('shareTargetPicker')) {
                 liff.shareTargetPicker([{ type: "text", text: text }])
                     .then((res) => {
-                        // API call successful, but user might have cancelled share
-                        if (res) {
-                            // Shared successfully
-                        } else {
-                            // User cancelled share picker, maybe they want to copy? 
-                            // Optional: tryClipboard(); 
-                            // But usually if they cancel picker they don't want to do anything.
-                            // However, just in case, let's offer copy if they didn't share.
-                            tryClipboard();
-                        }
+                        if (!res) directCopy(text);
                     })
-                    .catch((err) => {
-                        console.warn("LIFF share failed", err);
-                        tryClipboard();
-                    });
+                    .catch(() => directCopy(text));
             } else {
-                // 2. Not in LINE or API unavailable, try Clipboard
-                tryClipboard();
+                directCopy(text);
             }
         }
 
