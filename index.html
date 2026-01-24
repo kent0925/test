@@ -2601,7 +2601,20 @@
 
                 const e = appState.currentEvent;
 
-                let text = ``;
+                let text = `📅 ${e.name}\n`;
+                // 判斷並加入活動資訊
+                if (e.organizer) text += `👤 主辦人：${e.organizer}\n`;
+
+                // 時間處理：如果是 T 結尾的 ISO 格式就簡單修飾，否則直接顯示
+                let timeDisplay = e.time;
+                if (timeDisplay && timeDisplay.includes('T')) {
+                    timeDisplay = timeDisplay.replace('T', ' ');
+                }
+                if (timeDisplay) text += `🕒 時間：${timeDisplay}\n`;
+
+                if (e.location) text += `📍 地點：${e.location}\n`;
+                if (e.address) text += `🚗 地址：${e.address}\n`;
+                text += `──────────────\n`;
 
 
 
