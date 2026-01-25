@@ -410,6 +410,7 @@
         let app = {
             view: 'home', // home, store, seller
             user: { id: 'Guest', name: 'Guest', img: '' },
+            eventId: new URLSearchParams(window.location.search).get('eventId') || 'default', // Get Event ID
             stores: [], // List of stores for Home
             currentStore: null, // { info, products } for Store View
             cart: [], // { pid, name, price, qty, spec, storeId }
@@ -920,6 +921,7 @@
             const payload = {
                 action: 'submitOrder',
                 data: {
+                    eventId: app.eventId,
                     storeId: app.cartStoreId,
                     memberId: app.user.id,
                     memberName: app.user.name,
@@ -1001,6 +1003,7 @@
             const payload = {
                 action: 'updateStore',
                 data: {
+                    eventId: app.eventId,
                     storeId: app.user.id,
                     name: document.getElementById('set-store-name').value,
                     desc: document.getElementById('set-store-desc').value,
@@ -1039,7 +1042,7 @@
 
         // Create Product
         async function submitProduct() {
-            if (!app.prodImgBase64) return alert('請上傳商品照');
+            if (!app.prodImgBase64 && app.editingProductIdx === null) return alert('請上傳商品照');
             const price = parseFloat(document.getElementById('prod-price').value);
             if (price < 0) return alert('商品價格不能為負數');
 
@@ -1057,6 +1060,7 @@
             const payload = {
                 action: app.editingProductIdx !== null ? 'updateProduct' : 'createProduct',
                 data: {
+                    eventId: app.eventId,
                     sellerId: app.user.id,
                     sellerName: app.user.name,
                     productId: app.editingProductIdx !== null ? app.myProducts[app.editingProductIdx].id || app.myProducts[app.editingProductIdx].Name : null, // Pass ID if exists, logic depends on backend
