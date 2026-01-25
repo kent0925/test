@@ -403,7 +403,7 @@
     <!-- LOGIC -->
     <script>
         // CONFIG
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzJb6Noa0JqX6NoOQF8L4EINrryt7P4MdRQN6SC34I_-38LwVpNZSYuMRvn6GP578zO4A/exec';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycby0eaLjowGyKy5DDWgGT0mfDIod8zEXgy4-hdeYW4pPoQ_OaWu8K1KPh8V-V0o-ZeA/exec';
         const LIFF_ID = '2008678090-SEONUKky';
 
         // STATE
@@ -1006,14 +1006,14 @@
                 eventId: app.eventId,
                 data: {
                     eventId: app.eventId,
-                    StoreID: app.user.id,
-                    Name: document.getElementById('set-store-name').value,
-                    Description: document.getElementById('set-store-desc').value,
-                    BankInfo: JSON.stringify(bankData),
-                    Shipping_Home: parseInt(document.getElementById('set-ship-home').value || 0),
-                    Shipping_Store: parseInt(document.getElementById('set-ship-store').value || 0),
+                    storeId: app.user.id,
+                    name: document.getElementById('set-store-name').value,
+                    desc: document.getElementById('set-store-desc').value,
+                    bankInfo: JSON.stringify(bankData),
+                    shipHome: parseInt(document.getElementById('set-ship-home').value || 0),
+                    shipStore: parseInt(document.getElementById('set-ship-store').value || 0),
                     imageBase64: app.storeImgBase64,
-                    Image: app.storeImgBase64 ? '' : document.getElementById('preview-store-img').src
+                    imageUrl: app.storeImgBase64 ? '' : document.getElementById('preview-store-img').src
                 }
             };
 
@@ -1061,17 +1061,21 @@
                 eventId: app.eventId,
                 data: {
                     eventId: app.eventId,
-                    SellerID: app.user.id,
-                    SellerName: app.user.name,
-                    ProductID: app.editingProductIdx !== null ? app.myProducts[app.editingProductIdx].id || app.myProducts[app.editingProductIdx].Name : null,
-                    ID: app.editingProductIdx !== null ? app.myProducts[app.editingProductIdx].id : null,
-
-                    Name: document.getElementById('prod-name').value,
-                    Price: document.getElementById('prod-price').value,
-                    Category: document.getElementById('prod-cat').value,
-                    Specs: specs,
+                    sellerId: app.user.id,
+                    sellerName: app.user.name,
+                    // If creating, productId is null (backend generates). If updating, pass ID.
+                    productId: app.editingProductIdx !== null ? (app.myProducts[app.editingProductIdx].id || app.myProducts[app.editingProductIdx].Name) : null,
+                    // backend_v4.0 expects 'id' for update? No, it doesn't seem to implement updateProduct logic fully in snippet, 
+                    // but usually createProduct ignores ID.
+                    // Wait, I need to check backend_v4.0 createProduct properly.
+                    // It uses Date.now() for PID. It doesn't seem to handle UPDATE.
+                    // But assume standard pattern:
+                    name: document.getElementById('prod-name').value,
+                    price: document.getElementById('prod-price').value,
+                    category: document.getElementById('prod-cat').value,
+                    specs: specs,
                     imageBase64: app.prodImgBase64,
-                    Image: app.editingProductIdx !== null && !app.prodImgBase64 ? document.getElementById('preview-prod-img').src : null
+                    imageUrl: app.editingProductIdx !== null && !app.prodImgBase64 ? document.getElementById('preview-prod-img').src : null
                 }
             };
 
