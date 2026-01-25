@@ -985,7 +985,10 @@
 
         // Save Store Settings
         async function saveStoreSettings() {
+            if (app.user.id === 'Guest') return alert('請先登入 LINE (測試環境不可用)');
+
             const btn = document.getElementById('btn-save-store');
+            const originalText = btn.innerHTML;
             btn.innerHTML = '儲存中...'; btn.disabled = true;
 
             // Collect Bank Info
@@ -1001,23 +1004,37 @@
                     storeId: app.user.id,
                     name: document.getElementById('set-store-name').value,
                     desc: document.getElementById('set-store-desc').value,
-                    bankInfo: JSON.stringify(bankData), // Save as JSON
-                    shipHome: document.getElementById('set-ship-home').value,
-                    shipStore: document.getElementById('set-ship-store').value,
+                    bankInfo: JSON.stringify(bankData),
+                    shipHome: parseInt(document.getElementById('set-ship-home').value || 0),
+                    shipStore: parseInt(document.getElementById('set-ship-store').value || 0),
                     imageBase64: app.storeImgBase64,
-                    imageUrl: app.storeImgBase64 ? '' : document.getElementById('preview-store-img').src // Fallback to current img (profile) if no new upload
+                    // If no new upload, keep existing URL (logic: send empty/null to indicate no change, or send current src)
+                    // Better: Send null if app.storeImgBase64 is null. Backend should handle "if imageBase64 is null, don't update image".
+                    // But current logic was: imageUrl fallback. Let's keep it safe.
+                    imageUrl: app.storeImgBase64 ? '' : document.getElementById('preview-store-img').src
                 }
             };
 
             // Send
             try {
+                // console.log('Sending Payload:', payload);
                 const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
-                const json = await res.json();
-                if (json.result === 'success') alert('✅ 商店設定已更新');
-                else alert('更新失敗');
-            } catch (e) { alert('Error'); }
+                // Check content type
+                const text = await res.text();
+                try {
+                    const json = JSON.parse(text);
+                    if (json.result === 'success') alert('✅ 商店設定已更新');
+                    else alert('更新失敗: ' + (json.message || '未知錯誤'));
+                } catch (e) {
+                    console.error('Response Parse Error:', text);
+                    alert('伺服器回傳格式錯誤 (可能是檔案太大獲逾時)');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('連線失敗: ' + e.message);
+            }
 
-            btn.innerHTML = '儲存攤位設定'; btn.disabled = false;
+            btn.innerHTML = originalText; btn.disabled = false;
         }
 
         // Create Product
