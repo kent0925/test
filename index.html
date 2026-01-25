@@ -1025,7 +1025,7 @@
                 const text = await res.text();
                 try {
                     const json = JSON.parse(text);
-                    if (json.result === 'success') alert('✅ 商店設定已更新');
+                    if (json.result === 'success') alert('✅ 成功回傳: ' + JSON.stringify(json));
                     else alert('更新失敗: ' + (json.message || '未知錯誤'));
                 } catch (e) {
                     console.error('Response Parse Error:', text);
