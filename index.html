@@ -75,6 +75,15 @@
                 <span class="text-2xl">🛍️</span> 載入中...
             </h1>
             <div class="flex items-center gap-3">
+                <!-- Mode Toggle -->
+                <button onclick="toggleMode()" id="mode-btn"
+                    class="bg-stone-800 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm transition-all active:scale-95 flex items-center gap-1">
+                    <span>Store</span>
+                    <svg class="w-3 h-3 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                </button>
                 <!-- User Avatar (LIFF) -->
                 <div id="user-info" class="hidden flex items-center gap-2 bg-stone-100 pl-1 pr-3 py-1 rounded-full">
                     <img id="user-avatar" src="" class="w-6 h-6 rounded-full bg-stone-300 object-cover">
@@ -119,6 +128,77 @@
             </div>
         </div>
 
+    </main>
+
+    <!-- Sell View (Hidden by default) -->
+    <main id="sell-view" class="hidden max-w-md mx-auto pt-24 px-6 space-y-6 pb-24">
+        <h2 class="text-2xl font-black text-stone-800">上架您的商品</h2>
+
+        <form id="sell-form" class="space-y-6" onsubmit="event.preventDefault(); submitProduct();">
+            <!-- Image Upload -->
+            <div class="space-y-2">
+                <label class="block text-xs font-bold text-stone-400">商品圖片</label>
+                <div class="relative w-full aspect-square bg-white rounded-3xl border-2 border-dashed border-stone-200 flex flex-col items-center justify-center cursor-pointer hover:border-orange-400 transition-colors overflow-hidden group"
+                    onclick="document.getElementById('img-input').click()">
+                    <img id="preview-img" class="absolute inset-0 w-full h-full object-cover hidden">
+                    <div class="text-center group-hover:scale-110 transition-transform">
+                        <span class="text-4xl">📸</span>
+                        <p class="text-xs font-bold text-stone-400 mt-2">點擊上傳圖片</p>
+                    </div>
+                </div>
+                <input type="file" id="img-input" accept="image/*" class="hidden" onchange="handleImageSelect(this)">
+            </div>
+
+            <!-- Basic Info -->
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-stone-400 mb-1">商品名稱</label>
+                    <input type="text" id="prod-name" required
+                        class="w-full bg-white border border-stone-200 rounded-xl px-4 py-3 font-bold text-stone-700 outline-none focus:ring-2 focus:ring-stone-800"
+                        placeholder="例如：手作餅乾">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-stone-400 mb-1">價格 ($)</label>
+                        <input type="number" id="prod-price" required min="1"
+                            class="w-full bg-white border border-stone-200 rounded-xl px-4 py-3 font-bold text-stone-700 outline-none focus:ring-2 focus:ring-stone-800"
+                            placeholder="100">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-stone-400 mb-1">分類</label>
+                        <input type="text" id="prod-cat" required list="cat-list"
+                            class="w-full bg-white border border-stone-200 rounded-xl px-4 py-3 font-bold text-stone-700 outline-none focus:ring-2 focus:ring-stone-800"
+                            placeholder="食品">
+                        <datalist id="cat-list">
+                            <option value="食品">
+                            <option value="花藝">
+                            <option value="用品">
+                        </datalist>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Specs (Simple) -->
+            <div class="space-y-2 bg-white p-4 rounded-2xl border border-stone-100">
+                <label class="block text-xs font-bold text-stone-400 mb-2">商品規格 (選項)</label>
+                <div id="specs-container" class="space-y-3">
+                    <!-- Dynamic Spec Lines -->
+                    <div class="flex gap-2">
+                        <input type="text" placeholder="規格名稱 (如: 口味)"
+                            class="spec-key w-1/3 bg-stone-50 text-xs font-bold p-2 rounded-lg outline-none" value="樣式">
+                        <input type="text" placeholder="選項 (用逗號隔開, 如: 紅色,藍色)"
+                            class="spec-vals flex-grow bg-stone-50 text-xs font-bold p-2 rounded-lg outline-none">
+                    </div>
+                </div>
+                <button type="button" onclick="addSpecLine()"
+                    class="text-xs font-bold text-orange-500 hover:underline">+ 增加規格</button>
+            </div>
+
+            <button type="submit" id="submit-prod-btn"
+                class="w-full bg-stone-900 text-white font-bold py-4 rounded-2xl shadow-lg btn-press">
+                確認上架
+            </button>
+        </form>
     </main>
 
     <!-- Floating Cart Button -->
@@ -276,11 +356,12 @@
     <!-- Init Script -->
     <script>
         // --- Configurations ---
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzJb6Noa0JqX6NoOQF8L4EINrryt7P4MdRQN6SC34I_-38LwVpNZSYuMRvn6GP578zO4A/exec';
-        const LIFF_ID = '2008678090-SEONUKky';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycby0eaLjowGyKy5DDWgGT0mfDIod8zEXgy4-hdeYW4pPoQ_OaWu8K1KPh8V-V0o-ZeA/exec';
+        const LIFF_ID = '2008678090-eGItUWQx';
 
         // --- State ---
         let appState = {
+            mode: 'buy', // buy | sell
             products: [],
             settings: {},
             cart: [], // { id, name, price, qty, spec: {key: val} }
@@ -660,11 +741,122 @@
             const count = appState.cart.reduce((sum, i) => sum + i.qty, 0);
             document.getElementById('cart-count').innerText = count;
 
+
             const btn = document.getElementById('cart-btn');
-            if (count > 0) {
+            if (count > 0 && appState.mode === 'buy') {
                 btn.classList.remove('translate-y-20', 'opacity-0');
             } else {
                 btn.classList.add('translate-y-20', 'opacity-0');
+            }
+        }
+
+        // --- Sell Mode Logic ---
+        function toggleMode() {
+            appState.mode = appState.mode === 'buy' ? 'sell' : 'buy';
+            const isSell = appState.mode === 'sell';
+
+            // UI Toggle
+            document.querySelector('main').classList.toggle('hidden', isSell); // Buy View
+            document.getElementById('sell-view').classList.toggle('hidden', !isSell);
+            document.getElementById('cart-btn').classList.add('translate-y-20', 'opacity-0'); // Hide cart in sell mode
+
+            // Button Update
+            const btn = document.getElementById('mode-btn');
+            if (isSell) {
+                btn.innerHTML = `<span>逛逛商品</span><svg class="w-3 h-3 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>`;
+                btn.classList.replace('bg-stone-800', 'bg-orange-600');
+            } else {
+                btn.innerHTML = `<span>我要賣東西</span><svg class="w-3 h-3 text-stone-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>`;
+                btn.classList.replace('bg-orange-600', 'bg-stone-800');
+                updateUI(); // Restore cart btn if needed
+            }
+
+            // Title Update
+            document.getElementById('store-name').innerHTML = isSell
+                ? `<span class="text-2xl">🏪</span> 賣家中心`
+                : `<span class="text-2xl">🛍️</span> ${appState.settings.StoreName || 'Store'}`;
+        }
+
+        let uploadImageBase64 = null;
+
+        function handleImageSelect(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    document.getElementById('preview-img').src = e.target.result;
+                    document.getElementById('preview-img').classList.remove('hidden');
+                    uploadImageBase64 = e.target.result; // Data URL
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function addSpecLine() {
+            const div = document.createElement('div');
+            div.className = 'flex gap-2';
+            div.innerHTML = `
+                <input type="text" placeholder="規格名稱" class="spec-key w-1/3 bg-stone-50 text-xs font-bold p-2 rounded-lg outline-none">
+                <input type="text" placeholder="選項 (用逗號隔開)" class="spec-vals flex-grow bg-stone-50 text-xs font-bold p-2 rounded-lg outline-none">
+            `;
+            document.getElementById('specs-container').appendChild(div);
+        }
+
+        async function submitProduct() {
+            if (!uploadImageBase64) { alert('請上傳商品圖片'); return; }
+
+            const btn = document.getElementById('submit-prod-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '上架中...';
+            btn.disabled = true;
+
+            // Build Specs Object
+            const specs = {};
+            document.querySelectorAll('#specs-container > div').forEach(div => {
+                const key = div.querySelector('.spec-key').value.trim();
+                const valStr = div.querySelector('.spec-vals').value.trim();
+                if (key && valStr) {
+                    specs[key] = valStr.split(',').map(s => s.trim()).filter(x => x);
+                }
+            });
+
+            const payload = {
+                action: 'createProduct',
+                data: {
+                    imageBase64: uploadImageBase64,
+                    name: document.getElementById('prod-name').value,
+                    price: document.getElementById('prod-price').value,
+                    category: document.getElementById('prod-cat').value,
+                    specs: specs,
+                    sellerId: appState.user.userId,
+                    sellerName: appState.user.displayName
+                }
+            };
+
+            try {
+                const res = await fetch(GAS_URL, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const json = await res.json();
+
+                if (json.result === 'success') {
+                    alert('✅ 商品上架成功！');
+                    // Reset Form
+                    document.getElementById('sell-form').reset();
+                    document.getElementById('preview-img').classList.add('hidden');
+                    uploadImageBase64 = null;
+
+                    // Refresh Data & Switch to Buy Mode to see it
+                    fetchData(); // Background refresh
+                    toggleMode();
+                } else {
+                    throw new Error(json.message);
+                }
+            } catch (e) {
+                alert('上架失敗: ' + e.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         }
 
