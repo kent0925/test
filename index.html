@@ -134,9 +134,15 @@
 
         <!-- VIEW: Seller Dashboard -->
         <main id="view-seller" class="hidden animate-fade-in space-y-8 pb-24">
-            <div class="space-y-1">
-                <h2 class="text-2xl font-black text-stone-800">攤主中心</h2>
-                <p class="text-xs text-stone-500 font-bold">佈置您的攤位與上架商品</p>
+            <div class="flex justify-between items-end">
+                <div class="space-y-1">
+                    <h2 class="text-2xl font-black text-stone-800">攤主中心</h2>
+                    <p class="text-xs text-stone-500 font-bold">佈置您的攤位與上架商品</p>
+                </div>
+                <button onclick="goToStore(app.user.id)"
+                    class="bg-orange-100 text-orange-600 px-3 py-1.5 rounded-lg text-xs font-bold active:scale-95 transition-transform">
+                    預覽攤位 ➜
+                </button>
             </div>
 
             <!-- 1. Store Settings Module -->
@@ -389,7 +395,7 @@
     <!-- LOGIC -->
     <script>
         // CONFIG
-        const GAS_URL = 'https://script.google.com/macros/s/AKfycbzJb6Noa0JqX6NoOQF8L4EINrryt7P4MdRQN6SC34I_-38LwVpNZSYuMRvn6GP578zO4A/exec';
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycby0eaLjowGyKy5DDWgGT0mfDIod8zEXgy4-hdeYW4pPoQ_OaWu8K1KPh8V-V0o-ZeA/exec';
         const LIFF_ID = '2008678090-SEONUKky';
 
         // STATE
