@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>大老二兄弟園遊會</title>
+    <title>Garden Party</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -362,14 +362,120 @@
         };
 
         // --- INIT ---
+        let TW_ADDRESS_DATA = [];
+        let CVS_STORES = [];
+
         window.onload = async () => {
             await initLIFF();
             initBankSelect();
+            initAddressData(); // Load Address JSON
+            loadCVSCities(); // Init CVS
             await loadStores(); // Fetch Store List
             loadCartLocal();
             renderHome();
             document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
         };
+
+        async function initAddressData() {
+            try {
+                const res = await fetch('https://raw.githubusercontent.com/donma/TaiwanAddressCityAreaRoadChineseEnglishJSON/master/AllData.json');
+                TW_ADDRESS_DATA = await res.json();
+            } catch (e) { console.error('Address Load Failed', e); }
+        }
+
+        // Handle Zip Input (Auto-fill)
+        function handleZipInput(val) {
+            if (val.length < 3) return;
+            // Search in Data
+            for (const city of TW_ADDRESS_DATA) {
+                for (const area of city.AreaList) {
+                    if (area.ZipCode === val || area.ZipCode.startsWith(val)) {
+                        document.getElementById('ship-city').value = city.CityName;
+                        document.getElementById('ship-dist').value = area.AreaName;
+
+                        // Populate Road Datalist
+                        const dl = document.getElementById('road-list');
+                        dl.innerHTML = '';
+                        if (area.RoadList) {
+                            area.RoadList.forEach(r => {
+                                const opt = document.createElement('option');
+                                opt.value = r.RoadName;
+                                dl.appendChild(opt);
+                            });
+                        }
+                        return;
+                    }
+                }
+            }
+        }
+
+        // --- CVS LOGIC ---
+        async function loadCVSCities() {
+            const sel = document.getElementById('cvs-city');
+            // Hardcode or get from data? 7-11 JSONs are by City.
+            const CITIES = ["基隆市", "台北市", "新北市", "桃園市", "新竹市", "新竹縣", "苗栗縣", "台中市", "彰化縣", "南投縣", "雲林縣", "嘉義市", "嘉義縣", "台南市", "高雄市", "屏東縣", "宜蘭縣", "花蓮縣", "台東縣", "澎湖縣", "金門縣", "連江縣"];
+            sel.innerHTML = '<option value="">選擇縣市</option>' + CITIES.map(c => `<option value="${c}">${c}</option>`).join('');
+        }
+
+        async function loadCVSStores() {
+            const brand = document.getElementById('cvs-type').value; // 7-11 or FamilyMart
+            const city = document.getElementById('cvs-city').value;
+            if (!city) return;
+
+            const list = document.getElementById('cvs-list');
+            list.innerHTML = '載入中...';
+
+            // Mapping for URL
+            // ctiml repo: 7-11/{City}.json, Familymart/{City}.json
+            // Note: Repo uses English or Chinese? Repo uses Chinese filename e.g. "新北市.json"
+            // Brand Check: "7-11" or "FamilyMart"
+            let brandPath = brand === '7-11' ? '7-11' : 'FamilyMart';
+
+            try {
+                const url = `https://raw.githubusercontent.com/ctiml/convenience-store-data/master/${brandPath}/${city}.json`;
+                const res = await fetch(url);
+                CVS_STORES = await res.json();
+
+                // Populate Districts
+                const distSet = new Set(CVS_STORES.map(s => s.District || s.town)); // 7-11 uses POI, Family uses town? Check content logic if fail.
+                // Actually 7-11 data: {POIID, POIName, X, Y, Address, ...} - Address contains district usually
+                // Simplified: Just render list filterable by text inputs if needed.
+                // Let's implement District Filter.
+                const distSel = document.getElementById('cvs-dist');
+                // Extract districts from address (e.g. "基隆市仁愛區...")
+                const dists = [...new Set(CVS_STORES.map(s => {
+                    // Simple regex to grab District
+                    const m = s.Address.match(/(.+?[市縣])?(.+?[區鄉鎮市])/);
+                    return m ? m[2] : '其他';
+                }))];
+
+                distSel.innerHTML = '<option value="">全區域</option>' + dists.map(d => `<option value="${d}">${d}</option>`).join('');
+                filterCVSStores();
+
+            } catch (e) {
+                console.error(e);
+                list.innerHTML = '載入失敗，請稍後再試或手動輸入';
+            }
+        }
+
+        function filterCVSStores() {
+            const dist = document.getElementById('cvs-dist').value;
+            const list = document.getElementById('cvs-list');
+            list.innerHTML = '';
+
+            const filtered = dist ? CVS_STORES.filter(s => s.Address.includes(dist)) : CVS_STORES;
+
+            filtered.forEach(s => {
+                const div = document.createElement('div');
+                div.className = 'p-2 bg-stone-100 rounded text-xs cursor-pointer hover:bg-orange-100';
+                div.innerHTML = `<b>${s.POIName}</b><br><span class="text-stone-400">${s.Address}</span>`;
+                div.onclick = () => {
+                    document.getElementById('ship-store-name').value = `${s.POIName} (${s.Address})`;
+                    // Highlight selection
+                };
+                list.appendChild(div);
+            });
+        }
 
         async function initBankSelect() {
             const sel = document.getElementById('set-bank-code');
