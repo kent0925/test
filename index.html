@@ -422,6 +422,15 @@
             prodImgBase64: null
         };
 
+        function fixDriveUrl(url) {
+            if (!url || !url.includes('drive.google.com')) return url;
+            let match = url.match(/[?&]id=([-\w]{25,})/);
+            if (match && match[1]) {
+                return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w1000`;
+            }
+            return url;
+        }
+
         // --- INIT ---
         let TW_ADDRESS_DATA = [];
         let CVS_STORES = [];
@@ -633,7 +642,7 @@
                 document.getElementById('page-title').innerText = info.Name || '攤位';
                 document.getElementById('store-page-name').innerText = info.Name || '未命名攤位';
                 document.getElementById('store-page-desc').innerText = info.Description || '歡迎光臨';
-                document.getElementById('store-cover-img').src = info.Image && info.Image.startsWith('http') ? info.Image : 'https://placehold.co/100';
+                document.getElementById('store-cover-img').src = info.Image && info.Image.startsWith('http') ? fixDriveUrl(info.Image) : 'https://placehold.co/100';
                 document.getElementById('store-ship-home').innerText = `🚚 宅配 $${info.Shipping_Home || 100}`;
                 document.getElementById('store-ship-store').innerText = `🏪 超商 $${info.Shipping_Store || 60}`;
 
@@ -665,12 +674,12 @@
                         document.getElementById('set-bank-name').value = '';
                     }
 
-                    document.getElementById('preview-store-img').src = myStore.Image;
+                    document.getElementById('preview-store-img').src = fixDriveUrl(myStore.Image);
                     document.getElementById('preview-store-img').classList.remove('hidden');
                 } else {
                     // New Store - Default to User Profile
                     document.getElementById('set-store-name').value = app.user.name;
-                    document.getElementById('preview-store-img').src = app.user.img;
+                    document.getElementById('preview-store-img').src = fixDriveUrl(app.user.img);
                     document.getElementById('preview-store-img').classList.remove('hidden');
                     document.getElementById('set-bank-code').value = '';
                     document.getElementById('set-bank-acc').value = '';
@@ -693,7 +702,7 @@
             }
             container.innerHTML = app.stores.map(s => `
                 <div onclick="goToStore('${s.StoreID}')" class="bg-white rounded-2xl p-4 shadow-sm flex items-center gap-4 active:scale-95 transition-transform cursor-pointer">
-                    <img src="${s.Image && s.Image.startsWith('http') ? s.Image : 'https://placehold.co/80'}" class="w-16 h-16 rounded-full bg-stone-100 object-cover">
+                    <img src="${s.Image && s.Image.startsWith('http') ? fixDriveUrl(s.Image) : 'https://placehold.co/80'}" class="w-16 h-16 rounded-full bg-stone-100 object-cover">
                     <div>
                         <h3 class="font-bold text-lg text-stone-800">${s.Name}</h3>
                         <p class="text-xs text-stone-500 line-clamp-1">${s.Description || 'No description'}</p>
@@ -712,7 +721,7 @@
             }
             container.innerHTML = products.map((p, idx) => `
                 <div onclick="openProductModal(${idx})" class="bg-white rounded-2xl p-3 shadow-sm active:scale-95 transition-transform cursor-pointer">
-                    <img src="${p.Image && p.Image.startsWith('http') ? p.Image : 'https://placehold.co/200'}" class="w-full aspect-square rounded-xl object-cover bg-stone-100 mb-2">
+                    <img src="${p.Image && p.Image.startsWith('http') ? fixDriveUrl(p.Image) : 'https://placehold.co/200'}" class="w-full aspect-square rounded-xl object-cover bg-stone-100 mb-2">
                     <h4 class="font-bold text-stone-800 text-sm truncate">${p.Name}</h4>
                     <p class="text-orange-600 font-bold">$${p.Price}</p>
                 </div>
@@ -728,7 +737,7 @@
             currentModalProduct = p;
             currentModalSpecs = {};
 
-            document.getElementById('modal-img').src = p.Image && p.Image.startsWith('http') ? p.Image : 'https://placehold.co/300';
+            document.getElementById('modal-img').src = p.Image && p.Image.startsWith('http') ? fixDriveUrl(p.Image) : 'https://placehold.co/300';
             document.getElementById('modal-name').innerText = p.Name;
             document.getElementById('modal-price').innerText = `$${p.Price}`;
             document.getElementById('modal-qty').innerText = '1';
@@ -859,7 +868,7 @@
 
             container.innerHTML = app.cart.map((item, idx) => `
                 <div class="flex gap-3 bg-white p-3 rounded-2xl shadow-sm border border-stone-50">
-                    <img src="${item.image}" class="w-14 h-14 rounded-lg bg-stone-100 object-cover" onerror="this.src='https://placehold.co/100'">
+                    <img src="${fixDriveUrl(item.image)}" class="w-14 h-14 rounded-lg bg-stone-100 object-cover" onerror="this.src='https://placehold.co/100'">
                     <div class="flex-grow">
                         <h4 class="font-bold text-stone-800">${item.name}</h4>
                         <p class="text-xs text-stone-400">${Object.values(item.spec).join('/')}</p>
@@ -1118,7 +1127,7 @@
             }
             container.innerHTML = app.myProducts.map((p, i) => `
                 <div class="flex items-center gap-3 bg-stone-50 p-3 rounded-xl">
-                    <img src="${p.Image && p.Image.startsWith('http') ? p.Image : 'https://placehold.co/80'}" class="w-12 h-12 rounded-lg object-cover bg-stone-200">
+                    <img src="${p.Image && p.Image.startsWith('http') ? fixDriveUrl(p.Image) : 'https://placehold.co/80'}" class="w-12 h-12 rounded-lg object-cover bg-stone-200">
                     <div class="flex-1 min-w-0">
                         <h4 class="font-bold text-sm text-stone-800 truncate">${p.Name}</h4>
                         <p class="text-orange-600 font-bold text-xs">$${p.Price}</p>
@@ -1139,7 +1148,7 @@
             document.getElementById('prod-cat').value = p.Category || '';
 
             // Image
-            document.getElementById('preview-prod-img').src = p.Image;
+            document.getElementById('preview-prod-img').src = fixDriveUrl(p.Image);
             document.getElementById('preview-prod-img').classList.remove('hidden');
             app.prodImgBase64 = null; // Don't change unless new upload
 
