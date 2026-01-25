@@ -573,7 +573,7 @@
 
         async function loadStores() {
             try {
-                const res = await fetch(`${GAS_URL}?action=getStores`);
+                const res = await fetch(`${GAS_URL}?action=getStores&eventId=${app.eventId}`);
                 const json = await res.json();
                 app.stores = json.stores || [];
             } catch (e) { alert('載入失敗'); }
@@ -589,7 +589,7 @@
         async function goToStore(storeId) {
             document.getElementById('loading-screen').classList.remove('opacity-0', 'pointer-events-none');
             try {
-                const res = await fetch(`${GAS_URL}?action=getStoreData&storeId=${storeId}`);
+                const res = await fetch(`${GAS_URL}?action=getStoreData&storeId=${storeId}&eventId=${app.eventId}`);
                 const json = await res.json();
                 app.currentStore = {
                     info: json.store || {},
@@ -935,7 +935,7 @@
             };
 
             try {
-                const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const res = await fetch(`${GAS_URL}?eventId=${app.eventId}`, { method: 'POST', body: JSON.stringify(payload) });
                 const json = await res.json();
                 if (json.result === 'success') {
                     alert('🎉 訂單已送出！');
@@ -1021,7 +1021,7 @@
             // Send
             try {
                 // console.log('Sending Payload:', payload);
-                const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const res = await fetch(`${GAS_URL}?eventId=${app.eventId}`, { method: 'POST', body: JSON.stringify(payload) });
                 // Check content type
                 const text = await res.text();
                 try {
@@ -1083,7 +1083,7 @@
             };
 
             try {
-                const res = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });
+                const res = await fetch(`${GAS_URL}?eventId=${app.eventId}`, { method: 'POST', body: JSON.stringify(payload) });
                 const json = await res.json();
                 if (json.result === 'success') {
                     alert(app.editingProductIdx !== null ? '✅ 修改成功' : '✅ 上架成功');
@@ -1104,7 +1104,7 @@
 
         async function fetchMyProducts() {
             try {
-                const res = await fetch(`${GAS_URL}?action=getStoreData&storeId=${app.user.id}`);
+                const res = await fetch(`${GAS_URL}?action=getStoreData&storeId=${app.user.id}&eventId=${app.eventId}`);
                 const json = await res.json();
                 app.myProducts = json.products || [];
                 renderSellerProducts();
