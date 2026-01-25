@@ -1004,17 +1004,14 @@
                 action: 'updateStore',
                 data: {
                     eventId: app.eventId,
-                    storeId: app.user.id,
-                    name: document.getElementById('set-store-name').value,
-                    desc: document.getElementById('set-store-desc').value,
-                    bankInfo: JSON.stringify(bankData),
-                    shipHome: parseInt(document.getElementById('set-ship-home').value || 0),
-                    shipStore: parseInt(document.getElementById('set-ship-store').value || 0),
+                    StoreID: app.user.id,
+                    Name: document.getElementById('set-store-name').value,
+                    Description: document.getElementById('set-store-desc').value,
+                    BankInfo: JSON.stringify(bankData),
+                    Shipping_Home: parseInt(document.getElementById('set-ship-home').value || 0),
+                    Shipping_Store: parseInt(document.getElementById('set-ship-store').value || 0),
                     imageBase64: app.storeImgBase64,
-                    // If no new upload, keep existing URL (logic: send empty/null to indicate no change, or send current src)
-                    // Better: Send null if app.storeImgBase64 is null. Backend should handle "if imageBase64 is null, don't update image".
-                    // But current logic was: imageUrl fallback. Let's keep it safe.
-                    imageUrl: app.storeImgBase64 ? '' : document.getElementById('preview-store-img').src
+                    Image: app.storeImgBase64 ? '' : document.getElementById('preview-store-img').src
                 }
             };
 
@@ -1061,24 +1058,17 @@
                 action: app.editingProductIdx !== null ? 'updateProduct' : 'createProduct',
                 data: {
                     eventId: app.eventId,
-                    sellerId: app.user.id,
-                    sellerName: app.user.name,
-                    productId: app.editingProductIdx !== null ? app.myProducts[app.editingProductIdx].id || app.myProducts[app.editingProductIdx].Name : null, // Pass ID if exists, logic depends on backend
-                    // If backend uses Name to match (risky) or needs ID. Assuming backend handles "updateProduct" with some ID.
-                    // IMPORTANT: We need to pass the ORIGINAL ID.
-                    // Let's assume the product object has an 'id' or 'row' property from GAS.
-                    // If not, we might be creating duplicates if backend validates by name.
-                    // I will pass the whole object or ID.
-                    id: app.editingProductIdx !== null ? app.myProducts[app.editingProductIdx].id : null,
+                    SellerID: app.user.id,
+                    SellerName: app.user.name,
+                    ProductID: app.editingProductIdx !== null ? app.myProducts[app.editingProductIdx].id || app.myProducts[app.editingProductIdx].Name : null,
+                    ID: app.editingProductIdx !== null ? app.myProducts[app.editingProductIdx].id : null,
 
-                    name: document.getElementById('prod-name').value,
-                    price: document.getElementById('prod-price').value,
-                    category: document.getElementById('prod-cat').value,
-                    specs: specs,
+                    Name: document.getElementById('prod-name').value,
+                    Price: document.getElementById('prod-price').value,
+                    Category: document.getElementById('prod-cat').value,
+                    Specs: specs,
                     imageBase64: app.prodImgBase64,
-                    // If updating and no new image, backend should keep old one?
-                    // We send imageBase64 as null if no new image. Backend logic required.
-                    imageUrl: app.editingProductIdx !== null && !app.prodImgBase64 ? document.getElementById('preview-prod-img').src : null
+                    Image: app.editingProductIdx !== null && !app.prodImgBase64 ? document.getElementById('preview-prod-img').src : null
                 }
             };
 
