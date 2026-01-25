@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ordering Platform</title>
+    <title>Garden Party</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -13,6 +13,8 @@
         body {
             font-family: 'Noto Sans TC', sans-serif;
             -webkit-tap-highlight-color: transparent;
+            background-color: #fefce8;
+            /* Light Yellow bg for festive feel */
         }
 
         .no-scrollbar::-webkit-scrollbar {
@@ -75,15 +77,15 @@
                 </button>
                 <!-- Title / Store Name -->
                 <h1 id="page-title" class="font-black text-xl text-stone-800 tracking-tight flex items-center gap-2">
-                    <span class="text-2xl">🛍️</span> 市集大廳
+                    <span class="text-2xl">🎪</span> 園遊會主會場
                 </h1>
             </div>
 
             <div class="flex items-center gap-2">
                 <!-- Mode Toggle (Seller) -->
                 <button onclick="toggleSellerMode()" id="seller-btn"
-                    class="bg-stone-800 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm active:scale-95 flex items-center gap-1">
-                    <span>我要開店</span>
+                    class="bg-orange-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm active:scale-95 flex items-center gap-1">
+                    <span>我要擺攤</span>
                 </button>
                 <!-- User Avatar -->
                 <img id="user-avatar" src=""
@@ -98,13 +100,13 @@
         <!-- VIEW: Platform Home (Store List) -->
         <main id="view-home" class="animate-fade-in space-y-6">
             <div class="space-y-1 px-1">
-                <h2 class="text-2xl font-black text-stone-800">探索好店</h2>
-                <p class="text-xs text-stone-500 font-bold">今天想買點什麼？</p>
+                <h2 class="text-2xl font-black text-stone-800">熱鬧攤位</h2>
+                <p class="text-xs text-stone-500 font-bold">來看看大家都在賣什麼！</p>
             </div>
             <!-- Store Grid -->
             <div id="store-list" class="grid grid-cols-1 gap-4 pb-10">
                 <!-- Skeloton -->
-                <div class="bg-white rounded-2xl p-4 shadow-sm h-32 animate-pulse bg-stone-200"></div>
+                <div class="bg-white rounded-2xl p-4 shadow-sm h-32 animate-pulse bg-orange-100"></div>
             </div>
         </main>
 
@@ -133,13 +135,13 @@
         <!-- VIEW: Seller Dashboard -->
         <main id="view-seller" class="hidden animate-fade-in space-y-8 pb-24">
             <div class="space-y-1">
-                <h2 class="text-2xl font-black text-stone-800">賣家中心</h2>
-                <p class="text-xs text-stone-500 font-bold">管理您的商店與商品</p>
+                <h2 class="text-2xl font-black text-stone-800">攤主中心</h2>
+                <p class="text-xs text-stone-500 font-bold">佈置您的攤位與上架商品</p>
             </div>
 
             <!-- 1. Store Settings Module -->
             <section class="bg-white p-5 rounded-3xl shadow-sm border border-stone-100 space-y-4">
-                <h3 class="font-bold text-lg flex items-center gap-2">🏪 商店設定</h3>
+                <h3 class="font-bold text-lg flex items-center gap-2">� 攤位佈置</h3>
 
                 <div class="grid grid-cols-[auto_1fr] gap-4 items-center">
                     <div class="relative w-16 h-16 rounded-full bg-stone-100 overflow-hidden group cursor-pointer border-2 border-dashed border-stone-300 hover:border-orange-500 transition-colors"
@@ -152,17 +154,25 @@
                     <input type="file" id="store-img-input" accept="image/*" class="hidden"
                         onchange="handleStoreImage(this)">
                     <div class="space-y-2">
-                        <input type="text" id="set-store-name" placeholder="商店名稱"
+                        <input type="text" id="set-store-name" placeholder="攤位名稱 (如: 601班 乾冰汽水)"
                             class="w-full bg-stone-50 rounded-xl px-3 py-2 text-sm font-bold outline-none border border-transparent focus:border-stone-300">
-                        <input type="text" id="set-store-desc" placeholder="商店簡介 (一句話)"
+                        <input type="text" id="set-store-desc" placeholder="攤位介紹 (一句話)"
                             class="w-full bg-stone-50 rounded-xl px-3 py-2 text-xs font-bold outline-none border border-transparent focus:border-stone-300">
                     </div>
                 </div>
 
                 <div class="space-y-2 pt-2 border-t border-stone-100">
-                    <label class="text-xs font-bold text-stone-400">匯款資訊 (銀行代碼/帳號)</label>
-                    <textarea id="set-bank-info" rows="2"
-                        class="w-full bg-stone-50 rounded-xl p-3 text-xs font-bold outline-none resize-none"></textarea>
+                    <label class="text-xs font-bold text-stone-400">匯款資訊</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <select id="set-bank-code"
+                            class="col-span-2 bg-stone-50 rounded-xl px-3 py-2 text-xs font-bold outline-none border border-transparent focus:border-stone-300">
+                            <option value="">選擇銀行</option>
+                        </select>
+                        <input type="text" id="set-bank-acc" placeholder="銀行帳號"
+                            class="w-full bg-stone-50 rounded-xl px-3 py-2 text-xs font-bold outline-none border border-transparent focus:border-stone-300">
+                        <input type="text" id="set-bank-name" placeholder="戶名"
+                            class="w-full bg-stone-50 rounded-xl px-3 py-2 text-xs font-bold outline-none border border-transparent focus:border-stone-300">
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
@@ -179,7 +189,7 @@
                 </div>
 
                 <button onclick="saveStoreSettings()" id="btn-save-store"
-                    class="w-full bg-stone-800 text-white font-bold py-3 rounded-xl text-sm btn-press">儲存商店設定</button>
+                    class="w-full bg-stone-800 text-white font-bold py-3 rounded-xl text-sm btn-press">儲存攤位設定</button>
             </section>
 
             <!-- 2. Create Product Module -->
@@ -201,7 +211,7 @@
                     <div class="grid grid-cols-2 gap-3">
                         <input type="text" id="prod-name" required placeholder="商品名稱"
                             class="col-span-2 w-full bg-stone-50 rounded-xl px-4 py-3 text-sm font-bold outline-none">
-                        <input type="number" id="prod-price" required placeholder="價格"
+                        <input type="number" id="prod-price" required min="0" placeholder="價格 (0=免費)"
                             class="w-full bg-stone-50 rounded-xl px-4 py-3 text-sm font-bold outline-none">
                         <input type="text" id="prod-cat" required placeholder="分類" list="cat-list"
                             class="w-full bg-stone-50 rounded-xl px-4 py-3 text-sm font-bold outline-none">
@@ -336,6 +346,13 @@
         const GAS_URL = 'https://script.google.com/macros/s/AKfycby0eaLjowGyKy5DDWgGT0mfDIod8zEXgy4-hdeYW4pPoQ_OaWu8K1KPh8V-V0o-ZeA/exec';
         const LIFF_ID = '2008678090-SEONUKky';
 
+        const TW_BANKS = [
+            { c: '700', n: '中華郵政' }, { c: '822', n: '中國信託' }, { c: '013', n: '國泰世華' },
+            { c: '012', n: '台北富邦' }, { c: '808', n: '玉山銀行' }, { c: '812', n: '台新銀行' },
+            { c: '004', n: '臺灣銀行' }, { c: '007', n: '第一銀行' }, { c: '008', n: '華南銀行' },
+            { c: '009', n: '彰化銀行' }, { c: '005', n: '土地銀行' }, { c: '006', n: '合作金庫' }
+        ];
+
         // STATE
         let app = {
             view: 'home', // home, store, seller
@@ -354,11 +371,17 @@
         // --- INIT ---
         window.onload = async () => {
             await initLIFF();
+            initBankSelect();
             await loadStores(); // Fetch Store List
             loadCartLocal();
             renderHome();
             document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
         };
+
+        function initBankSelect() {
+            const sel = document.getElementById('set-bank-code');
+            sel.innerHTML = '<option value="">選擇銀行</option>' + TW_BANKS.map(b => `<option value="${b.c} ${b.n}">${b.c} ${b.n}</option>`).join('');
+        }
 
         async function initLIFF() {
             try {
@@ -423,9 +446,9 @@
 
             if (app.view === 'home') {
                 document.getElementById('view-home').classList.remove('hidden');
-                document.getElementById('page-title').innerHTML = '<span class="text-2xl">🛍️</span> 市集大廳';
-                sellerBtn.innerHTML = '<span>我要開店</span>';
-                sellerBtn.classList.replace('bg-orange-600', 'bg-stone-800');
+                document.getElementById('page-title').innerHTML = '<span class="text-2xl">🎪</span> 園遊會主會場';
+                sellerBtn.innerHTML = '<span>我要擺攤</span>';
+                sellerBtn.classList.replace('bg-stone-800', 'bg-orange-600');
                 renderHome();
             }
             else if (app.view === 'store') {
@@ -433,8 +456,8 @@
                 document.getElementById('back-btn').classList.remove('hidden');
 
                 const info = app.currentStore.info;
-                document.getElementById('page-title').innerText = info.Name || 'Store';
-                document.getElementById('store-page-name').innerText = info.Name || '未命名商店';
+                document.getElementById('page-title').innerText = info.Name || '攤位';
+                document.getElementById('store-page-name').innerText = info.Name || '未命名攤位';
                 document.getElementById('store-page-desc').innerText = info.Description || '歡迎光臨';
                 document.getElementById('store-cover-img').src = info.Image && info.Image.startsWith('http') ? info.Image : 'https://placehold.co/100';
                 document.getElementById('store-ship-home').innerText = `🚚 宅配 $${info.Shipping_Home || 100}`;
@@ -445,18 +468,40 @@
             }
             else if (app.view === 'seller') {
                 document.getElementById('view-seller').classList.remove('hidden');
-                document.getElementById('page-title').innerText = '賣家中心';
-                sellerBtn.innerHTML = '<span>回大廳</span>';
-                sellerBtn.classList.replace('bg-stone-800', 'bg-orange-600');
+                document.getElementById('page-title').innerText = '攤主中心';
+                sellerBtn.innerHTML = '<span>回主會場</span>';
+                sellerBtn.classList.replace('bg-orange-600', 'bg-stone-800');
 
                 // Pre-fill User Info if exists in store list
                 const myStore = app.stores.find(s => s.StoreID === app.user.id);
                 if (myStore) {
                     document.getElementById('set-store-name').value = myStore.Name;
                     document.getElementById('set-store-desc').value = myStore.Description;
-                    document.getElementById('set-bank-info').value = myStore.BankInfo;
+
+                    // Parse Bank Info (Try JSON, fallback to string)
+                    try {
+                        const bank = JSON.parse(myStore.BankInfo);
+                        document.getElementById('set-bank-code').value = bank.code || '';
+                        document.getElementById('set-bank-acc').value = bank.acc || '';
+                        document.getElementById('set-bank-name').value = bank.name || '';
+                    } catch (e) {
+                        // Old format or empty
+                        document.getElementById('set-bank-acc').value = myStore.BankInfo || '';
+                        document.getElementById('set-bank-code').value = '';
+                        document.getElementById('set-bank-name').value = '';
+                    }
+
                     document.getElementById('preview-store-img').src = myStore.Image;
                     document.getElementById('preview-store-img').classList.remove('hidden');
+                } else {
+                    // New Store - Default to User Profile
+                    document.getElementById('set-store-name').value = app.user.name;
+                    document.getElementById('preview-store-img').src = app.user.img;
+                    document.getElementById('preview-store-img').classList.remove('hidden');
+                    document.getElementById('set-store-desc').value = '';
+                    document.getElementById('set-bank-code').value = '';
+                    document.getElementById('set-bank-acc').value = '';
+                    document.getElementById('set-bank-name').value = '';
                 }
             }
 
@@ -467,7 +512,7 @@
         function renderHome() {
             const container = document.getElementById('store-list');
             if (app.stores.length === 0) {
-                container.innerHTML = '<p class="text-center text-stone-400 py-10">目前沒有商店</p>';
+                container.innerHTML = '<p class="text-center text-stone-400 py-10">目前沒有攤位，快來擺攤吧！</p>';
                 return;
             }
             container.innerHTML = app.stores.map(s => `
@@ -486,7 +531,7 @@
             const container = document.getElementById('product-grid');
             const products = app.currentStore.products;
             if (products.length === 0) {
-                container.innerHTML = '<div class="col-span-2 text-center text-stone-400 py-10">此商店尚未上架商品</div>';
+                container.innerHTML = '<div class="col-span-2 text-center text-stone-400 py-10">攤主還沒準備好商品...</div>';
                 return;
             }
             container.innerHTML = products.map((p, idx) => `
@@ -567,7 +612,7 @@
             // Check Store Lock
             const storeId = app.currentStore.info.StoreID;
             if (app.cartStoreId && app.cartStoreId !== storeId) {
-                if (!confirm('您的購物車內已有其他商店的商品。是否清空購物車以購買此商店商品？')) return;
+                if (!confirm('您的購物車內已有其他攤位的商品。是否清空購物車以購買此攤位商品？')) return;
                 app.cart = [];
                 app.cartStoreId = null;
             }
@@ -731,14 +776,36 @@
 
         function handleImage(inp, previewId, callback) {
             if (inp.files && inp.files[0]) {
-                const r = new FileReader();
-                r.onload = (e) => {
-                    document.getElementById(previewId).src = e.target.result;
+                const file = inp.files[0];
+                // Compress Image (Max 800px, 0.7 quality)
+                compressImage(file, 800, 0.7).then(b64 => {
+                    document.getElementById(previewId).src = b64;
                     document.getElementById(previewId).classList.remove('hidden');
-                    callback(e.target.result);
-                };
-                r.readAsDataURL(inp.files[0]);
+                    callback(b64);
+                });
             }
+        }
+
+        function compressImage(file, maxWidth, quality) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = () => {
+                        let w = img.width, h = img.height;
+                        if (w > maxWidth) { h = Math.round(h * (maxWidth / w)); w = maxWidth; }
+                        if (h > maxWidth) { w = Math.round(w * (maxWidth / h)); h = maxWidth; } // Also check height
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = w; canvas.height = h;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, w, h);
+                        resolve(canvas.toDataURL('image/jpeg', quality));
+                    };
+                };
+            });
         }
 
         // Save Store Settings
@@ -746,16 +813,24 @@
             const btn = document.getElementById('btn-save-store');
             btn.innerHTML = '儲存中...'; btn.disabled = true;
 
+            // Collect Bank Info
+            const bankData = {
+                code: document.getElementById('set-bank-code').value,
+                acc: document.getElementById('set-bank-acc').value,
+                name: document.getElementById('set-bank-name').value
+            };
+
             const payload = {
                 action: 'updateStore',
                 data: {
                     storeId: app.user.id,
                     name: document.getElementById('set-store-name').value,
                     desc: document.getElementById('set-store-desc').value,
-                    bankInfo: document.getElementById('set-bank-info').value,
+                    bankInfo: JSON.stringify(bankData), // Save as JSON
                     shipHome: document.getElementById('set-ship-home').value,
                     shipStore: document.getElementById('set-ship-store').value,
-                    imageBase64: app.storeImgBase64
+                    imageBase64: app.storeImgBase64,
+                    imageUrl: app.storeImgBase64 ? '' : document.getElementById('preview-store-img').src // Fallback to current img (profile) if no new upload
                 }
             };
 
@@ -767,12 +842,15 @@
                 else alert('更新失敗');
             } catch (e) { alert('Error'); }
 
-            btn.innerHTML = '儲存商店設定'; btn.disabled = false;
+            btn.innerHTML = '儲存攤位設定'; btn.disabled = false;
         }
 
         // Create Product
         async function submitProduct() {
             if (!app.prodImgBase64) return alert('請上傳商品照');
+            const price = parseFloat(document.getElementById('prod-price').value);
+            if (price < 0) return alert('商品價格不能為負數');
+
             const btn = document.getElementById('submit-prod-btn');
             btn.innerHTML = '上架中...'; btn.disabled = true;
 
