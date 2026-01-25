@@ -346,13 +346,6 @@
         const GAS_URL = 'https://script.google.com/macros/s/AKfycby0eaLjowGyKy5DDWgGT0mfDIod8zEXgy4-hdeYW4pPoQ_OaWu8K1KPh8V-V0o-ZeA/exec';
         const LIFF_ID = '2008678090-SEONUKky';
 
-        const TW_BANKS = [
-            { c: '700', n: '中華郵政' }, { c: '822', n: '中國信託' }, { c: '013', n: '國泰世華' },
-            { c: '012', n: '台北富邦' }, { c: '808', n: '玉山銀行' }, { c: '812', n: '台新銀行' },
-            { c: '004', n: '臺灣銀行' }, { c: '007', n: '第一銀行' }, { c: '008', n: '華南銀行' },
-            { c: '009', n: '彰化銀行' }, { c: '005', n: '土地銀行' }, { c: '006', n: '合作金庫' }
-        ];
-
         // STATE
         let app = {
             view: 'home', // home, store, seller
@@ -378,9 +371,22 @@
             document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
         };
 
-        function initBankSelect() {
+        async function initBankSelect() {
             const sel = document.getElementById('set-bank-code');
-            sel.innerHTML = '<option value="">選擇銀行</option>' + TW_BANKS.map(b => `<option value="${b.c} ${b.n}">${b.c} ${b.n}</option>`).join('');
+            sel.innerHTML = '<option>載入銀行列表中...</option>';
+            try {
+                // Fetch Taiwan Bank List (Open Data / GitHub)
+                const res = await fetch('https://raw.githubusercontent.com/nczz/taiwan-banks-list/main/banks_sort_by_codes.json');
+                const data = await res.json();
+
+                // Render Options: [Code] Name
+                // Some banks share codes (e.g. Farmers Assn), so we list them all.
+                sel.innerHTML = '<option value="">選擇銀行</option>' +
+                    data.map(b => `<option value="${b.bank_code} ${b.name}">[${b.bank_code}] ${b.name}</option>`).join('');
+            } catch (e) {
+                console.error(e);
+                sel.innerHTML = '<option value="">銀行列表載入失敗</option>';
+            }
         }
 
         async function initLIFF() {
