@@ -916,9 +916,21 @@
         async function submitOrder() {
             const name = document.getElementById('chk-name').value;
             const phone = document.getElementById('chk-phone').value;
-            const addr = document.getElementById('chk-addr').value; // Keeping it simple for refactor phase
 
-            if (!name || !phone || !addr) return alert('請填寫完整收件資訊');
+            let addr = '';
+            if (app.shippingMethod === 'store') {
+                addr = document.getElementById('ship-store-name').value;
+                if (!addr) return alert('請選擇或輸入取貨門市');
+            } else {
+                const city = document.getElementById('ship-city').value;
+                const dist = document.getElementById('ship-dist').value;
+                const road = document.getElementById('ship-road').value;
+                const detail = document.getElementById('ship-addr-detail').value;
+                if (!city || !dist || !detail) return alert('請填寫完整收件地址');
+                addr = `${document.getElementById('ship-zip').value} ${city}${dist}${road}${detail}`;
+            }
+
+            if (!name || !phone) return alert('請填寫姓名與電話');
 
             const btn = document.getElementById('btn-checkout');
             btn.innerHTML = '處理中...';
