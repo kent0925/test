@@ -168,7 +168,8 @@
                             class="col-span-2 bg-stone-50 rounded-xl px-3 py-2 text-xs font-bold outline-none border border-transparent focus:border-stone-300">
                             <option value="">選擇銀行</option>
                         </select>
-                        <input type="text" id="set-bank-acc" placeholder="銀行帳號"
+                        <input type="tel" id="set-bank-acc" placeholder="銀行帳號 (僅限數字)"
+                            oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                             class="w-full bg-stone-50 rounded-xl px-3 py-2 text-xs font-bold outline-none border border-transparent focus:border-stone-300">
                         <input type="text" id="set-bank-name" placeholder="戶名"
                             class="w-full bg-stone-50 rounded-xl px-3 py-2 text-xs font-bold outline-none border border-transparent focus:border-stone-300">
@@ -178,12 +179,14 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="text-[10px] font-bold text-stone-400 block mb-1">宅配運費</label>
-                        <input type="number" id="set-ship-home" value="100"
+                        <input type="number" id="set-ship-home" value="100" min="0"
+                            oninput="if(this.value<0)this.value=0"
                             class="w-full bg-stone-50 rounded-xl px-3 py-2 text-sm font-bold outline-none">
                     </div>
                     <div>
                         <label class="text-[10px] font-bold text-stone-400 block mb-1">超商運費</label>
-                        <input type="number" id="set-ship-store" value="60"
+                        <input type="number" id="set-ship-store" value="60" min="0"
+                            oninput="if(this.value<0)this.value=0"
                             class="w-full bg-stone-50 rounded-xl px-3 py-2 text-sm font-bold outline-none">
                     </div>
                 </div>
@@ -307,21 +310,64 @@
             <!-- Checkout Footer -->
             <div class="bg-white p-6 border-t border-stone-100 flex-shrink-0 safe-pb">
                 <!-- Checkout Forms (Condensed) -->
-                <div class="space-y-3 mb-4">
-                    <p class="text-xs font-bold text-stone-400">收件資訊</p>
-                    <div class="grid grid-cols-2 gap-2">
-                        <input id="chk-name" placeholder="姓名" class="bg-stone-50 p-3 rounded-xl text-sm font-bold">
-                        <input id="chk-phone" placeholder="電話" class="bg-stone-50 p-3 rounded-xl text-sm font-bold">
+                <div class="space-y-4 pt-2 border-t border-stone-100">
+                    <div class="flex gap-2">
+                        <button onclick="app.shippingMethod='store'; updateCartMeta()" id="btn-ship-store"
+                            class="flex-1 py-2 rounded-xl text-xs font-bold bg-orange-100 text-orange-600 border border-orange-200">去攤位自取</button>
+                        <button onclick="app.shippingMethod='home'; updateCartMeta()" id="btn-ship-home"
+                            class="flex-1 py-2 rounded-xl text-xs font-bold bg-stone-50 text-stone-400 border border-transparent">宅配到府</button>
                     </div>
-                    <!-- Shipping Method Tabs -->
-                    <div class="flex gap-2 text-xs font-bold">
-                        <button onclick="setShipMethod('store')" id="btn-ship-store"
-                            class="flex-1 py-2 rounded-lg border border-stone-800 bg-stone-800 text-white">超商取貨</button>
-                        <button onclick="setShipMethod('home')" id="btn-ship-home"
-                            class="flex-1 py-2 rounded-lg border border-stone-200 text-stone-400">宅配</button>
+
+                    <!-- Store Pickup Limit -->
+                    <div id="ship-store-info" class="text-xs text-stone-500 bg-stone-50 p-3 rounded-xl hidden">
+                        <div>
+                            <p class="font-bold mb-2">選擇取貨門市</p>
+                            <div class="grid grid-cols-2 gap-2 mb-2">
+                                <select id="cvs-type" onchange="loadCVSCities()"
+                                    class="bg-white rounded-lg p-2 border border-stone-200">
+                                    <option value="7-11">7-11</option>
+                                    <option value="FamilyMart">全家</option>
+                                </select>
+                                <select id="cvs-city" onchange="loadCVSStores()"
+                                    class="bg-white rounded-lg p-2 border border-stone-200">
+                                    <option>縣市</option>
+                                </select>
+                                <select id="cvs-dist" onchange="filterCVSStores()"
+                                    class="bg-white rounded-lg p-2 border border-stone-200 col-span-2">
+                                    <option>區域</option>
+                                </select>
+                            </div>
+                            <div id="cvs-list" class="max-h-40 overflow-y-auto space-y-2 mb-2">
+                                <!-- Store List -->
+                            </div>
+                            <input type="text" id="ship-store-name" placeholder="或手動輸入門市名稱"
+                                class="w-full bg-white rounded-lg p-2 border border-stone-200">
+                        </div>
                     </div>
-                    <input id="chk-addr" placeholder="門市名稱 / 宅配地址"
-                        class="w-full bg-stone-50 p-3 rounded-xl text-sm font-bold">
+
+                    <!-- Home Delivery Address -->
+                    <div id="ship-home-info" class="space-y-2 hidden">
+                        <div class="flex gap-2">
+                            <input type="text" id="ship-zip" placeholder="郵遞區號" oninput="handleZipInput(this.value)"
+                                class="w-24 bg-stone-50 rounded-xl px-3 py-2 text-xs font-bold outline-none">
+                            <input type="text" id="ship-city" placeholder="縣市" readonly
+                                class="flex-1 bg-stone-100 rounded-xl px-3 py-2 text-xs font-bold outline-none text-stone-500">
+                            <input type="text" id="ship-dist" placeholder="區域" readonly
+                                class="flex-1 bg-stone-100 rounded-xl px-3 py-2 text-xs font-bold outline-none text-stone-500">
+                        </div>
+                        <input type="text" id="ship-road" list="road-list" placeholder="路名 (可選)"
+                            class="w-full bg-stone-50 rounded-xl px-3 py-2 text-xs font-bold outline-none">
+                        <datalist id="road-list"></datalist>
+                        <input type="text" id="ship-addr-detail" placeholder="門牌號碼、樓層"
+                            class="w-full bg-stone-50 rounded-xl px-3 py-2 text-xs font-bold outline-none">
+                    </div>
+
+                    <div class="space-y-2">
+                        <input type="text" id="chk-name" placeholder="訂購人姓名"
+                            class="w-full bg-stone-50 rounded-xl px-3 py-2 text-xs font-bold outline-none">
+                        <input type="tel" id="chk-phone" placeholder="聯絡電話"
+                            class="w-full bg-stone-50 rounded-xl px-3 py-2 text-xs font-bold outline-none">
+                    </div>
                 </div>
 
                 <div class="flex items-end justify-between mb-4">
@@ -412,6 +458,7 @@
         // --- CVS LOGIC ---
         async function loadCVSCities() {
             const sel = document.getElementById('cvs-city');
+            if (!sel) return; // Prevent Null Error if element not ready
             // Hardcode or get from data? 7-11 JSONs are by City.
             const CITIES = ["基隆市", "台北市", "新北市", "桃園市", "新竹市", "新竹縣", "苗栗縣", "台中市", "彰化縣", "南投縣", "雲林縣", "嘉義市", "嘉義縣", "台南市", "高雄市", "屏東縣", "宜蘭縣", "花蓮縣", "台東縣", "澎湖縣", "金門縣", "連江縣"];
             sel.innerHTML = '<option value="">選擇縣市</option>' + CITIES.map(c => `<option value="${c}">${c}</option>`).join('');
