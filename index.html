@@ -1142,9 +1142,33 @@
                         <p class="text-orange-600 font-bold text-xs">$${p.Price}</p>
                     </div>
                     <button onclick="editProduct(${i})" class="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-bold">編輯</button>
-                    <!-- Delete button can be added here if API supports it -->
+                    <button onclick="deleteProduct(${i})" class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold">刪除</button>
                 </div>
             `).join('');
+        }
+
+
+        async function deleteProduct(idx) {
+            const p = app.myProducts[idx];
+            if (!confirm(`確定要刪除商品「${p.Name}」嗎？`)) return;
+
+            const payload = {
+                action: 'deleteProduct',
+                eventId: app.eventId,
+                data: {
+                    eventId: app.eventId,
+                    id: p.ID || p.id
+                }
+            };
+
+            try {
+                const res = await fetch(`${GAS_URL}?eventId=${app.eventId}`, { method: 'POST', body: JSON.stringify(payload) });
+                const json = await res.json();
+                if (json.result === 'success') {
+                    alert('✅ 商品已刪除');
+                    fetchMyProducts(); // Refresh list
+                } else alert('刪除失敗: ' + json.message);
+            } catch (e) { alert('連線失敗'); }
         }
 
         function editProduct(idx) {
