@@ -10,9 +10,17 @@
     <meta property="og:description" content="生活有點苦， 所以需要一點酒精的甜， 配上兄弟間的廢話。是時候將煩惱泡進酒裡一口乾掉， 報名吧！🍻" />
     <meta property="og:image" content="https://kent0925.github.io/test/logo.jpg" />
     <meta property="og:type" content="website" />
+    <!-- Added SEO & Branding Tags -->
+    <meta name="theme-color" content="#06c755">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Performance Optimizations -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com">
+    <link rel="preconnect" href="https://static.line-scdn.net">
+
     <script src="https://cdn.tailwindcss.com"></script>
-    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js" defer></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js" defer></script>
     <style>
         :root {
             --primary: #06c755;
@@ -1779,24 +1787,7 @@
          * 統一解析來賓資料，解決後端回傳格式不一致的問題
          * 無論是 JSON、Array 還是 String，統一轉為標準格式 Array
          */
-        // Helper to find value case-insensitively
-        function findCaseInsensitiveValue(row, candidates) {
-            // 1. Direct match (Fast)
-            for (const key of candidates) {
-                if (row[key] !== undefined && row[key] !== '') return row[key];
-            }
-            // 2. Case-insensitive Scan (Slow path)
-            const keys = Object.keys(row);
-            for (const c of candidates) {
-                const lowerC = c.toLowerCase().replace(/\s/g, ''); // ignore spaces in scan
-                for (const k of keys) {
-                    if (k.toLowerCase().replace(/\s/g, '') === lowerC) {
-                        return row[k];
-                    }
-                }
-            }
-            return undefined;
-        }
+
 
         function parseGuestData(row) {
             let guestData = [];
