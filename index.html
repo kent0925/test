@@ -326,9 +326,9 @@
                 <!-- Checkout Forms (Condensed) -->
                 <div class="space-y-4 pt-2 border-t border-stone-100">
                     <div class="flex gap-2">
-                        <button onclick="app.shippingMethod='store'; updateCartMeta()" id="btn-ship-store"
+                        <button onclick="setShipMethod('store')" id="btn-ship-store"
                             class="flex-1 py-2 rounded-xl text-xs font-bold bg-orange-100 text-orange-600 border border-orange-200">去攤位自取</button>
-                        <button onclick="app.shippingMethod='home'; updateCartMeta()" id="btn-ship-home"
+                        <button onclick="setShipMethod('home')" id="btn-ship-home"
                             class="flex-1 py-2 rounded-xl text-xs font-bold bg-stone-50 text-stone-400 border border-transparent">宅配到府</button>
                     </div>
 
@@ -1072,13 +1072,10 @@
                     eventId: app.eventId,
                     sellerId: app.user.id,
                     sellerName: app.user.name,
-                    // If creating, productId is null (backend generates). If updating, pass ID.
-                    productId: app.editingProductIdx !== null ? (app.myProducts[app.editingProductIdx].id || app.myProducts[app.editingProductIdx].Name) : null,
-                    // backend_v4.0 expects 'id' for update? No, it doesn't seem to implement updateProduct logic fully in snippet, 
-                    // but usually createProduct ignores ID.
-                    // Wait, I need to check backend_v4.0 createProduct properly.
-                    // It uses Date.now() for PID. It doesn't seem to handle UPDATE.
-                    // But assume standard pattern:
+                    // If creating, id is null (backend generates). If updating, pass ID.
+                    id: app.editingProductIdx !== null ? (app.myProducts[app.editingProductIdx].ID || app.myProducts[app.editingProductIdx].id) : null,
+                    // backend_v4.5 expects 'id' for update.
+                    // It uses Date.now() for PID on create.
                     name: document.getElementById('prod-name').value,
                     price: document.getElementById('prod-price').value,
                     category: document.getElementById('prod-cat').value,
