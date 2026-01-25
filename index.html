@@ -920,6 +920,7 @@
 
             const payload = {
                 action: 'submitOrder',
+                eventId: app.eventId,
                 data: {
                     eventId: app.eventId,
                     storeId: app.cartStoreId,
@@ -1002,6 +1003,7 @@
 
             const payload = {
                 action: 'updateStore',
+                eventId: app.eventId,
                 data: {
                     eventId: app.eventId,
                     StoreID: app.user.id,
@@ -1056,6 +1058,7 @@
 
             const payload = {
                 action: app.editingProductIdx !== null ? 'updateProduct' : 'createProduct',
+                eventId: app.eventId,
                 data: {
                     eventId: app.eventId,
                     SellerID: app.user.id,
