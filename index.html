@@ -811,63 +811,67 @@
                     document.getElementById('set-store-desc').value = myStore.Description;
 
                     // Parse Bank Info (Try JSON, fallback to string)
-                    document.getElementById('set-bank-name').value = bank.name || '';
-                } catch (e) {
-                    // Old format or empty
-                    document.getElementById('set-bank-acc').value = myStore.BankInfo || '';
+                    try {
+                        const bank = JSON.parse(myStore.BankInfo);
+                        document.getElementById('set-bank-code').value = bank.code || '';
+                        document.getElementById('set-bank-acc').value = bank.acc || '';
+                        document.getElementById('set-bank-name').value = bank.name || '';
+                    } catch (e) {
+                        // Old format or empty
+                        document.getElementById('set-bank-acc').value = myStore.BankInfo || '';
+                        document.getElementById('set-bank-code').value = '';
+                        document.getElementById('set-bank-name').value = '';
+                    }
+
+                    document.getElementById('preview-store-img').src = fixDriveUrl(myStore.Image);
+                    document.getElementById('preview-store-img').classList.remove('hidden');
+
+                    // Init Shipping Toggles
+                    const homePrice = parseInt(myStore.Shipping_Home);
+                    initShipToggle('home', isNaN(homePrice) ? 100 : homePrice);
+
+                    const storePrice = parseInt(myStore.Shipping_Store);
+                    initShipToggle('store', isNaN(storePrice) ? 60 : storePrice);
+
+                    // Init Pickup Toggle
+                    let pkEn = true;
+                    try {
+                        const bank = JSON.parse(myStore.BankInfo || '{}');
+                        // If pickupEnabled key exists, use it. Else default true.
+                        if (bank.hasOwnProperty('pickupEnabled')) pkEn = bank.pickupEnabled;
+
+                        // Pickup Info Inputs
+                        document.getElementById('set-pickup-loc').value = bank.pickupLoc || '';
+                        document.getElementById('set-pickup-tel').value = bank.pickupTel || '';
+                    } catch (e) { }
+
+                    document.getElementById('enable-ship-pickup').checked = pkEn;
+                    togglePickupInput(); // Sync inputs state
+
+                } else {
+                    // New Store - Default to User Profile
+                    document.getElementById('set-store-name').value = app.user.name;
+                    document.getElementById('preview-store-img').src = fixDriveUrl(app.user.img);
+                    document.getElementById('preview-store-img').classList.remove('hidden');
                     document.getElementById('set-bank-code').value = '';
+                    document.getElementById('set-bank-acc').value = '';
                     document.getElementById('set-bank-name').value = '';
+                    document.getElementById('set-pickup-loc').value = '';
+                    document.getElementById('set-pickup-tel').value = '';
+
+                    // Default Defaults
+                    initShipToggle('home', 100);
+                    initShipToggle('store', 60);
+
+                    document.getElementById('enable-ship-pickup').checked = true;
+                    togglePickupInput();
                 }
 
-                document.getElementById('preview-store-img').src = fixDriveUrl(myStore.Image);
-                document.getElementById('preview-store-img').classList.remove('hidden');
-
-                // Init Shipping Toggles
-                const homePrice = parseInt(myStore.Shipping_Home);
-                initShipToggle('home', isNaN(homePrice) ? 100 : homePrice);
-
-                const storePrice = parseInt(myStore.Shipping_Store);
-                initShipToggle('store', isNaN(storePrice) ? 60 : storePrice);
-
-                // Init Pickup Toggle
-                let pkEn = true;
-                try {
-                    const bank = JSON.parse(myStore.BankInfo || '{}');
-                    // If pickupEnabled key exists, use it. Else default true.
-                    if (bank.hasOwnProperty('pickupEnabled')) pkEn = bank.pickupEnabled;
-
-                    // Pickup Info Inputs
-                    document.getElementById('set-pickup-loc').value = bank.pickupLoc || '';
-                    document.getElementById('set-pickup-tel').value = bank.pickupTel || '';
-                } catch (e) { }
-
-                document.getElementById('enable-ship-pickup').checked = pkEn;
-                togglePickupInput(); // Sync inputs state
-
-            } else {
-                // New Store - Default to User Profile
-                document.getElementById('set-store-name').value = app.user.name;
-                document.getElementById('preview-store-img').src = fixDriveUrl(app.user.img);
-                document.getElementById('preview-store-img').classList.remove('hidden');
-                document.getElementById('set-bank-code').value = '';
-                document.getElementById('set-bank-acc').value = '';
-                document.getElementById('set-bank-name').value = '';
-                document.getElementById('set-pickup-loc').value = '';
-                document.getElementById('set-pickup-tel').value = '';
-
-                // Default Defaults
-                initShipToggle('home', 100);
-                initShipToggle('store', 60);
-
-                document.getElementById('enable-ship-pickup').checked = true;
-                togglePickupInput();
+                // Fetch My Products
+                fetchMyProducts();
             }
 
-            // Fetch My Products
-            fetchMyProducts();
-        }
-
-        window.scrollTo(0, 0);
+            window.scrollTo(0, 0);
         }
 
         // Helper for Toggles
