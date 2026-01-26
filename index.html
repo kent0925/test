@@ -217,6 +217,25 @@
                         </div>
                     </div>
 
+                    <div class="grid grid-cols-2 gap-3 mt-3">
+                        <!-- Pickup Toggle -->
+                        <div
+                            class="col-span-2 bg-stone-50 p-3 rounded-xl border border-transparent has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50 transition-colors">
+                            <label class="flex items-center gap-2 mb-2 cursor-pointer">
+                                <input type="checkbox" id="enable-ship-pickup" onchange="togglePickupInput()"
+                                    class="w-4 h-4 accent-orange-600">
+                                <span class="text-xs font-bold text-stone-600">開啟攤位自取</span>
+                            </label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <input type="text" id="set-pickup-loc" placeholder="自取地點 (例: 攤位A01)" disabled
+                                    class="col-span-1 w-full bg-transparent text-sm font-bold outline-none border-b border-stone-300 focus:border-orange-500">
+                                <input type="text" id="set-pickup-tel" placeholder="自取聯絡電話" inputmode="numeric" disabled
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                                    class="col-span-1 w-full bg-transparent text-sm font-bold outline-none border-b border-stone-300 focus:border-orange-500">
+                            </div>
+                        </div>
+                    </div>
+
                     <button onclick="saveStoreSettings()" id="btn-save-store"
                         class="w-full bg-stone-800 text-white font-bold py-3 rounded-xl text-sm btn-press">儲存攤位設定</button>
             </section>
@@ -534,8 +553,7 @@
             loadCartLocal();
             renderHome();
             document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
-            // Init Default Ship View
-            setShipMethod('pickup');
+            // Init Default Ship View - Moved to openCart or goToStore
         };
 
         // --- ADDRESS LOGIC ---
@@ -739,7 +757,8 @@
         async function goToStore(storeId) {
             document.getElementById('loading-screen').classList.remove('opacity-0', 'pointer-events-none');
             try {
-                const res = await fetch(`${GAS_URL}?action=getStoreData&storeId=${storeId}&eventId=${app.eventId}`);
+                // Add timestamp to prevent caching
+                const res = await fetch(`${GAS_URL}?action=getStoreData&storeId=${storeId}&eventId=${app.eventId}&_t=${Date.now()}`);
                 const json = await res.json();
                 app.currentStore = {
                     info: json.store || {},
