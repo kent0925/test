@@ -184,22 +184,41 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="text-[10px] font-bold text-stone-400 block mb-1">宅配運費</label>
-                        <input type="number" id="set-ship-home" value="100" min="0"
-                            oninput="if(this.value<0)this.value=0"
-                            class="w-full bg-stone-50 rounded-xl px-3 py-2 text-sm font-bold outline-none">
+                    <div class="grid grid-cols-2 gap-3">
+                        <!-- Home Delivery -->
+                        <div
+                            class="bg-stone-50 p-3 rounded-xl border border-transparent has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50 transition-colors">
+                            <label class="flex items-center gap-2 mb-2 cursor-pointer">
+                                <input type="checkbox" id="enable-ship-home" onchange="toggleShipInput('home')"
+                                    class="w-4 h-4 accent-orange-600">
+                                <span class="text-xs font-bold text-stone-600">開啟宅配</span>
+                            </label>
+                            <div class="flex items-center gap-1">
+                                <span class="text-xs font-bold text-stone-400">$</span>
+                                <input type="number" id="set-ship-home" value="100" min="0" placeholder="運費"
+                                    oninput="if(this.value<0)this.value=0"
+                                    class="w-full bg-transparent text-sm font-bold outline-none border-b border-stone-300 focus:border-orange-500">
+                            </div>
+                        </div>
+                        <!-- CVS Delivery -->
+                        <div
+                            class="bg-stone-50 p-3 rounded-xl border border-transparent has-[:checked]:border-orange-500 has-[:checked]:bg-orange-50 transition-colors">
+                            <label class="flex items-center gap-2 mb-2 cursor-pointer">
+                                <input type="checkbox" id="enable-ship-store" onchange="toggleShipInput('store')"
+                                    class="w-4 h-4 accent-orange-600">
+                                <span class="text-xs font-bold text-stone-600">開啟超商</span>
+                            </label>
+                            <div class="flex items-center gap-1">
+                                <span class="text-xs font-bold text-stone-400">$</span>
+                                <input type="number" id="set-ship-store" value="60" min="0" placeholder="運費"
+                                    oninput="if(this.value<0)this.value=0"
+                                    class="w-full bg-transparent text-sm font-bold outline-none border-b border-stone-300 focus:border-orange-500">
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <label class="text-[10px] font-bold text-stone-400 block mb-1">超商運費</label>
-                        <input type="number" id="set-ship-store" value="60" min="0"
-                            oninput="if(this.value<0)this.value=0"
-                            class="w-full bg-stone-50 rounded-xl px-3 py-2 text-sm font-bold outline-none">
-                    </div>
-                </div>
 
-                <button onclick="saveStoreSettings()" id="btn-save-store"
-                    class="w-full bg-stone-800 text-white font-bold py-3 rounded-xl text-sm btn-press">儲存攤位設定</button>
+                    <button onclick="saveStoreSettings()" id="btn-save-store"
+                        class="w-full bg-stone-800 text-white font-bold py-3 rounded-xl text-sm btn-press">儲存攤位設定</button>
             </section>
 
             <!-- 2. Create Product Module -->
@@ -449,7 +468,8 @@
                     <div class="space-y-2">
                         <input type="text" id="chk-name" placeholder="訂購人姓名"
                             class="w-full bg-stone-50 rounded-xl px-3 py-2 text-base font-bold outline-none">
-                        <input type="tel" id="chk-phone" placeholder="聯絡電話"
+                        <input type="tel" id="chk-phone" placeholder="聯絡電話" inputmode="numeric"
+                            oninput="this.value = this.value.replace(/[^0-9]/g, '')"
                             class="w-full bg-stone-50 rounded-xl px-3 py-2 text-base font-bold outline-none">
                     </div>
                 </div>
@@ -764,8 +784,16 @@
                 document.getElementById('store-page-name').innerText = info.Name || '未命名攤位';
                 document.getElementById('store-page-desc').innerText = info.Description || '歡迎光臨';
                 document.getElementById('store-cover-img').src = info.Image && info.Image.startsWith('http') ? fixDriveUrl(info.Image) : 'https://placehold.co/100';
-                document.getElementById('store-ship-home').innerText = `🚚 宅配 $${info.Shipping_Home || 100}`;
-                document.getElementById('store-ship-store').innerText = `🏪 超商 $${info.Shipping_Store || 60}`;
+
+                // Hide if -1
+                const costHome = parseInt(info.Shipping_Home);
+                const costStore = parseInt(info.Shipping_Store);
+
+                document.getElementById('store-ship-home').innerText = costHome >= 0 ? `🚚 宅配 $${costHome}` : '';
+                document.getElementById('store-ship-home').style.display = costHome >= 0 ? '' : 'none';
+
+                document.getElementById('store-ship-store').innerText = costStore >= 0 ? `🏪 超商 $${costStore}` : '';
+                document.getElementById('store-ship-store').style.display = costStore >= 0 ? '' : 'none';
 
                 renderProductGrid();
                 updateCartUI(); // Show float button if cart has items
@@ -783,35 +811,94 @@
                     document.getElementById('set-store-desc').value = myStore.Description;
 
                     // Parse Bank Info (Try JSON, fallback to string)
-                    try {
-                        const bank = JSON.parse(myStore.BankInfo);
-                        document.getElementById('set-bank-code').value = bank.code || '';
-                        document.getElementById('set-bank-acc').value = bank.acc || '';
-                        document.getElementById('set-bank-name').value = bank.name || '';
-                    } catch (e) {
-                        // Old format or empty
-                        document.getElementById('set-bank-acc').value = myStore.BankInfo || '';
-                        document.getElementById('set-bank-code').value = '';
-                        document.getElementById('set-bank-name').value = '';
-                    }
-
-                    document.getElementById('preview-store-img').src = fixDriveUrl(myStore.Image);
-                    document.getElementById('preview-store-img').classList.remove('hidden');
-                } else {
-                    // New Store - Default to User Profile
-                    document.getElementById('set-store-name').value = app.user.name;
-                    document.getElementById('preview-store-img').src = fixDriveUrl(app.user.img);
-                    document.getElementById('preview-store-img').classList.remove('hidden');
+                    document.getElementById('set-bank-name').value = bank.name || '';
+                } catch (e) {
+                    // Old format or empty
+                    document.getElementById('set-bank-acc').value = myStore.BankInfo || '';
                     document.getElementById('set-bank-code').value = '';
-                    document.getElementById('set-bank-acc').value = '';
                     document.getElementById('set-bank-name').value = '';
                 }
 
-                // Fetch My Products
-                fetchMyProducts();
+                document.getElementById('preview-store-img').src = fixDriveUrl(myStore.Image);
+                document.getElementById('preview-store-img').classList.remove('hidden');
+
+                // Init Shipping Toggles
+                const homePrice = parseInt(myStore.Shipping_Home);
+                initShipToggle('home', isNaN(homePrice) ? 100 : homePrice);
+
+                const storePrice = parseInt(myStore.Shipping_Store);
+                initShipToggle('store', isNaN(storePrice) ? 60 : storePrice);
+
+                // Init Pickup Toggle
+                let pkEn = true;
+                try {
+                    const bank = JSON.parse(myStore.BankInfo || '{}');
+                    // If pickupEnabled key exists, use it. Else default true.
+                    if (bank.hasOwnProperty('pickupEnabled')) pkEn = bank.pickupEnabled;
+
+                    // Pickup Info Inputs
+                    document.getElementById('set-pickup-loc').value = bank.pickupLoc || '';
+                    document.getElementById('set-pickup-tel').value = bank.pickupTel || '';
+                } catch (e) { }
+
+                document.getElementById('enable-ship-pickup').checked = pkEn;
+                togglePickupInput(); // Sync inputs state
+
+            } else {
+                // New Store - Default to User Profile
+                document.getElementById('set-store-name').value = app.user.name;
+                document.getElementById('preview-store-img').src = fixDriveUrl(app.user.img);
+                document.getElementById('preview-store-img').classList.remove('hidden');
+                document.getElementById('set-bank-code').value = '';
+                document.getElementById('set-bank-acc').value = '';
+                document.getElementById('set-bank-name').value = '';
+                document.getElementById('set-pickup-loc').value = '';
+                document.getElementById('set-pickup-tel').value = '';
+
+                // Default Defaults
+                initShipToggle('home', 100);
+                initShipToggle('store', 60);
+
+                document.getElementById('enable-ship-pickup').checked = true;
+                togglePickupInput();
             }
 
-            window.scrollTo(0, 0);
+            // Fetch My Products
+            fetchMyProducts();
+        }
+
+        window.scrollTo(0, 0);
+        }
+
+        // Helper for Toggles
+        function initShipToggle(type, price) {
+            const chk = document.getElementById(`enable-ship-${type}`);
+            const inp = document.getElementById(`set-ship-${type}`);
+
+            if (price >= 0) {
+                chk.checked = true;
+                inp.value = price;
+                inp.disabled = false;
+            } else {
+                chk.checked = false;
+                inp.value = type === 'home' ? 100 : 60; // Default when re-enabled
+                inp.disabled = true;
+            }
+        }
+
+        function toggleShipInput(type) {
+            const chk = document.getElementById(`enable-ship-${type}`);
+            const inp = document.getElementById(`set-ship-${type}`);
+            inp.disabled = !chk.checked;
+            if (chk.checked) inp.focus();
+        }
+
+        function togglePickupInput() {
+            const chk = document.getElementById('enable-ship-pickup');
+            const loc = document.getElementById('set-pickup-loc');
+            const tel = document.getElementById('set-pickup-tel');
+            loc.disabled = !chk.checked;
+            tel.disabled = !chk.checked;
         }
 
         // --- RENDERERS ---
@@ -969,7 +1056,20 @@
             modal.classList.remove('hidden');
             setTimeout(() => document.getElementById('cart-panel').classList.remove('translate-y-full'), 10);
 
-            // Set init method logic
+            // Init Method availability
+            const info = app.currentStore.info;
+            const canHome = parseInt(info.Shipping_Home) >= 0;
+            const canStore = parseInt(info.Shipping_Store) >= 0;
+            const canPickup = true; // Always true
+
+            document.getElementById('btn-ship-home').style.display = canHome ? '' : 'none';
+            document.getElementById('btn-ship-cvs').style.display = canStore ? '' : 'none';
+            document.getElementById('btn-ship-pickup').style.display = canPickup ? '' : 'none';
+
+            // Auto switch if current invalid
+            if (app.shippingMethod === 'home' && !canHome) app.shippingMethod = 'pickup';
+            if (app.shippingMethod === 'cvs' && !canStore) app.shippingMethod = 'pickup';
+
             setShipMethod(app.shippingMethod || 'pickup');
         }
 
@@ -1022,6 +1122,10 @@
         function setShipMethod(m) {
             app.shippingMethod = m;
 
+            // Check availability again (safety)
+            const info = app.currentStore.info;
+            // ... (Already handled in openCart mostly, but UI Toggle here)
+
             // Update Buttons
             const activeClass = "flex-1 py-2 rounded-xl border border-stone-800 bg-stone-800 text-white shadow-md transition-all";
             const inactiveClass = "flex-1 py-2 rounded-xl border border-transparent text-stone-400 hover:bg-stone-100 transition-all";
@@ -1039,6 +1143,32 @@
                 pickupInfo.classList.remove('hidden');
                 cvsInfo.classList.add('hidden');
                 homeInfo.classList.add('hidden');
+
+                // Show Pickup Details
+                const info = app.currentStore.info;
+                let loc = '攤位現場';
+                let tel = '';
+                try {
+                    const bank = JSON.parse(info.BankInfo || '{}');
+                    if (bank.pickupLoc) loc = bank.pickupLoc;
+                    if (bank.pickupTel) tel = bank.pickupTel;
+                } catch (e) { }
+
+                // Update text
+                // Check if container exists, if not create/update?
+                // Currently pickupInfo only has time input. We should prepend/append info.
+
+                // Reset content
+                pickupInfo.innerHTML = `
+                    <p class="text-xs font-bold text-stone-500 mb-2">請選擇取貨時間</p>
+                    <input type="datetime-local" id="pickup-time" 
+                        class="w-full bg-stone-50 rounded-xl px-3 py-2 text-base font-bold outline-none mb-2">
+                    <div class="bg-orange-50 p-3 rounded-xl border border-orange-100 text-xs space-y-1">
+                        <p class="font-bold text-stone-700">📍 取貨地點：${loc}</p>
+                        ${tel ? `<p class="font-bold text-stone-700">📞 攤主電話：${tel}</p>` : ''}
+                    </div>
+                `;
+
             } else if (m === 'cvs') {
                 pickupInfo.classList.add('hidden');
                 cvsInfo.classList.remove('hidden');
@@ -1182,12 +1312,20 @@
             const originalText = btn.innerHTML;
             btn.innerHTML = '儲存中...'; btn.disabled = true;
 
-            // Collect Bank Info
+            // Collect Bank Info & Pickup Info
+            const pickupEnabled = document.getElementById('enable-ship-pickup').checked;
             const bankData = {
                 code: document.getElementById('set-bank-code').value,
                 acc: document.getElementById('set-bank-acc').value,
-                name: document.getElementById('set-bank-name').value
+                name: document.getElementById('set-bank-name').value,
+                pickupEnabled: pickupEnabled, // Save Boolean
+                pickupLoc: document.getElementById('set-pickup-loc').value,
+                pickupTel: document.getElementById('set-pickup-tel').value
             };
+
+            // Logic: If checkbox unchecked, value is -1
+            const shipHomeEnabled = document.getElementById('enable-ship-home').checked;
+            const shipStoreEnabled = document.getElementById('enable-ship-store').checked;
 
             const payload = {
                 action: 'updateStore',
@@ -1198,8 +1336,8 @@
                     name: document.getElementById('set-store-name').value,
                     desc: document.getElementById('set-store-desc').value,
                     bankInfo: JSON.stringify(bankData),
-                    shipHome: parseInt(document.getElementById('set-ship-home').value || 0),
-                    shipStore: parseInt(document.getElementById('set-ship-store').value || 0),
+                    shipHome: shipHomeEnabled ? parseInt(document.getElementById('set-ship-home').value || 0) : -1,
+                    shipStore: shipStoreEnabled ? parseInt(document.getElementById('set-ship-store').value || 0) : -1,
                     imageBase64: app.storeImgBase64,
                     imageUrl: app.storeImgBase64 ? '' : document.getElementById('preview-store-img').src
                 }
