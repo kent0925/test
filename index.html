@@ -226,12 +226,12 @@
                                     class="w-4 h-4 accent-orange-600">
                                 <span class="text-xs font-bold text-stone-600">開啟攤位自取</span>
                             </label>
-                            <div class="grid grid-cols-2 gap-3">
+                            <div class="grid grid-cols-1 gap-3">
                                 <input type="text" id="set-pickup-loc" placeholder="自取地點 (例: 攤位A01)" disabled
-                                    class="col-span-1 w-full bg-transparent text-sm font-bold outline-none border-b border-stone-300 focus:border-orange-500">
+                                    class="w-full bg-transparent text-sm font-bold outline-none border-b border-stone-300 focus:border-orange-500 py-1">
                                 <input type="text" id="set-pickup-tel" placeholder="自取聯絡電話" inputmode="numeric" disabled
                                     oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                                    class="col-span-1 w-full bg-transparent text-sm font-bold outline-none border-b border-stone-300 focus:border-orange-500">
+                                    class="w-full bg-transparent text-sm font-bold outline-none border-b border-stone-300 focus:border-orange-500 py-1">
                             </div>
                         </div>
                     </div>
@@ -888,6 +888,8 @@
 
                 // Fetch My Products
                 fetchMyProducts();
+                // Auto Fetch Orders
+                fetchSellerOrders();
             }
 
             window.scrollTo(0, 0);
