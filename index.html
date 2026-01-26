@@ -280,7 +280,7 @@
         <div
             class="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 transition-transform duration-300 translate-y-full transform max-h-[85vh] overflow-y-auto">
             <div class="w-12 h-1.5 bg-stone-200 rounded-full mx-auto mb-6"></div>
-            <img id="modal-img" class="w-full aspect-square object-cover rounded-2xl mb-4 bg-stone-100">
+            <img id="modal-img" class="w-[150px] h-[150px] mx-auto object-cover rounded-2xl mb-4 bg-stone-100">
             <div class="space-y-4">
                 <div>
                     <h3 id="modal-name" class="text-2xl font-black text-stone-800">Product</h3>
@@ -326,14 +326,24 @@
                 <!-- Checkout Forms (Condensed) -->
                 <div class="space-y-4 pt-2 border-t border-stone-100">
                     <div class="flex gap-2">
-                        <button onclick="setShipMethod('store')" id="btn-ship-store"
-                            class="flex-1 py-2 rounded-xl text-xs font-bold bg-orange-100 text-orange-600 border border-orange-200">去攤位自取</button>
+                        <button onclick="setShipMethod('pickup')" id="btn-ship-pickup"
+                            class="flex-1 py-2 rounded-xl text-xs font-bold bg-orange-100 text-orange-600 border border-orange-200">攤位自取</button>
+                        <button onclick="setShipMethod('cvs')" id="btn-ship-cvs"
+                            class="flex-1 py-2 rounded-xl text-xs font-bold bg-stone-50 text-stone-400 border border-transparent">超商取貨</button>
                         <button onclick="setShipMethod('home')" id="btn-ship-home"
                             class="flex-1 py-2 rounded-xl text-xs font-bold bg-stone-50 text-stone-400 border border-transparent">宅配到府</button>
                     </div>
 
-                    <!-- Store Pickup Limit -->
-                    <div id="ship-store-info" class="text-xs text-stone-500 bg-stone-50 p-3 rounded-xl hidden">
+                    <!-- Pickup Info -->
+                    <div id="ship-pickup-info" class="text-xs text-stone-500 bg-stone-50 p-3 rounded-xl">
+                        <p class="font-bold mb-2">預約自取時間</p>
+                        <input type="datetime-local" id="pickup-time"
+                            class="w-full bg-white rounded-lg p-2 border border-stone-200 outline-none">
+                        <p class="mt-2 text-[10px] text-stone-400">*請於園遊會營業時間內前往攤位取貨</p>
+                    </div>
+
+                    <!-- CVS Pickup (Renamed from ship-store-info) -->
+                    <div id="ship-cvs-info" class="text-xs text-stone-500 bg-stone-50 p-3 rounded-xl hidden">
                         <div>
                             <p class="font-bold mb-2">選擇取貨門市</p>
                             <div class="grid grid-cols-2 gap-2 mb-2">
@@ -415,7 +425,7 @@
             currentStore: null, // { info, products } for Store View
             cart: [], // { pid, name, price, qty, spec, storeId }
             cartStoreId: null, // Lock cart to this store
-            shippingMethod: 'store', // store, home
+            shippingMethod: 'pickup', // pickup, cvs, home
 
             // Pending Uploads
             storeImgBase64: null,
@@ -444,6 +454,8 @@
             loadCartLocal();
             renderHome();
             document.getElementById('loading-screen').classList.add('opacity-0', 'pointer-events-none');
+            // Init Default Ship View
+            setShipMethod('pickup');
         };
 
         async function initAddressData() {
@@ -500,26 +512,34 @@
             // ctiml repo: 7-11/{City}.json, Familymart/{City}.json
             // Note: Repo uses English or Chinese? Repo uses Chinese filename e.g. "新北市.json"
             // Brand Check: "7-11" or "FamilyMart"
-            let brandPath = brand === '7-11' ? '7-11' : 'FamilyMart';
+            // Fix: Repo uses lowercase "familymart"
+            let brandPath = brand === '7-11' ? '7-11' : 'familymart';
 
             try {
                 const url = `https://raw.githubusercontent.com/ctiml/convenience-store-data/master/${brandPath}/${city}.json`;
                 const res = await fetch(url);
-                CVS_STORES = await res.json();
+                const json = await res.json();
+
+                // Fix: Data is in json.stores array
+                const rawStores = json.stores || [];
+
+                // Normalize Data: 7-11 uses POIName/Address, Family uses NAME/addr
+                CVS_STORES = rawStores.map(s => ({
+                    name: s.POIName || s.NAME,
+                    address: s.Address || s.addr,
+                    // Preserve original for reference if needed
+                    _raw: s
+                }));
 
                 // Populate Districts
-                const distSet = new Set(CVS_STORES.map(s => s.District || s.town)); // 7-11 uses POI, Family uses town? Check content logic if fail.
-                // Actually 7-11 data: {POIID, POIName, X, Y, Address, ...} - Address contains district usually
-                // Simplified: Just render list filterable by text inputs if needed.
-                // Let's implement District Filter.
-                const distSel = document.getElementById('cvs-dist');
                 // Extract districts from address (e.g. "基隆市仁愛區...")
                 const dists = [...new Set(CVS_STORES.map(s => {
                     // Simple regex to grab District
-                    const m = s.Address.match(/(.+?[市縣])?(.+?[區鄉鎮市])/);
+                    const m = s.address.match(/(.+?[市縣])?(.+?[區鄉鎮市])/);
                     return m ? m[2] : '其他';
                 }))];
 
+                const distSel = document.getElementById('cvs-dist');
                 distSel.innerHTML = '<option value="">全區域</option>' + dists.map(d => `<option value="${d}">${d}</option>`).join('');
                 filterCVSStores();
 
@@ -534,14 +554,14 @@
             const list = document.getElementById('cvs-list');
             list.innerHTML = '';
 
-            const filtered = dist ? CVS_STORES.filter(s => s.Address.includes(dist)) : CVS_STORES;
+            const filtered = dist ? CVS_STORES.filter(s => s.address.includes(dist)) : CVS_STORES;
 
             filtered.forEach(s => {
                 const div = document.createElement('div');
                 div.className = 'p-2 bg-stone-100 rounded text-xs cursor-pointer hover:bg-orange-100';
-                div.innerHTML = `<b>${s.POIName}</b><br><span class="text-stone-400">${s.Address}</span>`;
+                div.innerHTML = `<b>${s.name}</b><br><span class="text-stone-400">${s.address}</span>`;
                 div.onclick = () => {
-                    document.getElementById('ship-store-name').value = `${s.POIName} (${s.Address})`;
+                    document.getElementById('ship-store-name').value = `${s.name} (${s.address})`;
                     // Highlight selection
                 };
                 list.appendChild(div);
@@ -723,7 +743,7 @@
                 <div onclick="openProductModal(${idx})" class="bg-white rounded-2xl p-3 shadow-sm active:scale-95 transition-transform cursor-pointer">
                     <img src="${p.Image && p.Image.startsWith('http') ? fixDriveUrl(p.Image) : 'https://placehold.co/200'}" class="w-full aspect-square rounded-xl object-cover bg-stone-100 mb-2">
                     <h4 class="font-bold text-stone-800 text-sm truncate">${p.Name}</h4>
-                    <p class="text-orange-600 font-bold">$${p.Price}</p>
+                    <p class="text-orange-600 font-bold">${p.Price == 0 ? '免費' : '$' + p.Price}</p>
                 </div>
             `).join('');
         }
@@ -739,7 +759,7 @@
 
             document.getElementById('modal-img').src = p.Image && p.Image.startsWith('http') ? fixDriveUrl(p.Image) : 'https://placehold.co/300';
             document.getElementById('modal-name').innerText = p.Name;
-            document.getElementById('modal-price').innerText = `$${p.Price}`;
+            document.getElementById('modal-price').innerText = p.Price == 0 ? '免費' : `$${p.Price}`;
             document.getElementById('modal-qty').innerText = '1';
 
             // Render Specs
@@ -847,6 +867,9 @@
             renderCartItems();
             modal.classList.remove('hidden');
             setTimeout(() => document.getElementById('cart-panel').classList.remove('translate-y-full'), 10);
+
+            // Set init method logic
+            setShipMethod(app.shippingMethod || 'pickup');
         }
 
         function closeCart() {
@@ -872,7 +895,7 @@
                     <div class="flex-grow">
                         <h4 class="font-bold text-stone-800">${item.name}</h4>
                         <p class="text-xs text-stone-400">${Object.values(item.spec).join('/')}</p>
-                        <p class="text-orange-600 font-bold">$${item.price}</p>
+                        <p class="text-orange-600 font-bold">${item.price == 0 ? '免費' : '$' + item.price}</p>
                     </div>
                      <div class="flex items-center gap-2 bg-stone-100 rounded-lg p-1 h-8 self-end">
                         <button onclick="updateCartQty(${idx}, -1)" class="w-6 font-bold text-stone-500">-</button>
@@ -897,16 +920,49 @@
 
         function setShipMethod(m) {
             app.shippingMethod = m;
-            document.getElementById('btn-ship-store').className = m === 'store' ? "flex-1 py-2 rounded-lg border border-stone-800 bg-stone-800 text-white" : "flex-1 py-2 rounded-lg border border-stone-200 text-stone-400";
-            document.getElementById('btn-ship-home').className = m === 'home' ? "flex-1 py-2 rounded-lg border border-stone-800 bg-stone-800 text-white" : "flex-1 py-2 rounded-lg border border-stone-200 text-stone-400";
+
+            // Update Buttons
+            const activeClass = "flex-1 py-2 rounded-xl border border-stone-800 bg-stone-800 text-white shadow-md transition-all";
+            const inactiveClass = "flex-1 py-2 rounded-xl border border-transparent text-stone-400 hover:bg-stone-100 transition-all";
+
+            document.getElementById('btn-ship-pickup').className = m === 'pickup' ? activeClass : inactiveClass;
+            document.getElementById('btn-ship-cvs').className = m === 'cvs' ? activeClass : inactiveClass;
+            document.getElementById('btn-ship-home').className = m === 'home' ? activeClass : inactiveClass;
+
+            // Toggle Sections
+            const pickupInfo = document.getElementById('ship-pickup-info');
+            const cvsInfo = document.getElementById('ship-cvs-info');
+            const homeInfo = document.getElementById('ship-home-info');
+
+            if (m === 'pickup') {
+                pickupInfo.classList.remove('hidden');
+                cvsInfo.classList.add('hidden');
+                homeInfo.classList.add('hidden');
+            } else if (m === 'cvs') {
+                pickupInfo.classList.add('hidden');
+                cvsInfo.classList.remove('hidden');
+                homeInfo.classList.add('hidden');
+            } else { // home
+                pickupInfo.classList.add('hidden');
+                cvsInfo.classList.add('hidden');
+                homeInfo.classList.remove('hidden');
+            }
+
             calcTotal();
         }
 
         function calcTotal() {
             const subtotal = app.cart.reduce((a, b) => a + b.price * b.qty, 0);
-            const shipFee = app.shippingMethod === 'home'
-                ? parseInt(app.currentStore.info.Shipping_Home || 100)
-                : parseInt(app.currentStore.info.Shipping_Store || 60);
+            let shipFee = 0;
+
+            if (app.shippingMethod === 'home') {
+                shipFee = parseInt(app.currentStore.info.Shipping_Home || 100);
+            } else if (app.shippingMethod === 'cvs') {
+                shipFee = parseInt(app.currentStore.info.Shipping_Store || 60);
+            } else {
+                // pickup = 0
+                shipFee = 0;
+            }
 
             document.getElementById('cart-subtotal').innerText = subtotal;
             document.getElementById('cart-shipping').innerText = shipFee;
@@ -918,10 +974,18 @@
             const phone = document.getElementById('chk-phone').value;
 
             let addr = '';
-            if (app.shippingMethod === 'store') {
+
+            // Validation per method
+            if (app.shippingMethod === 'pickup') {
+                const time = document.getElementById('pickup-time').value;
+                if (!time) return alert('請選擇預約自取時間');
+                addr = `[自取預約] ${time.replace('T', ' ')}`;
+            }
+            else if (app.shippingMethod === 'cvs') {
                 addr = document.getElementById('ship-store-name').value;
                 if (!addr) return alert('請選擇或輸入取貨門市');
-            } else {
+            }
+            else { // home
                 const city = document.getElementById('ship-city').value;
                 const dist = document.getElementById('ship-dist').value;
                 const road = document.getElementById('ship-road').value;
@@ -937,7 +1001,9 @@
             btn.disabled = true;
 
             const subtotal = app.cart.reduce((a, b) => a + b.price * b.qty, 0);
-            const shipFee = app.shippingMethod === 'home' ? parseInt(app.currentStore.info.Shipping_Home || 100) : parseInt(app.currentStore.info.Shipping_Store || 60);
+            let shipFee = 0;
+            if (app.shippingMethod === 'home') shipFee = parseInt(app.currentStore.info.Shipping_Home || 100);
+            if (app.shippingMethod === 'cvs') shipFee = parseInt(app.currentStore.info.Shipping_Store || 60);
 
             const payload = {
                 action: 'submitOrder',
@@ -1139,7 +1205,7 @@
                     <img src="${p.Image && p.Image.startsWith('http') ? fixDriveUrl(p.Image) : 'https://placehold.co/80'}" class="w-12 h-12 rounded-lg object-cover bg-stone-200">
                     <div class="flex-1 min-w-0">
                         <h4 class="font-bold text-sm text-stone-800 truncate">${p.Name}</h4>
-                        <p class="text-orange-600 font-bold text-xs">$${p.Price}</p>
+                        <p class="text-orange-600 font-bold text-xs">${p.Price == 0 ? '免費' : '$' + p.Price}</p>
                     </div>
                     <button onclick="editProduct(${i})" class="bg-blue-50 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-bold">編輯</button>
                     <button onclick="deleteProduct(${i})" class="bg-red-50 text-red-600 px-3 py-1.5 rounded-lg text-xs font-bold">刪除</button>
